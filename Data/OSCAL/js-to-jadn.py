@@ -3,13 +3,14 @@ import json
 import os
 from jadn.definitions import TypeName, BaseType, TypeOptions, Fields, FieldType
 
-SCHEMA_DIR = os.path.join('..', '..', 'Schemas', 'Metaschema')
-JSCHEMA = os.path.join(SCHEMA_DIR, 'oscal_catalog_schema_1.1.0.json')
+# SCHEMA_DIR = os.path.join('..', '..', 'Schemas', 'Metaschema')
+# JSCHEMA = os.path.join(SCHEMA_DIR, 'oscal_catalog_schema_1.1.0.json')
+SCHEMA_DIR = os.path.join('json', 'schema')
+OUT_DIR = 'Out'
 DEBUG = False
 D = [(f'${n}' if DEBUG else '') for n in range(10)]
 
-
-def typedefname(jsdef: str) -> str:
+def typedefname(jsdef: str, jss: dict) -> str:
     """
     Infer type name from a JSON Schema definition
     """
@@ -22,7 +23,7 @@ def typedefname(jsdef: str) -> str:
     return jsdef.removeprefix('#/definitions/') + D[0]     # Exact type name or none
 
 
-def typerefname(jsref: dict) -> str:
+def typerefname(jsref: dict, jss: dict, jssx: dict) -> str:
     """
     Infer a type name from a JSON Schema property reference
     """
@@ -35,7 +36,7 @@ def typerefname(jsref: dict) -> str:
         if ':' in td:
             return maketypename('', td.split(':', maxsplit=1)[1]) + D[6]  # Extract type name from $id
         if td2 := jss['definitions'].get(td, {}):
-            return typerefname(td2) + D[7]
+            return typerefname(td2, jss, jssx) + D[7]
     return ''
 
 
@@ -62,12 +63,12 @@ def maketypename(tn: str, name: str) -> str:
     return name + '1' if jadn.definitions.is_builtin(name) else name
 
 
-def scandef(tn: str, tv: dict, nt: list):
+def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
     """
     Process nested type definitions, add to list nt
     """
 
-    if not (td := define_jadn_type(tn, tv)):
+    if not (td := define_jadn_type(tn, tv, jss, jssx)):
         return
     nt.append(td)
     if tv.get('type', '') == 'object':
@@ -75,22 +76,22 @@ def scandef(tn: str, tv: dict, nt: list):
             if v.get('$ref', '') or v.get('type', '') in ('string', 'number', 'integer', 'boolean'):     # Not nested
                 pass
             elif v.get('type', '') == 'array':
-                scandef(maketypename('', k), v, nt)
-                scandef(singular(maketypename('', k)), v['items'], nt)  # TODO: primitive with options or none
+                scandef(maketypename('', k), v, nt, jss, jssx)
+                scandef(singular(maketypename('', k)), v['items'], nt, jss, jssx)  # TODO: primitive with options or none
             elif v.get('anyOf', '') or v.get('allOf', ''):
-                scandef(maketypename(tn, k), v, nt)
-            elif typerefname(v):
+                scandef(maketypename(tn, k), v, nt, jss, jssx)
+            elif typerefname(v, jss):
                 print('  nested property type:', f'{td[TypeName]}${k}', v)
 
         if not tn:
             print(f'  nested type: "{tv.get("title", "")}"')
     elif (tc := tv.get('anyOf', '')) or (tc := tv.get('allOf', '')):
         for n, v in enumerate(tc, start=1):
-            scandef(maketypename(tn, n), v, nt)
+            scandef(maketypename(tn, n), v, nt, jss, jssx)
     pass
 
 
-def define_jadn_type(tn: str, tv: dict) -> list:
+def define_jadn_type(tn: str, tv: dict, jss: dict, jssx: dict) -> list:
     topts = []
     tdesc = tv.get('description', '')
     fields = []
@@ -148,18 +149,21 @@ def define_jadn_type(tn: str, tv: dict) -> list:
     else:
         return []
 
-    return [typedefname(tn), basetype, topts, tdesc, fields]
+    return [typedefname(tn, jss), basetype, topts, tdesc, fields]
 
 
-if __name__ == '__main__':
+def convert_js_to_jadn(jsfile, outdir):
+    path, fne = os.path.split(jsfile)
+    fn, fe = os.path.splitext(fne)
+    outfile = os.path.join(outdir, fn) + '.jadn'
     """
     Create a JADN type from each definition in a Metaschema-generated JSON Schema
     """
-    with open(JSCHEMA, encoding='utf-8') as fp:
+    with open(jsfile, encoding='utf-8') as fp:
         jss = json.load(fp)
     assert jss['type'] == 'object', f'Unsupported JSON Schema format'
     jssx = {v.get('$id', k): k for k, v in jss['definitions'].items()}      # Index from $id to definition
-    types = {typedefname(k): v for k, v in jss['definitions'].items()}      # Index from type name to definition
+    types = {typedefname(k, jss): v for k, v in jss['definitions'].items()}      # Index from type name to definition
     assert len(types) == len(set(types)), f'Type name collision'
 
     info = {'package': jss['$id']}
@@ -168,14 +172,18 @@ if __name__ == '__main__':
     info.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
 
     nt = []     # Walk nested type definition tree to build type list
-    scandef('$Root', jss, nt)
+    scandef('$Root', jss, nt, jss, jssx)
     for tn, tv in jss['definitions'].items():
-        scandef(tn, tv, nt)
+        scandef(tn, tv, nt, jss, jssx)
 
     ntypes = []     # Prune identical type definitions
     for t in nt:
         if t not in ntypes:     # O(n^2) runtime because type definitions aren't hashable
             ntypes.append(t)    # Convert to immutable types if it becomes an issue
 
-    jadn.dump(schema := {'info': info, 'types': ntypes}, 'out.jadn')
+    jadn.dump(schema := {'info': info, 'types': ntypes}, outfile)
     print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
+
+
+if __name__ == '__main__':
+
