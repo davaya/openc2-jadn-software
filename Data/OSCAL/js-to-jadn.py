@@ -76,34 +76,6 @@ def maketypename(tn: str, name: str, jss: dict) -> str:
     name = f'{tn}${name}' if tn else name.capitalize()
     return name + '1' if jadn.definitions.is_builtin(name) else name
 
-"""
-def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
-    '''
-    Process nested type definitions, add to list nt
-    '''
-    if len(nt) == 107:
-        print('z')
-    if not (jt := define_jadn_type(tn, tv, jss, jssx)):
-        return
-    nt.append({'jadn': jt, 'tn': tn, '$id': tv.get('$id', None)})
-    if tv.get('type', '') == 'object':
-        for k, v in tv.get('properties', {}).items():
-            if v.get('$ref', '') or v.get('type', '') in ('string', 'number', 'integer', 'boolean'):     # Not nested
-                pass
-            elif v.get('type', '') == 'array':
-                scandef(maketypename('', k, jss), v, nt, jss, jssx)
-                scandef(singular(maketypename('', k, jss)), v['items'], nt, jss, jssx)  # TODO: primitive with options or none
-            elif v.get('anyOf', '') or v.get('allOf', ''):
-                scandef(maketypename(tn, k, jss), v, nt, jss, jssx)
-            elif typerefname(v, jss, jssx):
-                print('  nested property type:', f'{jt[TypeName]}${k}', v)
-        if not tn:
-            print(f'  nested type: "{tv.get("title", "")}"')
-    elif (tc := tv.get('anyOf', [])) or (tc := tv.get('allOf', [])):
-        for n, v in enumerate(tc, start=1):
-            scandef(maketypename(tn, str(n), jss), v, nt, jss, jssx)
-"""
-
 
 def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
     """
@@ -192,6 +164,9 @@ def make_jadn_type(tn: str, basetype: str, flist: list, tv: dict, jss: dict, jss
 
 
 def define_jadn_type(tn: str, tv: dict, jss: dict, jssx: dict) -> list:
+    """
+    Replaced by make_jadn_type - delete when conversion finished
+    """
     topts = []
     tdesc = tv.get('description', '')
     fields = []
