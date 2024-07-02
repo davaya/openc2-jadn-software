@@ -2,11 +2,12 @@ import jadn
 import json
 import os
 from jadn.definitions import TypeName
+from collections import defaultdict
 
 # SCHEMA_DIR = os.path.join('..', '..', 'Schemas', 'Metaschema')
 # JSCHEMA = os.path.join(SCHEMA_DIR, 'oscal_catalog_schema_1.1.0.json')
 SCHEMA_DIR = os.path.join('oscal-1.1.2', 'json', 'schema')
-OUT_DIR = 'Out'
+OUT_DIR = '../../Schemas/Out'
 DEBUG = False
 D = [(f'${n}' if DEBUG else '') for n in range(10)]
 
@@ -77,6 +78,10 @@ def maketypename(tn: str, name: str, jss: dict) -> str:
     return name + '1' if jadn.definitions.is_builtin(name) else name
 
 
+def is_defined(items: dict) -> bool:
+    return '$ref' in items or items.get('type', '') in {'string', 'integer', 'number', 'boolean'}
+
+
 def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
     """
     Process nested type definitions, add to list nt
@@ -88,23 +93,22 @@ def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
         dn = typedefname(jssx.get(ref, ref), jss)
         print(f'- {tn:80}: {dn}')
         return dn
-    elif (vtype := tv.get('type', '')) == 'object':
+    elif (vtype := tv.get('type', '')) in {'string', 'integer', 'number', 'boolean'}:
+        basetype = vtype.capitalize()
+    elif vtype == 'object':
         basetype = 'Record'
         for k, v in tv.get('properties', {}).items():
             fields.append((k, scandef(f'{tn}.{k}', v, nt, jss, jssx), v))
         popts = f'({len(fields)})'
     elif vtype == 'array':
         if type(items := tv.get('items', None)) == dict:
-            basetype = 'ArrayOf'
+            basetype = '' if is_defined(items) else 'ArrayOf'
             fields.append((scandef(f'{tn}', items, nt, jss, jssx)))
             popts = f'({fields[0]})'
         elif type(items) == list:
             for n, v in enumerate(items):
                 scandef(f'{tn}.{n}', v, nt, jss, jssx)
             print(f'- {tn}: ArrayX')
-    elif vtype in {'string', 'integer', 'number', 'boolean'}:
-        print(f'- {tn:80}: {vtype}')
-        return vtype.capitalize()
     elif enum := tv.get('enum', []):
         basetype = 'Enumerated'
         for v in enum:
@@ -119,9 +123,12 @@ def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
         raise ValueError(f'- {tn}: Unexpected type: {vtype}: {tv}')
 
     if basetype:
+        tn += '-list' if basetype == 'ArrayOf' else ''
         print(f'- {tn}: {basetype}{popts}')
-        nt.append(td := make_jadn_type(tn, basetype, fields, tv, jss, jssx))
+        nt.append(td:= make_jadn_type(tn, basetype, fields, tv, jss, jssx))
         return td[TypeName]
+
+    return fields[0]    # empty basetype signals a named multiplicity field
 
 
 def make_jadn_type(tn: str, basetype: str, flist: list, tv: dict, jss: dict, jssx: dict):
@@ -129,18 +136,20 @@ def make_jadn_type(tn: str, basetype: str, flist: list, tv: dict, jss: dict, jss
     typename = typedefname(tnroot, jss) + (f'.{tnpath}' if tnpath else '')
     topts = []
     fields = []
-    tdesc = tv.get('description', '')
+    tdesc = tv.get('description', tv.get('title', ''))
     if basetype == 'Record':
         req = tv.get('required', [])
         for n, f in enumerate(flist, start=1):
             k, v, fv = f
             fdesc = fv.get('description', '')
             fopts = ['[0'] if k not in req else []
+            if fv.get('type', '') == 'array':
+                fopts.append(f']{fv.get("maxItems", 0)}')
             fields.append([n, k, v, fopts, fdesc])
 
     elif basetype == 'ArrayOf':
         topts = [f'{{{tv["minItems"]}'] if 'minItems' in tv else []
-        topts.append(f'}}{tv["maxItems"]}') if 'maxItems' in tv else []
+        topts.append(f'}}{tv["maxItems"]}') if 'maxItems' in tv else '}0'
         topts.append(f'*{flist[0]}')
 
     elif basetype == 'Enumerated':
@@ -157,7 +166,15 @@ def make_jadn_type(tn: str, basetype: str, flist: list, tv: dict, jss: dict, jss
         for n, v in enumerate(flist, start=1):
             fields.append([n, f'c{n}', v, [], ''])
 
-    else:
+    elif basetype == 'String':
+        pass # process string opts
+    elif basetype == 'Integer':
+        pass # process integer opts
+    elif basetype == 'Number':
+        pass # process number opts
+    elif basetype == ('Boolean'):
+        pass # done - no opts on boolean
+    elif basetype:
         raise ValueError(f'unsupported type {basetype}')
 
     return [typename, basetype, topts, tdesc, fields]
@@ -267,7 +284,10 @@ def convert_js_to_jadn(jsfile, outfile):
             ntypes.append(t)    # Convert to immutable types if it becomes an issue
 
     jadn.dump(schema := {'info': info, 'types': ntypes}, outfile)
-    print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
+    try:
+        print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
+    except ValueError as e:
+        print(f'### {f}: {e}')
 
 
 if __name__ == '__main__':
@@ -281,7 +301,3 @@ if __name__ == '__main__':
         except (ValueError, IndexError) as e:
             print(f'### {f}: {e}')
             raise
-
-
-
-
