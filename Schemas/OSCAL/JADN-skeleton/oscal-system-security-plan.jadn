@@ -1,0 +1,10 @@
+{
+  "info": {
+    "title": "OSCAL System Security Plan",
+    "package": "system_security_plan/",
+    "exports": ["SystemSecurityPlan"]
+  },
+  "types": [
+    ["SystemSecurityPlan", "Record", [], "", []]
+  ]
+}

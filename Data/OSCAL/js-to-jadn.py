@@ -7,7 +7,7 @@ from collections import defaultdict
 # SCHEMA_DIR = os.path.join('..', '..', 'Schemas', 'Metaschema')
 # JSCHEMA = os.path.join(SCHEMA_DIR, 'oscal_catalog_schema_1.1.0.json')
 SCHEMA_DIR = os.path.join('oscal-1.1.2', 'json', 'schema')
-OUT_DIR = '../../Schemas/Out'
+OUT_DIR = '../../Out'
 DEBUG = False
 D = [(f'${n}' if DEBUG else '') for n in range(10)]
 
