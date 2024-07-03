@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "OSCAL Assessment Results",
-    "package": "https://www.nist.gov/oscal/assessment_results/",
+    "package": "https://example.gov/ns/oscal/0.0.1/assessment_results/",
     "exports": ["AssessmentResults"]
   },
   "types": [

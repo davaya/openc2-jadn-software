@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "OSCAL Assessment Plan",
-    "package": "https://www.nist.gov/oscal/assessment_plan/",
+    "package": "https://example.gov/ns/oscal/0.0.1/assessment_plan/",
     "exports": ["AssessmentPlan"]
   },
   "types": [

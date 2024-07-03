@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "OSCAL Catalog",
-    "package": "https://www.nist.gov/oscal/catalog/",
+    "package": "https://example.gov/ns/oscal/0.0.1/catalog/",
     "exports": ["Catalog"]
   },
   "types": [

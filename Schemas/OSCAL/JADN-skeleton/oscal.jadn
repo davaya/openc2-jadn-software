@@ -1,18 +1,18 @@
 {
   "info": {
     "title": "OSCAL",
-    "package": "https://www.nist.gov/oscal/",
+    "package": "https://example.gov/ns/oscal/0.0.1/",
     "description": "OSCAL - Open Security Controls Assessment Language",
     "namespaces": [
-      ["", "https://www.nist.gov/oscal/metadata/"],
-      ["", "https://www.nist.gov/oscal/back_matter/"],
-      ["", "https://www.nist.gov/oscal/catalog/"],
-      ["", "https://www.nist.gov/oscal/profile/"],
-      ["", "https://www.nist.gov/oscal/component/"],
-      ["", "https://www.nist.gov/oscal/system_security_plan/"],
-      ["", "https://www.nist.gov/oscal/assessment_plan/"],
-      ["", "https://www.nist.gov/oscal/assessment_results/"],
-      ["", "https://www.nist.gov/oscal/component/plan_of_actions_and_milestones/"]
+      ["", "https://example.gov/ns/oscal/0.0.1/metadata/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/back_matter/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/catalog/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/profile/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/component/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/system_security_plan/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/assessment_plan/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/assessment_results/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/component/plan_of_actions_and_milestones/"]
     ],
     "exports": ["OSCAL"]
   },

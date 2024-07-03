@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "OSCAL Components",
-    "package": "https://www.nist.gov/oscal/component/",
+    "package": "https://example.gov/ns/oscal/0.0.1/component/",
     "exports": ["Component"]
   },
   "types": [

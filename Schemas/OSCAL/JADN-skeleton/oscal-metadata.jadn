@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "OSCAL Metadata",
-    "package": "https://www.nist.gov/oscal/metadata/",
+    "package": "https://example.gov/ns/oscal/0.0.1/metadata/",
     "exports": ["Metadata"]
   },
   "types": [

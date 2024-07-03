@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "OSCAL Plan of Actions and Milestones",
-    "package": "https://www.nist.gov/oscal/plan_of_actions_and_milestones/",
+    "package": "https://example.gov/ns/oscal/0.0.1/plan_of_actions_and_milestones/",
     "exports": ["POAM"]
   },
   "types": [
