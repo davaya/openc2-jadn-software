@@ -1,0 +1,10 @@
+{
+  "info": {
+    "title": "OSCAL Profile",
+    "package": "https://example.gov/ns/oscal/0.0.1/profile/",
+    "exports": ["Profile"]
+  },
+  "types": [
+    ["Profile", "Record", [], "", []]
+  ]
+}

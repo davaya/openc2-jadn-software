@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "OSCAL Back Matter",
-    "package": "https://example.gov/ns/oscal/0.0.1/back_matter/",
+    "package": "https://example.gov/ns/oscal/0.0.1/backmatter/",
     "exports": ["BackMatter"]
   },
   "types": [
