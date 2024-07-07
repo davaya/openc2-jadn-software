@@ -1,0 +1,17 @@
+{
+  "info": {
+    "package": "http://csrc.nist.gov/ns/oscal/1.0/1.1.2/oscal-complete-schema",
+    "comment": "OSCAL Unified Model of Models: JSON Schema",
+    "exports": ["$Root"],
+    "config": {
+      "$MaxString": 1000,
+      "$TypeName": "^[$A-Z][-.$A-Za-z0-9]{0,96}$",
+      "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$",
+      "$NSID": "^([A-Za-z][-A-Za-z0-9]{0,31})?$"
+    }
+  },
+
+  "types": [
+    ["$Root", "Record", [], "", []]
+  ]
+}
