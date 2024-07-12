@@ -2,7 +2,7 @@
   "info": {
     "package": "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-component-definition-schema",
     "comment": "OSCAL Component Definition Model: JSON Schema",
-    "exports": ["$Root"],
+    "exports": ["Component-definition"],
     "config": {
       "$MaxString": 1000,
       "$TypeName": "^[$A-Z][-.$A-Za-z0-9]{0,96}$",
@@ -12,17 +12,12 @@
   },
 
   "types": [
-    ["$Root", "Record", [], "", [
-      [1, "$schema", "URIReferenceDatatype", ["[0"], ""],
-      [2, "component-definition", "Component-definition", [], ""]
-    ]],
-
     ["Component-definition", "Record", [], "A collection of component descriptions, which may optionally be grouped by capability.", [
       [1, "uuid", "UUIDDatatype", [], "Provides a globally unique means to identify a given component definition instance."],
       [2, "metadata", "Metadata", [], ""],
-      [3, "import-component-definitions", "Import-component-definition", ["[0"], ""],
-      [4, "components", "Defined-component", ["[0"], ""],
-      [5, "capabilities", "Capability", ["[0"], ""],
+      [3, "import-component-definitions", "Import-component-definition", ["[0", "]0"], ""],
+      [4, "components", "Defined-component", ["[0", "]0"], ""],
+      [5, "capabilities", "Capability", ["[0", "]0"], ""],
       [6, "back-matter", "Back-matter", ["[0"], ""]
     ]],
 
@@ -32,45 +27,81 @@
       [3, "last-modified", "Last-modified", [], ""],
       [4, "version", "Version", [], ""],
       [5, "oscal-version", "Oscal-version", [], ""],
-      [6, "revisions", "Metadata.revisions-list", ["[0"], ""],
-      [7, "document-ids", "Document-id", ["[0"], ""],
-      [8, "props", "Property", ["[0"], ""],
-      [9, "links", "Link", ["[0"], ""],
-      [10, "roles", "Metadata.roles-list", ["[0"], ""],
-      [11, "locations", "Metadata.locations-list", ["[0"], ""],
-      [12, "parties", "Metadata.parties-list", ["[0"], ""],
-      [13, "responsible-parties", "Responsible-party", ["[0"], ""],
-      [14, "actions", "Action", ["[0"], ""],
+      [6, "revisions", "Metadata.revisions", ["[0", "]0"], ""],
+      [7, "document-ids", "Document-id", ["[0", "]0"], ""],
+      [8, "props", "Property", ["[0", "]0"], ""],
+      [9, "links", "Link", ["[0", "]0"], ""],
+      [10, "roles", "Metadata.roles", ["[0", "]0"], ""],
+      [11, "locations", "Metadata.locations", ["[0", "]0"], ""],
+      [12, "parties", "Metadata.parties", ["[0", "]0"], ""],
+      [13, "responsible-parties", "Responsible-party", ["[0", "]0"], ""],
+      [14, "actions", "Action", ["[0", "]0"], ""],
       [15, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Responsible-party", "Record", [], "A reference to a set of persons and/or organizations that have responsibility for performing the referenced role in the context of the containing object.", [
-      [1, "role-id", "TokenDatatype", [], "A reference to a role performed by a party."],
-      [2, "party-uuids", "Party-uuid", [], ""],
-      [3, "props", "Property", ["[0"], ""],
-      [4, "links", "Link", ["[0"], ""],
-      [5, "remarks", "Remarks", ["[0"], ""]
+    ["Import-component-definition", "Record", [], "Loads a component definition from another resource.", [
+      [1, "href", "URIReferenceDatatype", [], "A link to a resource that defines a set of components and/or capabilities to import into this collection."]
     ]],
 
-    ["Link", "Record", [], "A reference to a local or remote resource, that has a specific relation to the containing object.", [
-      [1, "href", "URIReferenceDatatype", [], "A resolvable URL reference to a resource."],
-      [2, "rel", "Link.rel", ["[0"], "Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose."],
-      [3, "media-type", "StringDatatype", ["[0"], "A label that indicates the nature of a resource, as a data serialization or format."],
-      [4, "resource-fragment", "StringDatatype", ["[0"], "In case where the href points to a back-matter/resource, this value will indicate the URI fragment to append to any rlink associated with the resource. This value MUST be URI encoded."],
-      [5, "text", "String", ["[0"], "A textual label to associate with the link, which may be used for presentation in a tool."]
+    ["Defined-component", "Record", [], "A defined component that can be part of an implemented system.", [
+      [1, "uuid", "UUIDDatatype", [], "Provides a globally unique means to identify a given component."],
+      [2, "type", "Defined-component.type", [], "A category describing the purpose of the component."],
+      [3, "title", "String", [], "A human readable name for the component."],
+      [4, "description", "String", [], "A description of the component, including information about its function."],
+      [5, "purpose", "String", ["[0"], "A summary of the technological or business purpose of the component."],
+      [6, "props", "Property", ["[0", "]0"], ""],
+      [7, "links", "Link", ["[0", "]0"], ""],
+      [8, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
+      [9, "protocols", "Protocol", ["[0", "]0"], ""],
+      [10, "control-implementations", "Control-implementation", ["[0", "]0"], ""],
+      [11, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Link.rel", "Choice", ["CO"], "Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose.", [
-      [1, "c1", "TokenDatatype", [], ""],
-      [2, "c2", "Link.rel.1", [], ""]
+    ["Capability", "Record", [], "A grouping of other components and/or capabilities.", [
+      [1, "uuid", "UUIDDatatype", [], "Provides a globally unique means to identify a given capability."],
+      [2, "name", "StringDatatype", [], "The capability's human-readable name."],
+      [3, "description", "String", [], "A summary of the capability."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "incorporates-components", "Incorporates-component", ["[0", "]0"], ""],
+      [7, "control-implementations", "Control-implementation", ["[0", "]0"], ""],
+      [8, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Link.rel.1", "Enumerated", [], "", [
-      [1, "reference", ""]
+    ["Back-matter", "Record", [], "A collection of resources that may be referenced from within the OSCAL document instance.", [
+      [1, "resources", "Back-matter.resources", ["[0", "]0"], ""]
     ]],
 
-    ["Party-uuid", "Choice", ["CA"], "Reference to a party by UUID.", [
-      [1, "alias", "UUIDDatatype", [], ""]
+    ["Published", "Choice", ["CA"], "The date and time the document was last made available.", [
+      [1, "alias", "DateTimeWithTimezoneDatatype", [], ""]
+    ]],
+
+    ["Last-modified", "Choice", ["CA"], "The date and time the document was last stored for later retrieval.", [
+      [1, "alias", "DateTimeWithTimezoneDatatype", [], ""]
+    ]],
+
+    ["Version", "Choice", ["CA"], "Used to distinguish a specific revision of an OSCAL document from other previous and future versions.", [
+      [1, "alias", "StringDatatype", [], ""]
+    ]],
+
+    ["Oscal-version", "Choice", ["CA"], "The OSCAL model version the document was authored against and will conform to as valid.", [
+      [1, "alias", "StringDatatype", [], ""]
+    ]],
+
+    ["Metadata.revisions", "Record", [], "An entry in a sequential list of revisions to the containing document, expected to be in reverse chronological order (i.e. latest first).", [
+      [1, "title", "String", ["[0"], "A name given to the document revision, which may be used by a tool for display and navigation."],
+      [2, "published", "Published", ["[0"], ""],
+      [3, "last-modified", "Last-modified", ["[0"], ""],
+      [4, "version", "Version", [], ""],
+      [5, "oscal-version", "Oscal-version", ["[0"], ""],
+      [6, "props", "Property", ["[0", "]0"], ""],
+      [7, "links", "Link", ["[0", "]0"], ""],
+      [8, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Document-id", "Record", [], "A document identifier qualified by an identifier scheme.", [
+      [1, "scheme", "Document-id.scheme", ["[0"], "Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters."],
+      [2, "identifier", "StringDatatype", [], ""]
     ]],
 
     ["Property", "Record", [], "An attribute, characteristic, or quality of the containing object expressed as a namespace qualified name/value pair.", [
@@ -83,22 +114,58 @@
       [7, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Last-modified", "Choice", ["CA"], "The date and time the document was last stored for later retrieval.", [
-      [1, "alias", "DateTimeWithTimezoneDatatype", [], ""]
+    ["Link", "Record", [], "A reference to a local or remote resource, that has a specific relation to the containing object.", [
+      [1, "href", "URIReferenceDatatype", [], "A resolvable URL reference to a resource."],
+      [2, "rel", "Link.rel", ["[0"], "Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose."],
+      [3, "media-type", "StringDatatype", ["[0"], "A label that indicates the nature of a resource, as a data serialization or format."],
+      [4, "resource-fragment", "StringDatatype", ["[0"], "In case where the href points to a back-matter/resource, this value will indicate the URI fragment to append to any rlink associated with the resource. This value MUST be URI encoded."],
+      [5, "text", "String", ["[0"], "A textual label to associate with the link, which may be used for presentation in a tool."]
     ]],
 
-    ["Document-id", "Record", [], "A document identifier qualified by an identifier scheme.", [
-      [1, "scheme", "Document-id.scheme", ["[0"], "Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters."],
-      [2, "identifier", "StringDatatype", [], ""]
+    ["Metadata.roles", "Record", [], "Defines a function, which might be assigned to a party in a specific situation.", [
+      [1, "id", "TokenDatatype", [], "A unique identifier for the role."],
+      [2, "title", "String", [], "A name given to the role, which may be used by a tool for display and navigation."],
+      [3, "short-name", "StringDatatype", ["[0"], "A short common name, abbreviation, or acronym for the role."],
+      [4, "description", "String", ["[0"], "A summary of the role's purpose and associated responsibilities."],
+      [5, "props", "Property", ["[0", "]0"], ""],
+      [6, "links", "Link", ["[0", "]0"], ""],
+      [7, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Document-id.scheme", "Choice", ["CO"], "Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters.", [
-      [1, "c1", "URIDatatype", [], ""],
-      [2, "c2", "Document-id.scheme.1", [], ""]
+    ["Metadata.locations", "Record", [], "A physical point of presence, which may be associated with people, organizations, or other concepts within the current or linked OSCAL document.", [
+      [1, "uuid", "UUIDDatatype", [], "A unique ID for the location, for reference."],
+      [2, "title", "String", ["[0"], "A name given to the location, which may be used by a tool for display and navigation."],
+      [3, "address", "Address", ["[0"], ""],
+      [4, "email-addresses", "Email-address", ["[0", "]0"], ""],
+      [5, "telephone-numbers", "Telephone-number", ["[0", "]0"], ""],
+      [6, "urls", "URIDatatype", ["[0", "]0"], ""],
+      [7, "props", "Property", ["[0", "]0"], ""],
+      [8, "links", "Link", ["[0", "]0"], ""],
+      [9, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Document-id.scheme.1", "Enumerated", [], "", [
-      [1, "http://www.doi.org/", ""]
+    ["Metadata.parties", "Record", [], "An organization or person, which may be associated with roles or other concepts within the current or linked OSCAL document.", [
+      [1, "uuid", "UUIDDatatype", [], "A unique identifier for the party."],
+      [2, "type", "Metadata.parties.type", [], "A category describing the kind of party the object describes."],
+      [3, "name", "StringDatatype", ["[0"], "The full name of the party. This is typically the legal name associated with the party."],
+      [4, "short-name", "StringDatatype", ["[0"], "A short common name, abbreviation, or acronym for the party."],
+      [5, "external-ids", "Metadata.parties.external-ids", ["[0", "]0"], ""],
+      [6, "props", "Property", ["[0", "]0"], ""],
+      [7, "links", "Link", ["[0", "]0"], ""],
+      [8, "email-addresses", "Email-address", ["[0", "]0"], ""],
+      [9, "telephone-numbers", "Telephone-number", ["[0", "]0"], ""],
+      [10, "addresses", "Address", ["[0", "]0"], ""],
+      [11, "location-uuids", "Location-uuid", ["[0", "]0"], ""],
+      [12, "member-of-organizations", "UUIDDatatype", ["[0", "]0"], ""],
+      [13, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Responsible-party", "Record", [], "A reference to a set of persons and/or organizations that have responsibility for performing the referenced role in the context of the containing object.", [
+      [1, "role-id", "TokenDatatype", [], "A reference to a role performed by a party."],
+      [2, "party-uuids", "Party-uuid", ["]0"], ""],
+      [3, "props", "Property", ["[0", "]0"], ""],
+      [4, "links", "Link", ["[0", "]0"], ""],
+      [5, "remarks", "Remarks", ["[0"], ""]
     ]],
 
     ["Action", "Record", [], "An action applied by a role within a given party to the content.", [
@@ -106,93 +173,80 @@
       [2, "date", "DateTimeWithTimezoneDatatype", ["[0"], "The date and time when the action occurred."],
       [3, "type", "TokenDatatype", [], "The type of action documented by the assembly, such as an approval."],
       [4, "system", "URIDatatype", [], "Specifies the action type system used."],
-      [5, "props", "Property", ["[0"], ""],
-      [6, "links", "Link", ["[0"], ""],
-      [7, "responsible-parties", "Responsible-party", ["[0"], ""],
+      [5, "props", "Property", ["[0", "]0"], ""],
+      [6, "links", "Link", ["[0", "]0"], ""],
+      [7, "responsible-parties", "Responsible-party", ["[0", "]0"], ""],
       [8, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Version", "Choice", ["CA"], "Used to distinguish a specific revision of an OSCAL document from other previous and future versions.", [
-      [1, "alias", "StringDatatype", [], ""]
+    ["Defined-component.type", "Choice", ["CO"], "A category describing the purpose of the component.", [
+      [1, "c1", "StringDatatype", [], ""],
+      [2, "c2", "Defined-component.type.1", [], ""]
     ]],
 
-    ["Oscal-version", "Choice", ["CA"], "The OSCAL model version the document was authored against and will conform to as valid.", [
-      [1, "alias", "StringDatatype", [], ""]
+    ["Responsible-role", "Record", [], "A reference to a role with responsibility for performing a function relative to the containing object, optionally associated with a set of persons and/or organizations that perform that role.", [
+      [1, "role-id", "TokenDatatype", [], "A human-oriented identifier reference to a role performed."],
+      [2, "props", "Property", ["[0", "]0"], ""],
+      [3, "links", "Link", ["[0", "]0"], ""],
+      [4, "party-uuids", "Party-uuid", ["[0", "]0"], ""],
+      [5, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Published", "Choice", ["CA"], "The date and time the document was last made available.", [
-      [1, "alias", "DateTimeWithTimezoneDatatype", [], ""]
+    ["Protocol", "Record", [], "Information about the protocol used to provide a service.", [
+      [1, "uuid", "UUIDDatatype", ["[0"], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this service protocol information elsewhere in this or other OSCAL instances. The locally defined UUID of the service protocol can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "name", "StringDatatype", [], "The common name of the protocol, which should be the appropriate \"service name\" from the IANA Service Name and Transport Protocol Port Number Registry."],
+      [3, "title", "String", ["[0"], "A human readable name for the protocol (e.g., Transport Layer Security)."],
+      [4, "port-ranges", "Port-range", ["[0", "]0"], ""]
     ]],
 
-    ["Metadata.roles-list", "ArrayOf", ["{1", "*Metadata.roles"], "", []],
-
-    ["Metadata.roles", "Record", [], "Defines a function, which might be assigned to a party in a specific situation.", [
-      [1, "id", "TokenDatatype", [], "A unique identifier for the role."],
-      [2, "title", "String", [], "A name given to the role, which may be used by a tool for display and navigation."],
-      [3, "short-name", "StringDatatype", ["[0"], "A short common name, abbreviation, or acronym for the role."],
-      [4, "description", "String", ["[0"], "A summary of the role's purpose and associated responsibilities."],
-      [5, "props", "Property", ["[0"], ""],
-      [6, "links", "Link", ["[0"], ""],
-      [7, "remarks", "Remarks", ["[0"], ""]
+    ["Control-implementation", "Record", [], "Defines how the component or capability supports a set of controls.", [
+      [1, "uuid", "UUIDDatatype", [], "Provides a means to identify a set of control implementations that are supported by a given component or capability."],
+      [2, "source", "URIReferenceDatatype", [], "A reference to an OSCAL catalog or profile providing the referenced control or subcontrol definition."],
+      [3, "description", "String", [], "A description of how the specified set of controls are implemented for the containing component or capability."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "set-parameters", "Set-parameter", ["[0", "]0"], ""],
+      [7, "implemented-requirements", "Implemented-requirement", ["]0"], ""]
     ]],
 
-    ["Metadata.revisions-list", "ArrayOf", ["{1", "*Metadata.revisions"], "", []],
-
-    ["Metadata.revisions", "Record", [], "An entry in a sequential list of revisions to the containing document, expected to be in reverse chronological order (i.e. latest first).", [
-      [1, "title", "String", ["[0"], "A name given to the document revision, which may be used by a tool for display and navigation."],
-      [2, "published", "Published", ["[0"], ""],
-      [3, "last-modified", "Last-modified", ["[0"], ""],
-      [4, "version", "Version", [], ""],
-      [5, "oscal-version", "Oscal-version", ["[0"], ""],
-      [6, "props", "Property", ["[0"], ""],
-      [7, "links", "Link", ["[0"], ""],
-      [8, "remarks", "Remarks", ["[0"], ""]
+    ["Incorporates-component", "Record", [], "The collection of components comprising this capability.", [
+      [1, "component-uuid", "UUIDDatatype", [], "A machine-oriented identifier reference to a component."],
+      [2, "description", "String", [], "A description of the component, including information about its function."]
     ]],
 
-    ["Metadata.locations-list", "ArrayOf", ["{1", "*Metadata.locations"], "", []],
-
-    ["Metadata.locations", "Record", [], "A physical point of presence, which may be associated with people, organizations, or other concepts within the current or linked OSCAL document.", [
-      [1, "uuid", "UUIDDatatype", [], "A unique ID for the location, for reference."],
-      [2, "title", "String", ["[0"], "A name given to the location, which may be used by a tool for display and navigation."],
-      [3, "address", "Address", ["[0"], ""],
-      [4, "email-addresses", "Email-address", ["[0"], ""],
-      [5, "telephone-numbers", "Telephone-number", ["[0"], ""],
-      [6, "urls", "URIDatatype", ["[0"], ""],
-      [7, "props", "Property", ["[0"], ""],
-      [8, "links", "Link", ["[0"], ""],
+    ["Back-matter.resources", "Record", [], "A resource associated with content in the containing document instance. A resource may be directly included in the document using base64 encoding or may point to one or more equivalent internet resources.", [
+      [1, "uuid", "UUIDDatatype", [], "A unique identifier for a resource."],
+      [2, "title", "String", ["[0"], "An optional name given to the resource, which may be used by a tool for display and navigation."],
+      [3, "description", "String", ["[0"], "An optional short summary of the resource used to indicate the purpose of the resource."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "document-ids", "Document-id", ["[0", "]0"], ""],
+      [6, "citation", "Back-matter.resources.citation", ["[0"], "An optional citation consisting of end note text using structured markup."],
+      [7, "rlinks", "Back-matter.resources.rlinks", ["[0", "]0"], ""],
+      [8, "base64", "Back-matter.resources.base64", ["[0"], "A resource encoded using the Base64 alphabet defined by RFC 2045."],
       [9, "remarks", "Remarks", ["[0"], ""]
     ]],
 
-    ["Email-address", "Choice", ["CA"], "An email address as defined by RFC 5322 Section 3.4.1.", [
-      [1, "alias", "EmailAddressDatatype", [], ""]
+    ["Document-id.scheme", "Choice", ["CO"], "Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters.", [
+      [1, "c1", "URIDatatype", [], ""],
+      [2, "c2", "Document-id.scheme.1", [], ""]
     ]],
 
-    ["EmailAddressDatatype", "Choice", ["CA"], "An email address string formatted according to RFC 6531.", [
-      [1, "c1", "StringDatatype", [], ""],
-      [2, "c2", "EmailAddressDatatype.1", [], ""]
+    ["Link.rel", "Choice", ["CO"], "Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose.", [
+      [1, "c1", "TokenDatatype", [], ""],
+      [2, "c2", "Link.rel.1", [], ""]
     ]],
 
     ["Address", "Record", [], "A postal address for the location.", [
       [1, "type", "Address.type", ["[0"], "Indicates the type of address."],
-      [2, "addr-lines", "Addr-line", ["[0"], ""],
+      [2, "addr-lines", "Addr-line", ["[0", "]0"], ""],
       [3, "city", "StringDatatype", ["[0"], "City, town or geographical region for the mailing address."],
       [4, "state", "StringDatatype", ["[0"], "State, province or analogous geographical region for a mailing address."],
       [5, "postal-code", "StringDatatype", ["[0"], "Postal or ZIP code for mailing address."],
       [6, "country", "StringDatatype", ["[0"], "The ISO 3166-1 alpha-2 country code for the mailing address."]
     ]],
 
-    ["Addr-line", "Choice", ["CA"], "A single line of an address.", [
-      [1, "alias", "StringDatatype", [], ""]
-    ]],
-
-    ["Address.type", "Choice", ["CO"], "Indicates the type of address.", [
-      [1, "c1", "TokenDatatype", [], ""],
-      [2, "c2", "Address.type.1", [], ""]
-    ]],
-
-    ["Address.type.1", "Enumerated", [], "", [
-      [1, "home", ""],
-      [2, "work", ""]
+    ["Email-address", "Choice", ["CA"], "An email address as defined by RFC 5322 Section 3.4.1.", [
+      [1, "alias", "EmailAddressDatatype", [], ""]
     ]],
 
     ["Telephone-number", "Record", [], "A telephone service number as defined by ITU-T E.164.", [
@@ -200,82 +254,22 @@
       [2, "number", "StringDatatype", [], ""]
     ]],
 
-    ["Telephone-number.type", "Choice", ["CO"], "Indicates the type of phone number.", [
-      [1, "c1", "StringDatatype", [], ""],
-      [2, "c2", "Telephone-number.type.1", [], ""]
-    ]],
-
-    ["Telephone-number.type.1", "Enumerated", [], "", [
-      [1, "home", ""],
-      [2, "office", ""],
-      [3, "mobile", ""]
-    ]],
-
-    ["Metadata.parties-list", "ArrayOf", ["{1", "*Metadata.parties"], "", []],
-
-    ["Metadata.parties", "Record", [], "An organization or person, which may be associated with roles or other concepts within the current or linked OSCAL document.", [
-      [1, "uuid", "UUIDDatatype", [], "A unique identifier for the party."],
-      [2, "type", "Metadata.parties.type", [], "A category describing the kind of party the object describes."],
-      [3, "name", "StringDatatype", ["[0"], "The full name of the party. This is typically the legal name associated with the party."],
-      [4, "short-name", "StringDatatype", ["[0"], "A short common name, abbreviation, or acronym for the party."],
-      [5, "external-ids", "Metadata.parties.external-ids-list", ["[0"], ""],
-      [6, "props", "Property", ["[0"], ""],
-      [7, "links", "Link", ["[0"], ""],
-      [8, "email-addresses", "Email-address", ["[0"], ""],
-      [9, "telephone-numbers", "Telephone-number", ["[0"], ""],
-      [10, "addresses", "Address", ["[0"], ""],
-      [11, "location-uuids", "Location-uuid", ["[0"], ""],
-      [12, "member-of-organizations", "UUIDDatatype", ["[0"], ""],
-      [13, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
     ["Metadata.parties.type", "Choice", ["CA"], "A category describing the kind of party the object describes.", [
       [1, "c1", "StringDatatype", [], ""],
       [2, "c2", "Metadata.parties.type.1", [], ""]
     ]],
-
-    ["Metadata.parties.type.1", "Enumerated", [], "", [
-      [1, "person", ""],
-      [2, "organization", ""]
-    ]],
-
-    ["Location-uuid", "Choice", ["CA"], "Reference to a location by UUID.", [
-      [1, "alias", "UUIDDatatype", [], ""]
-    ]],
-
-    ["Metadata.parties.external-ids-list", "ArrayOf", ["{1", "*Metadata.parties.external-ids"], "", []],
 
     ["Metadata.parties.external-ids", "Record", [], "An identifier for a person or organization using a designated scheme. e.g. an Open Researcher and Contributor ID (ORCID).", [
       [1, "scheme", "Metadata.parties.external-ids.scheme", [], "Indicates the type of external identifier."],
       [2, "id", "StringDatatype", [], ""]
     ]],
 
-    ["Metadata.parties.external-ids.scheme", "Choice", ["CO"], "Indicates the type of external identifier.", [
-      [1, "c1", "URIDatatype", [], ""],
-      [2, "c2", "Metadata.parties.external-ids.scheme.1", [], ""]
+    ["Location-uuid", "Choice", ["CA"], "Reference to a location by UUID.", [
+      [1, "alias", "UUIDDatatype", [], ""]
     ]],
 
-    ["Metadata.parties.external-ids.scheme.1", "Enumerated", [], "", [
-      [1, "http://orcid.org/", ""]
-    ]],
-
-    ["Defined-component", "Record", [], "A defined component that can be part of an implemented system.", [
-      [1, "uuid", "UUIDDatatype", [], "Provides a globally unique means to identify a given component."],
-      [2, "type", "Defined-component.type", [], "A category describing the purpose of the component."],
-      [3, "title", "String", [], "A human readable name for the component."],
-      [4, "description", "String", [], "A description of the component, including information about its function."],
-      [5, "purpose", "String", ["[0"], "A summary of the technological or business purpose of the component."],
-      [6, "props", "Property", ["[0"], ""],
-      [7, "links", "Link", ["[0"], ""],
-      [8, "responsible-roles", "Responsible-role", ["[0"], ""],
-      [9, "protocols", "Protocol", ["[0"], ""],
-      [10, "control-implementations", "Control-implementation", ["[0"], ""],
-      [11, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
-    ["Defined-component.type", "Choice", ["CO"], "A category describing the purpose of the component.", [
-      [1, "c1", "StringDatatype", [], ""],
-      [2, "c2", "Defined-component.type.1", [], ""]
+    ["Party-uuid", "Choice", ["CA"], "Reference to a party by UUID.", [
+      [1, "alias", "UUIDDatatype", [], ""]
     ]],
 
     ["Defined-component.type.1", "Enumerated", [], "", [
@@ -292,17 +286,83 @@
       [11, "validation", ""]
     ]],
 
-    ["Protocol", "Record", [], "Information about the protocol used to provide a service.", [
-      [1, "uuid", "UUIDDatatype", ["[0"], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this service protocol information elsewhere in this or other OSCAL instances. The locally defined UUID of the service protocol can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
-      [2, "name", "StringDatatype", [], "The common name of the protocol, which should be the appropriate \"service name\" from the IANA Service Name and Transport Protocol Port Number Registry."],
-      [3, "title", "String", ["[0"], "A human readable name for the protocol (e.g., Transport Layer Security)."],
-      [4, "port-ranges", "Port-range", ["[0"], ""]
-    ]],
-
     ["Port-range", "Record", [], "Where applicable this is the IPv4 port range on which the service operates.", [
       [1, "start", "NonNegativeIntegerDatatype", ["[0"], "Indicates the starting port number in a port range"],
       [2, "end", "NonNegativeIntegerDatatype", ["[0"], "Indicates the ending port number in a port range"],
       [3, "transport", "Port-range.transport", ["[0"], "Indicates the transport type."]
+    ]],
+
+    ["Set-parameter", "Record", [], "Identifies the parameter that will be set by the enclosed value.", [
+      [1, "param-id", "TokenDatatype", [], "A human-oriented reference to a parameter within a control, who's catalog has been imported into the current implementation context."],
+      [2, "values", "StringDatatype", ["]0"], ""],
+      [3, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Implemented-requirement", "Record", [], "Describes how the containing component or capability implements an individual control.", [
+      [1, "uuid", "UUIDDatatype", [], "Provides a globally unique means to identify a given control implementation by a component."],
+      [2, "control-id", "TokenDatatype", [], "A reference to a control with a corresponding id value. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference)."],
+      [3, "description", "String", [], "A suggestion from the supplier (e.g., component vendor or author) for how the specified control may be implemented if the containing component or capability is instantiated in a system security plan."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "set-parameters", "Set-parameter", ["[0", "]0"], ""],
+      [7, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
+      [8, "statements", "Statement", ["[0", "]0"], ""],
+      [9, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Back-matter.resources.citation", "Record", [], "An optional citation consisting of end note text using structured markup.", [
+      [1, "text", "String", [], "A line of citation text."],
+      [2, "props", "Property", ["[0", "]0"], ""],
+      [3, "links", "Link", ["[0", "]0"], ""]
+    ]],
+
+    ["Back-matter.resources.rlinks", "Record", [], "A URL-based pointer to an external resource with an optional hash for verification and change detection.", [
+      [1, "href", "URIReferenceDatatype", [], "A resolvable URL pointing to the referenced resource."],
+      [2, "media-type", "StringDatatype", ["[0"], "A label that indicates the nature of a resource, as a data serialization or format."],
+      [3, "hashes", "Hash", ["[0", "]0"], ""]
+    ]],
+
+    ["Back-matter.resources.base64", "Record", [], "A resource encoded using the Base64 alphabet defined by RFC 2045.", [
+      [1, "filename", "TokenDatatype", ["[0"], "Name of the file before it was encoded as Base64 to be embedded in a resource. This is the name that will be assigned to the file when the file is decoded."],
+      [2, "media-type", "StringDatatype", ["[0"], "A label that indicates the nature of a resource, as a data serialization or format."],
+      [3, "value", "Base64Datatype", [], ""]
+    ]],
+
+    ["Document-id.scheme.1", "Enumerated", [], "", [
+      [1, "http://www.doi.org/", ""]
+    ]],
+
+    ["Link.rel.1", "Enumerated", [], "", [
+      [1, "reference", ""]
+    ]],
+
+    ["Address.type", "Choice", ["CO"], "Indicates the type of address.", [
+      [1, "c1", "TokenDatatype", [], ""],
+      [2, "c2", "Address.type.1", [], ""]
+    ]],
+
+    ["Addr-line", "Choice", ["CA"], "A single line of an address.", [
+      [1, "alias", "StringDatatype", [], ""]
+    ]],
+
+    ["EmailAddressDatatype", "Choice", ["CA"], "An email address string formatted according to RFC 6531.", [
+      [1, "c1", "StringDatatype", [], ""],
+      [2, "c2", "EmailAddressDatatype.1", [], ""]
+    ]],
+
+    ["Telephone-number.type", "Choice", ["CO"], "Indicates the type of phone number.", [
+      [1, "c1", "StringDatatype", [], ""],
+      [2, "c2", "Telephone-number.type.1", [], ""]
+    ]],
+
+    ["Metadata.parties.type.1", "Enumerated", [], "", [
+      [1, "person", ""],
+      [2, "organization", ""]
+    ]],
+
+    ["Metadata.parties.external-ids.scheme", "Choice", ["CO"], "Indicates the type of external identifier.", [
+      [1, "c1", "URIDatatype", [], ""],
+      [2, "c2", "Metadata.parties.external-ids.scheme.1", [], ""]
     ]],
 
     ["NonNegativeIntegerDatatype", "Choice", ["CA"], "An integer value that is equal to or greater than 0.", [
@@ -315,118 +375,39 @@
       [2, "c2", "Port-range.transport.1", [], ""]
     ]],
 
-    ["Port-range.transport.1", "Enumerated", [], "", [
-      [1, "TCP", ""],
-      [2, "UDP", ""]
-    ]],
-
-    ["Responsible-role", "Record", [], "A reference to a role with responsibility for performing a function relative to the containing object, optionally associated with a set of persons and/or organizations that perform that role.", [
-      [1, "role-id", "TokenDatatype", [], "A human-oriented identifier reference to a role performed."],
-      [2, "props", "Property", ["[0"], ""],
-      [3, "links", "Link", ["[0"], ""],
-      [4, "party-uuids", "Party-uuid", ["[0"], ""],
-      [5, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
-    ["Control-implementation", "Record", [], "Defines how the component or capability supports a set of controls.", [
-      [1, "uuid", "UUIDDatatype", [], "Provides a means to identify a set of control implementations that are supported by a given component or capability."],
-      [2, "source", "URIReferenceDatatype", [], "A reference to an OSCAL catalog or profile providing the referenced control or subcontrol definition."],
-      [3, "description", "String", [], "A description of how the specified set of controls are implemented for the containing component or capability."],
-      [4, "props", "Property", ["[0"], ""],
-      [5, "links", "Link", ["[0"], ""],
-      [6, "set-parameters", "Set-parameter", ["[0"], ""],
-      [7, "implemented-requirements", "Implemented-requirement", [], ""]
-    ]],
-
-    ["Set-parameter", "Record", [], "Identifies the parameter that will be set by the enclosed value.", [
-      [1, "param-id", "TokenDatatype", [], "A human-oriented reference to a parameter within a control, who's catalog has been imported into the current implementation context."],
-      [2, "values", "StringDatatype", [], ""],
-      [3, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
-    ["Implemented-requirement", "Record", [], "Describes how the containing component or capability implements an individual control.", [
-      [1, "uuid", "UUIDDatatype", [], "Provides a globally unique means to identify a given control implementation by a component."],
-      [2, "control-id", "TokenDatatype", [], "A reference to a control with a corresponding id value. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference)."],
-      [3, "description", "String", [], "A suggestion from the supplier (e.g., component vendor or author) for how the specified control may be implemented if the containing component or capability is instantiated in a system security plan."],
-      [4, "props", "Property", ["[0"], ""],
-      [5, "links", "Link", ["[0"], ""],
-      [6, "set-parameters", "Set-parameter", ["[0"], ""],
-      [7, "responsible-roles", "Responsible-role", ["[0"], ""],
-      [8, "statements", "Statement", ["[0"], ""],
-      [9, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
     ["Statement", "Record", [], "Identifies which statements within a control are addressed.", [
       [1, "statement-id", "TokenDatatype", [], "A human-oriented identifier reference to a control statement."],
       [2, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this control statement elsewhere in this or other OSCAL instances. The UUID of the control statement in the source OSCAL instance is sufficient to reference the data item locally or globally (e.g., in an imported OSCAL instance)."],
       [3, "description", "String", [], "A summary of how the containing control statement is implemented by the component or capability."],
-      [4, "props", "Property", ["[0"], ""],
-      [5, "links", "Link", ["[0"], ""],
-      [6, "responsible-roles", "Responsible-role", ["[0"], ""],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
       [7, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
-    ["Capability", "Record", [], "A grouping of other components and/or capabilities.", [
-      [1, "uuid", "UUIDDatatype", [], "Provides a globally unique means to identify a given capability."],
-      [2, "name", "StringDatatype", [], "The capability's human-readable name."],
-      [3, "description", "String", [], "A summary of the capability."],
-      [4, "props", "Property", ["[0"], ""],
-      [5, "links", "Link", ["[0"], ""],
-      [6, "incorporates-components", "Incorporates-component", ["[0"], ""],
-      [7, "control-implementations", "Control-implementation", ["[0"], ""],
-      [8, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
-    ["Incorporates-component", "Record", [], "The collection of components comprising this capability.", [
-      [1, "component-uuid", "UUIDDatatype", [], "A machine-oriented identifier reference to a component."],
-      [2, "description", "String", [], "A description of the component, including information about its function."]
-    ]],
-
-    ["Import-component-definition", "Record", [], "Loads a component definition from another resource.", [
-      [1, "href", "URIReferenceDatatype", [], "A link to a resource that defines a set of components and/or capabilities to import into this collection."]
-    ]],
-
-    ["Back-matter", "Record", [], "A collection of resources that may be referenced from within the OSCAL document instance.", [
-      [1, "resources", "Back-matter.resources-list", ["[0"], ""]
-    ]],
-
-    ["Back-matter.resources-list", "ArrayOf", ["{1", "*Back-matter.resources"], "", []],
-
-    ["Back-matter.resources", "Record", [], "A resource associated with content in the containing document instance. A resource may be directly included in the document using base64 encoding or may point to one or more equivalent internet resources.", [
-      [1, "uuid", "UUIDDatatype", [], "A unique identifier for a resource."],
-      [2, "title", "String", ["[0"], "An optional name given to the resource, which may be used by a tool for display and navigation."],
-      [3, "description", "String", ["[0"], "An optional short summary of the resource used to indicate the purpose of the resource."],
-      [4, "props", "Property", ["[0"], ""],
-      [5, "document-ids", "Document-id", ["[0"], ""],
-      [6, "citation", "Back-matter.resources.citation", ["[0"], "An optional citation consisting of end note text using structured markup."],
-      [7, "rlinks", "Back-matter.resources.rlinks-list", ["[0"], ""],
-      [8, "base64", "Back-matter.resources.base64", ["[0"], "A resource encoded using the Base64 alphabet defined by RFC 2045."],
-      [9, "remarks", "Remarks", ["[0"], ""]
-    ]],
-
-    ["Back-matter.resources.citation", "Record", [], "An optional citation consisting of end note text using structured markup.", [
-      [1, "text", "String", [], "A line of citation text."],
-      [2, "props", "Property", ["[0"], ""],
-      [3, "links", "Link", ["[0"], ""]
-    ]],
-
-    ["Back-matter.resources.base64", "Record", [], "A resource encoded using the Base64 alphabet defined by RFC 2045.", [
-      [1, "filename", "TokenDatatype", ["[0"], "Name of the file before it was encoded as Base64 to be embedded in a resource. This is the name that will be assigned to the file when the file is decoded."],
-      [2, "media-type", "StringDatatype", ["[0"], "A label that indicates the nature of a resource, as a data serialization or format."],
-      [3, "value", "Base64Datatype", [], ""]
-    ]],
-
-    ["Back-matter.resources.rlinks-list", "ArrayOf", ["{1", "*Back-matter.resources.rlinks"], "", []],
-
-    ["Back-matter.resources.rlinks", "Record", [], "A URL-based pointer to an external resource with an optional hash for verification and change detection.", [
-      [1, "href", "URIReferenceDatatype", [], "A resolvable URL pointing to the referenced resource."],
-      [2, "media-type", "StringDatatype", ["[0"], "A label that indicates the nature of a resource, as a data serialization or format."],
-      [3, "hashes", "Hash", ["[0"], ""]
     ]],
 
     ["Hash", "Record", [], "A representation of a cryptographic digest generated over a resource using a specified hash algorithm.", [
       [1, "algorithm", "Hash.algorithm", [], "The digest method by which a hash is derived."],
       [2, "value", "StringDatatype", [], ""]
+    ]],
+
+    ["Address.type.1", "Enumerated", [], "", [
+      [1, "home", ""],
+      [2, "work", ""]
+    ]],
+
+    ["Telephone-number.type.1", "Enumerated", [], "", [
+      [1, "home", ""],
+      [2, "office", ""],
+      [3, "mobile", ""]
+    ]],
+
+    ["Metadata.parties.external-ids.scheme.1", "Enumerated", [], "", [
+      [1, "http://orcid.org/", ""]
+    ]],
+
+    ["Port-range.transport.1", "Enumerated", [], "", [
+      [1, "TCP", ""],
+      [2, "UDP", ""]
     ]],
 
     ["Hash.algorithm", "Choice", ["CO"], "The digest method by which a hash is derived.", [
@@ -445,24 +426,223 @@
       [8, "SHA3-512", ""]
     ]],
 
+    ["UUIDDatatype", "String", ["%^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[45][0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"], "A type 4 ('random' or 'pseudorandom') or type 5 UUID per RFC 4122.", []],
+
+    ["Remarks", "String", [], "Additional commentary about the containing object.", []],
+
     ["URIReferenceDatatype", "String", ["/uri-reference"], "A URI Reference, either a URI or a relative-reference, formatted according to section 4.1 of RFC3986.", []],
 
     ["StringDatatype", "String", ["%^\\S(.*\\S)?$"], "A non-empty string with leading and trailing whitespace disallowed. Whitespace is: U+9, U+10, U+32 or [ \n\t]+", []],
 
+    ["DateTimeWithTimezoneDatatype", "String", ["/date-time", "%^(((2000|2400|2800|(19|2[0-9](0[48]|[2468][048]|[13579][26])))-02-29)|(((19|2[0-9])[0-9]{2})-02-(0[1-9]|1[0-9]|2[0-8]))|(((19|2[0-9])[0-9]{2})-(0[13578]|10|12)-(0[1-9]|[12][0-9]|3[01]))|(((19|2[0-9])[0-9]{2})-(0[469]|11)-(0[1-9]|[12][0-9]|30)))T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|(-((0[0-9]|1[0-2]):00|0[39]:30)|\\+((0[0-9]|1[0-4]):00|(0[34569]|10):30|(0[58]|12):45)))$"], "A string representing a point in time with a required timezone.", []],
+
     ["TokenDatatype", "String", ["%^(\\p{L}|_)(\\p{L}|\\p{N}|[.\\-_])*$"], "A non-colonized name as defined by XML Schema Part 2: Datatypes Second Edition. https://www.w3.org/TR/xmlschema11-2/#NCName.", []],
-
-    ["Remarks", "String", [], "Additional commentary about the containing object.", []],
-
-    ["UUIDDatatype", "String", ["%^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[45][0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"], "A type 4 ('random' or 'pseudorandom') or type 5 UUID per RFC 4122.", []],
 
     ["URIDatatype", "String", ["/uri", "%^[a-zA-Z][a-zA-Z0-9+\\-.]+:.+$"], "A universal resource identifier (URI) formatted according to RFC3986.", []],
 
-    ["DateTimeWithTimezoneDatatype", "String", ["/date-time", "%^(((2000|2400|2800|(19|2[0-9](0[48]|[2468][048]|[13579][26])))-02-29)|(((19|2[0-9])[0-9]{2})-02-(0[1-9]|1[0-9]|2[0-8]))|(((19|2[0-9])[0-9]{2})-(0[13578]|10|12)-(0[1-9]|[12][0-9]|3[01]))|(((19|2[0-9])[0-9]{2})-(0[469]|11)-(0[1-9]|[12][0-9]|30)))T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z|(-((0[0-9]|1[0-2]):00|0[39]:30)|\\+((0[0-9]|1[0-4]):00|(0[34569]|10):30|(0[58]|12):45)))$"], "A string representing a point in time with a required timezone.", []],
+    ["Base64Datatype", "String", ["%^[0-9A-Za-z+/]+={0,2}$"], "Binary data encoded using the Base 64 encoding algorithm as defined by RFC4648.", []],
 
     ["EmailAddressDatatype.1", "String", ["/email", "%^.+@.+$"], "", []],
 
     ["IntegerDatatype", "Integer", [], "A whole number value.", []],
 
-    ["Base64Datatype", "String", ["%^[0-9A-Za-z+/]+={0,2}$"], "Binary data encoded using the Base 64 encoding algorithm as defined by RFC4648.", []]
+    ["$Root", "Record", [], "", [
+      [1, "$schema", "URIReferenceDatatype", ["[0"], ""],
+      [2, "component-definition", "Component-definition", [], ""]
+    ]],
+
+    ["System-component.type.1", "Enumerated", [], "", [
+      [1, "this-system", ""],
+      [2, "system", ""],
+      [3, "interconnection", ""],
+      [4, "software", ""],
+      [5, "hardware", ""],
+      [6, "service", ""],
+      [7, "policy", ""],
+      [8, "physical", ""],
+      [9, "process-procedure", ""],
+      [10, "plan", ""],
+      [11, "guidance", ""],
+      [12, "standard", ""],
+      [13, "validation", ""],
+      [14, "network", ""]
+    ]],
+
+    ["System-component.type", "Choice", ["CO"], "A category describing the purpose of the component.", [
+      [1, "c1", "StringDatatype", [], ""],
+      [2, "c2", "System-component.type.1", [], ""]
+    ]],
+
+    ["System-component.status.state.1", "Enumerated", [], "", [
+      [1, "under-development", ""],
+      [2, "operational", ""],
+      [3, "disposition", ""],
+      [4, "other", ""]
+    ]],
+
+    ["System-component.status.state", "Choice", ["CA"], "The operational status.", [
+      [1, "c1", "TokenDatatype", [], ""],
+      [2, "c2", "System-component.status.state.1", [], ""]
+    ]],
+
+    ["System-component.status", "Record", [], "Describes the operational status of the system component.", [
+      [1, "state", "System-component.status.state", [], "The operational status."],
+      [2, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["System-component", "Record", [], "A defined component that can be part of an implemented system.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this component elsewhere in this or other OSCAL instances. The locally defined UUID of the component can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "type", "System-component.type", [], "A category describing the purpose of the component."],
+      [3, "title", "String", [], "A human readable name for the system component."],
+      [4, "description", "String", [], "A description of the component, including information about its function."],
+      [5, "purpose", "String", ["[0"], "A summary of the technological or business purpose of the component."],
+      [6, "props", "Property", ["[0", "]0"], ""],
+      [7, "links", "Link", ["[0", "]0"], ""],
+      [8, "status", "System-component.status", [], "Describes the operational status of the system component."],
+      [9, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
+      [10, "protocols", "Protocol", ["[0", "]0"], ""],
+      [11, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Implementation-status.state.1", "Enumerated", [], "", [
+      [1, "implemented", ""],
+      [2, "partial", ""],
+      [3, "planned", ""],
+      [4, "alternative", ""],
+      [5, "not-applicable", ""]
+    ]],
+
+    ["Implementation-status.state", "Choice", ["CO"], "Identifies the implementation status of the control or control objective.", [
+      [1, "c1", "TokenDatatype", [], ""],
+      [2, "c2", "Implementation-status.state.1", [], ""]
+    ]],
+
+    ["Implementation-status", "Record", [], "Indicates the degree to which the a given control is implemented.", [
+      [1, "state", "Implementation-status.state", [], "Identifies the implementation status of the control or control objective."],
+      [2, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Role-id", "Choice", ["CA"], "Reference to a role by UUID.", [
+      [1, "alias", "TokenDatatype", [], ""]
+    ]],
+
+    ["Function-performed", "Choice", ["CA"], "Describes a function performed for a given authorized privilege by this user class.", [
+      [1, "alias", "StringDatatype", [], ""]
+    ]],
+
+    ["Authorized-privilege", "Record", [], "Identifies a specific system privilege held by the user, along with an associated description and/or rationale for the privilege.", [
+      [1, "title", "String", [], "A human readable name for the privilege."],
+      [2, "description", "String", ["[0"], "A summary of the privilege's purpose within the system."],
+      [3, "functions-performed", "Function-performed", ["]0"], ""]
+    ]],
+
+    ["System-user", "Record", [], "A type of user that interacts with the system based on an associated role.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this user class elsewhere in this or other OSCAL instances. The locally defined UUID of the system user can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "title", "String", ["[0"], "A name given to the user, which may be used by a tool for display and navigation."],
+      [3, "short-name", "StringDatatype", ["[0"], "A short common name, abbreviation, or acronym for the user."],
+      [4, "description", "String", ["[0"], "A summary of the user's purpose within the system."],
+      [5, "props", "Property", ["[0", "]0"], ""],
+      [6, "links", "Link", ["[0", "]0"], ""],
+      [7, "role-ids", "Role-id", ["[0", "]0"], ""],
+      [8, "authorized-privileges", "Authorized-privilege", ["[0", "]0"], ""],
+      [9, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Inventory-item.implemented-components", "Record", [], "The set of components that are implemented in a given system inventory item.", [
+      [1, "component-uuid", "UUIDDatatype", [], "A machine-oriented identifier reference to a component that is implemented as part of an inventory item."],
+      [2, "props", "Property", ["[0", "]0"], ""],
+      [3, "links", "Link", ["[0", "]0"], ""],
+      [4, "responsible-parties", "Responsible-party", ["[0", "]0"], ""],
+      [5, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Inventory-item", "Record", [], "A single managed inventory item within the system.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this inventory item elsewhere in this or other OSCAL instances. The locally defined UUID of the inventory item can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "description", "String", [], "A summary of the inventory item stating its purpose within the system."],
+      [3, "props", "Property", ["[0", "]0"], ""],
+      [4, "links", "Link", ["[0", "]0"], ""],
+      [5, "responsible-parties", "Responsible-party", ["[0", "]0"], ""],
+      [6, "implemented-components", "Inventory-item.implemented-components", ["[0", "]0"], ""],
+      [7, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["System-id.identifier-type.1", "Enumerated", [], "", [
+      [1, "https://fedramp.gov", ""],
+      [2, "http://fedramp.gov/ns/oscal", ""],
+      [3, "https://ietf.org/rfc/rfc4122", ""],
+      [4, "http://ietf.org/rfc/rfc4122", ""]
+    ]],
+
+    ["System-id.identifier-type", "Choice", ["CO"], "Identifies the identification system from which the provided identifier was assigned.", [
+      [1, "c1", "URIDatatype", [], ""],
+      [2, "c2", "System-id.identifier-type.1", [], ""]
+    ]],
+
+    ["System-id", "Record", [], "A human-oriented, globally unique identifier with cross-instance scope that can be used to reference this system identification property elsewhere in this or other OSCAL instances. When referencing an externally defined system identification, the system identification must be used in the context of the external / imported OSCAL instance (e.g., uri-reference). This string should be assigned per-subject, which means it should be consistently used to identify the same system across revisions of the document.", [
+      [1, "identifier-type", "System-id.identifier-type", ["[0"], "Identifies the identification system from which the provided identifier was assigned."],
+      [2, "id", "StringDatatype", [], ""]
+    ]],
+
+    ["Part", "Record", [], "An annotated, markup-based textual element of a control's or catalog group's definition, or a child of another part.", [
+      [1, "id", "TokenDatatype", ["[0"], "A unique identifier for the part."],
+      [2, "name", "TokenDatatype", [], "A textual label that uniquely identifies the part's semantic type, which exists in a value space qualified by the ns."],
+      [3, "ns", "URIDatatype", ["[0"], "An optional namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."],
+      [4, "class", "TokenDatatype", ["[0"], "An optional textual providing a sub-type or characterization of the part's name, or a category to which the part belongs."],
+      [5, "title", "String", ["[0"], "An optional name given to the part, which may be used by a tool for display and navigation."],
+      [6, "props", "Property", ["[0", "]0"], ""],
+      [7, "prose", "String", ["[0"], "Permits multiple paragraphs, lists, tables etc."],
+      [8, "parts", "Part", ["[0", "]0"], ""],
+      [9, "links", "Link", ["[0", "]0"], ""]
+    ]],
+
+    ["Parameter-constraint.tests", "Record", [], "A test expression which is expected to be evaluated by a tool.", [
+      [1, "expression", "StringDatatype", [], "A formal (executable) expression of a constraint."],
+      [2, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Parameter-constraint", "Record", [], "A formal or informal expression of a constraint or test.", [
+      [1, "description", "String", ["[0"], "A textual summary of the constraint to be applied."],
+      [2, "tests", "Parameter-constraint.tests", ["[0", "]0"], ""]
+    ]],
+
+    ["Parameter-guideline", "Record", [], "A prose statement that provides a recommendation for the use of a parameter.", [
+      [1, "prose", "String", [], "Prose permits multiple paragraphs, lists, tables etc."]
+    ]],
+
+    ["Parameter-value", "Choice", ["CA"], "A parameter value or set of values.", [
+      [1, "alias", "StringDatatype", [], ""]
+    ]],
+
+    ["Parameter-selection.how-many.1", "Enumerated", [], "", [
+      [1, "one", ""],
+      [2, "one-or-more", ""]
+    ]],
+
+    ["Parameter-selection.how-many", "Choice", ["CA"], "Describes the number of selections that must occur. Without this setting, only one value should be assumed to be permitted.", [
+      [1, "c1", "TokenDatatype", [], ""],
+      [2, "c2", "Parameter-selection.how-many.1", [], ""]
+    ]],
+
+    ["Parameter-selection", "Record", [], "Presenting a choice among alternatives.", [
+      [1, "how-many", "Parameter-selection.how-many", ["[0"], "Describes the number of selections that must occur. Without this setting, only one value should be assumed to be permitted."],
+      [2, "choice", "String", ["[0", "]0"], ""]
+    ]],
+
+    ["Parameter", "Record", [], "Parameters provide a mechanism for the dynamic assignment of value(s) in a control.", [
+      [1, "id", "TokenDatatype", [], "A unique identifier for the parameter."],
+      [2, "class", "TokenDatatype", ["[0"], "A textual label that provides a characterization of the type, purpose, use or scope of the parameter."],
+      [3, "depends-on", "TokenDatatype", ["[0"], "(deprecated) Another parameter invoking this one. This construct has been deprecated and should not be used."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "label", "String", ["[0"], "A short, placeholder name for the parameter, which can be used as a substitute for a value if no value is assigned."],
+      [7, "usage", "String", ["[0"], "Describes the purpose and use of a parameter."],
+      [8, "constraints", "Parameter-constraint", ["[0", "]0"], ""],
+      [9, "guidelines", "Parameter-guideline", ["[0", "]0"], ""],
+      [10, "values", "Parameter-value", ["[0", "]0"], ""],
+      [11, "select", "Parameter-selection", ["[0"], ""],
+      [12, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Include-all", "Record", [], "Include all controls from the imported catalog or profile resources.", []]
   ]
 }

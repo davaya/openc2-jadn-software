@@ -2,9 +2,237 @@
   "info": {
     "title": "OSCAL System Security Plan",
     "package": "https://example.gov/ns/oscal/0.0.1/ssp/",
-    "exports": ["SystemSecurityPlan"]
+    "namespaces": [
+      ["", "https://example.gov/ns/oscal/0.0.1/component-definition/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/control-common/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/implementation-common/"],
+      ["", "https://example.gov/ns/oscal/0.0.1/metadata/"]
+    ],
+    "exports": ["System-security-plan", "By-component"],
+    "config": {
+      "$MaxString": 1000,
+      "$TypeName": "^[$A-Z][-.$A-Za-z0-9]{0,96}$",
+      "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$",
+      "$NSID": "^([A-Za-z][-A-Za-z0-9]{0,31})?$"
+    }
   },
   "types": [
-    ["SystemSecurityPlan", "Record", [], "", []]
+    ["System-security-plan", "Record", [], "A system security plan, such as those described in NIST SP 800-18.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this system security plan (SSP) elsewhere in this or other OSCAL instances. The locally defined UUID of the SSP can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance).This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "metadata", "Metadata", [], ""],
+      [3, "import-profile", "Import-profile", [], ""],
+      [4, "system-characteristics", "System-characteristics", [], ""],
+      [5, "system-implementation", "System-implementation", [], ""],
+      [6, "control-implementation", "Control-implementation", [], ""],
+      [7, "back-matter", "Back-matter", ["[0"], ""]
+    ]],
+
+    ["System-implementation", "Record", [], "Provides information as to how the system is implemented.", [
+      [1, "props", "Property", ["[0", "]0"], ""],
+      [2, "links", "Link", ["[0", "]0"], ""],
+      [3, "leveraged-authorizations", "System-implementation.leveraged-authorizations-list", ["[0", "]0"], ""],
+      [4, "users", "System-user", ["]0"], ""],
+      [5, "components", "System-component", ["]0"], ""],
+      [6, "inventory-items", "Inventory-item", ["[0", "]0"], ""],
+      [7, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["By-component", "Record", [], "Defines how the referenced component implements a set of controls.", [
+      [1, "component-uuid", "UUIDDatatype", [], "A machine-oriented identifier reference to the component that is implemeting a given control."],
+      [2, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this by-component entry elsewhere in this or other OSCAL instances. The locally defined UUID of the by-component entry can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [3, "description", "String", [], "An implementation statement that describes how a control or a control statement is implemented within the referenced system component."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "set-parameters", "Set-parameter", ["[0", "]0"], ""],
+      [7, "implementation-status", "Implementation-status", ["[0"], ""],
+      [8, "export", "By-component.export", ["[0"], "Identifies content intended for external consumption, such as with leveraged organizations."],
+      [9, "inherited", "By-component.inherited-list", ["[0", "]0"], ""],
+      [10, "satisfied", "By-component.satisfied-list", ["[0", "]0"], ""],
+      [11, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
+      [12, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["By-component.export", "Record", [], "Identifies content intended for external consumption, such as with leveraged organizations.", [
+      [1, "description", "String", ["[0"], "An implementation statement that describes the aspects of the control or control statement implementation that can be available to another system leveraging this system."],
+      [2, "props", "Property", ["[0", "]0"], ""],
+      [3, "links", "Link", ["[0", "]0"], ""],
+      [4, "provided", "By-component.export.provided-list", ["[0", "]0"], ""],
+      [5, "responsibilities", "By-component.export.responsibilities-list", ["[0", "]0"], ""],
+      [6, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["By-component.export.responsibilities-list", "ArrayOf", ["{1", "*By-component.export.responsibilities"], "", []],
+
+    ["By-component.export.responsibilities", "Record", [], "Describes a control implementation responsibility imposed on a leveraging system.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this responsibility elsewhere in this or other OSCAL instances. The locally defined UUID of the responsibility can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "provided-uuid", "UUIDDatatype", ["[0"], "A machine-oriented identifier reference to an inherited control implementation that a leveraging system is inheriting from a leveraged system."],
+      [3, "description", "String", [], "An implementation statement that describes the aspects of the control or control statement implementation that a leveraging system must implement to satisfy the control provided by a leveraged system."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
+      [7, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["By-component.export.provided-list", "ArrayOf", ["{1", "*By-component.export.provided"], "", []],
+
+    ["By-component.export.provided", "Record", [], "Describes a capability which may be inherited by a leveraging system.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this provided entry elsewhere in this or other OSCAL instances. The locally defined UUID of the provided entry can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "description", "String", [], "An implementation statement that describes the aspects of the control or control statement implementation that can be provided to another system leveraging this system."],
+      [3, "props", "Property", ["[0", "]0"], ""],
+      [4, "links", "Link", ["[0", "]0"], ""],
+      [5, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
+      [6, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["By-component.inherited-list", "ArrayOf", ["{1", "*By-component.inherited"], "", []],
+
+    ["By-component.inherited", "Record", [], "Describes a control implementation inherited by a leveraging system.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this inherited entry elsewhere in this or other OSCAL instances. The locally defined UUID of the inherited control implementation can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "provided-uuid", "UUIDDatatype", ["[0"], "A machine-oriented identifier reference to an inherited control implementation that a leveraging system is inheriting from a leveraged system."],
+      [3, "description", "String", [], "An implementation statement that describes the aspects of a control or control statement implementation that a leveraging system is inheriting from a leveraged system."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "responsible-roles", "Responsible-role", ["[0", "]0"], ""]
+    ]],
+
+    ["By-component.satisfied-list", "ArrayOf", ["{1", "*By-component.satisfied"], "", []],
+
+    ["By-component.satisfied", "Record", [], "Describes how this system satisfies a responsibility imposed by a leveraged system.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this satisfied control implementation entry elsewhere in this or other OSCAL instances. The locally defined UUID of the control implementation can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "responsibility-uuid", "UUIDDatatype", ["[0"], "A machine-oriented identifier reference to a control implementation that satisfies a responsibility imposed by a leveraged system."],
+      [3, "description", "String", [], "An implementation statement that describes the aspects of a control or control statement implementation that a leveraging system is implementing based on a requirement from a leveraged system."],
+      [4, "props", "Property", ["[0", "]0"], ""],
+      [5, "links", "Link", ["[0", "]0"], ""],
+      [6, "responsible-roles", "Responsible-role", ["[0", "]0"], ""],
+      [7, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["System-characteristics", "Record", [], "Contains the characteristics of the system, such as its name, purpose, and security impact level.", [
+      [1, "system-ids", "System-id", ["]0"], ""],
+      [2, "system-name", "StringDatatype", [], "The full name of the system."],
+      [3, "system-name-short", "StringDatatype", ["[0"], "A short name for the system, such as an acronym, that is suitable for display in a data table or summary list."],
+      [4, "description", "String", [], "A summary of the system."],
+      [5, "props", "Property", ["[0", "]0"], ""],
+      [6, "links", "Link", ["[0", "]0"], ""],
+      [7, "date-authorized", "Date-authorized", ["[0"], ""],
+      [8, "security-sensitivity-level", "StringDatatype", ["[0"], "The overall information system sensitivity categorization, such as defined by FIPS-199."],
+      [9, "system-information", "System-information", [], ""],
+      [10, "security-impact-level", "Security-impact-level", ["[0"], ""],
+      [11, "status", "Status", [], ""],
+      [12, "authorization-boundary", "Authorization-boundary", [], ""],
+      [13, "network-architecture", "Network-architecture", ["[0"], ""],
+      [14, "data-flow", "Data-flow", ["[0"], ""],
+      [15, "responsible-parties", "Responsible-party", ["[0", "]0"], ""],
+      [16, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Status", "Record", [], "Describes the operational status of the system.", [
+      [1, "state", "Status.state", [], "The current operating status."],
+      [2, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Status.state", "Choice", ["CA"], "The current operating status.", [
+      [1, "c1", "StringDatatype", [], ""],
+      [2, "c2", "Status.state.1", [], ""]
+    ]],
+
+    ["Status.state.1", "Enumerated", [], "", [
+      [1, "operational", ""],
+      [2, "under-development", ""],
+      [3, "under-major-modification", ""],
+      [4, "disposition", ""],
+      [5, "other", ""]
+    ]],
+
+    ["Data-flow", "Record", [], "A description of the logical flow of information within the system and across its boundaries, optionally supplemented by diagrams that illustrate these flows.", [
+      [1, "description", "String", [], "A summary of the system's data flow."],
+      [2, "props", "Property", ["[0", "]0"], ""],
+      [3, "links", "Link", ["[0", "]0"], ""],
+      [4, "diagrams", "Diagram", ["[0", "]0"], ""],
+      [5, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Diagram", "Record", [], "A graphic that provides a visual representation the system, or some aspect of it.", [
+      [1, "uuid", "UUIDDatatype", [], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this diagram elsewhere in this or other OSCAL instances. The locally defined UUID of the diagram can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "description", "String", ["[0"], "A summary of the diagram."],
+      [3, "props", "Property", ["[0", "]0"], ""],
+      [4, "links", "Link", ["[0", "]0"], ""],
+      [5, "caption", "String", ["[0"], "A brief caption to annotate the diagram."],
+      [6, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["System-information", "Record", [], "Contains details about all information types that are stored, processed, or transmitted by the system, such as privacy information, and those defined in NIST SP 800-60.", [
+      [1, "props", "Property", ["[0", "]0"], ""],
+      [2, "links", "Link", ["[0", "]0"], ""],
+      [3, "information-types", "System-information.information-types-list", ["]0"], ""]
+    ]],
+
+    ["System-information.information-types-list", "ArrayOf", ["{1", "*System-information.information-types"], "", []],
+
+    ["System-information.information-types", "Record", [], "Contains details about one information type that is stored, processed, or transmitted by the system, such as privacy information, and those defined in NIST SP 800-60.", [
+      [1, "uuid", "UUIDDatatype", ["[0"], "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this information type elsewhere in this or other OSCAL instances. The locally defined UUID of the information type can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "title", "String", [], "A human readable name for the information type. This title should be meaningful within the context of the system."],
+      [3, "description", "String", [], "A summary of how this information type is used within the system."],
+      [4, "categorizations", "System-information.information-types.categorizations-list", ["[0", "]0"], ""],
+      [5, "props", "Property", ["[0", "]0"], ""],
+      [6, "links", "Link", ["[0", "]0"], ""],
+      [7, "confidentiality-impact", "Impact", ["[0"], ""],
+      [8, "integrity-impact", "Impact", ["[0"], ""],
+      [9, "availability-impact", "Impact", ["[0"], ""]
+    ]],
+
+    ["System-information.information-types.categorizations-list", "ArrayOf", ["{1", "*System-information.information-types.categorizations"], "", []],
+
+    ["System-information.information-types.categorizations", "Record", [], "A set of information type identifiers qualified by the given identification system used, such as NIST SP 800-60.", [
+      [1, "system", "System-information.information-types.categorizations.system", [], "Specifies the information type identification system used."],
+      [2, "information-type-ids", "StringDatatype", ["[0", "]0"], ""]
+    ]],
+
+    ["System-information.information-types.categorizations.system", "Choice", ["CO"], "Specifies the information type identification system used.", [
+      [1, "c1", "URIDatatype", [], ""],
+      [2, "c2", "System-information.information-types.categorizations.system.1", [], ""]
+    ]],
+
+    ["System-information.information-types.categorizations.system.1", "Enumerated", [], "", [
+      [1, "http://doi.org/10.6028/NIST.SP.800-60v2r1", ""]
+    ]],
+
+    ["Impact", "Record", [], "The expected level of impact resulting from the described information.", [
+      [1, "props", "Property", ["[0", "]0"], ""],
+      [2, "links", "Link", ["[0", "]0"], ""],
+      [3, "base", "Base", [], ""],
+      [4, "selected", "Selected", ["[0"], ""],
+      [5, "adjustment-justification", "Adjustment-justification", ["[0"], ""]
+    ]],
+
+    ["Base", "Choice", ["CA"], "The prescribed base (Confidentiality, Integrity, or Availability) security impact level.", [
+      [1, "alias", "StringDatatype", [], ""]
+    ]],
+
+    ["Selected", "Choice", ["CA"], "The selected (Confidentiality, Integrity, or Availability) security impact level.", [
+      [1, "alias", "StringDatatype", [], ""]
+    ]],
+
+    ["Authorization-boundary", "Record", [], "A description of this system's authorization boundary, optionally supplemented by diagrams that illustrate the authorization boundary.", [
+      [1, "description", "String", [], "A summary of the system's authorization boundary."],
+      [2, "props", "Property", ["[0", "]0"], ""],
+      [3, "links", "Link", ["[0", "]0"], ""],
+      [4, "diagrams", "Diagram", ["[0", "]0"], ""],
+      [5, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Network-architecture", "Record", [], "A description of the system's network architecture, optionally supplemented by diagrams that illustrate the network architecture.", [
+      [1, "description", "String", [], "A summary of the system's network architecture."],
+      [2, "props", "Property", ["[0", "]0"], ""],
+      [3, "links", "Link", ["[0", "]0"], ""],
+      [4, "diagrams", "Diagram", ["[0", "]0"], ""],
+      [5, "remarks", "Remarks", ["[0"], ""]
+    ]],
+
+    ["Security-impact-level", "Record", [], "The overall level of expected impact resulting from unauthorized disclosure, modification, or loss of access to information.", [
+      [1, "security-objective-confidentiality", "StringDatatype", [], "A target-level of confidentiality for the system, based on the sensitivity of information within the system."],
+      [2, "security-objective-integrity", "StringDatatype", [], "A target-level of integrity for the system, based on the sensitivity of information within the system."],
+      [3, "security-objective-availability", "StringDatatype", [], "A target-level of availability for the system, based on the sensitivity of information within the system."]
+    ]]
   ]
 }

@@ -25,7 +25,7 @@ def translate(filename: str, sdir: str, odir: str) -> None:
         style={'format': 'graphviz', 'detail': 'information', 'attributes': True, 'links': True})
     jadn.convert.diagram_dump(schema, os.path.join(odir, fn + '_i.puml'),
         style={'format': 'plantuml', 'detail': 'information', 'attributes': False, 'links': False})
-    jadn.convert.jidl_dump(schema, os.path.join(odir, fn + '.jidl'), style={'desc': 50})
+    jadn.convert.jidl_dump(schema, os.path.join(odir, fn + '.jidl'), style={'desc': 60, 'name': 24})
     jadn.convert.html_dump(schema, os.path.join(odir, fn + '.html'))
     jadn.convert.markdown_dump(schema, os.path.join(odir, fn + '.md'))
     jadn.translate.json_schema_dump(schema, os.path.join(odir, fn + '.json'))

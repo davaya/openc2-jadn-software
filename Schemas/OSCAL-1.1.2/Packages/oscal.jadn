@@ -5,14 +5,13 @@
     "description": "OSCAL - Open Security Controls Assessment Language",
     "namespaces": [
       ["", "https://example.gov/ns/oscal/0.0.1/metadata/"],
-      ["", "https://example.gov/ns/oscal/0.0.1/backmatter/"],
       ["", "https://example.gov/ns/oscal/0.0.1/catalog/"],
       ["", "https://example.gov/ns/oscal/0.0.1/profile/"],
       ["", "https://example.gov/ns/oscal/0.0.1/component/"],
       ["", "https://example.gov/ns/oscal/0.0.1/ssp/"],
       ["", "https://example.gov/ns/oscal/0.0.1/assessment_plan/"],
       ["", "https://example.gov/ns/oscal/0.0.1/assessment_results/"],
-      ["", "https://example.gov/ns/oscal/0.0.1/component/poam/"]
+      ["", "https://example.gov/ns/oscal/0.0.1/poam/"]
     ],
     "exports": ["OSCAL"]
   },
@@ -23,7 +22,7 @@
       [2, "uuid", "UUID", [], "Document instance unique identifier"],
       [3, "meta", "Metadata", [], "Identifying info, roles, parties and locations"],
       [4, "body", "Model", ["&1"], "Model-specific body"],
-      [5, "backmatter", "BackMatter", [], "Linked and attached resources"]
+      [5, "back_matter", "Back-matter", [], "Linked and attached resources"]
     ]],
 
     ["Model", "Choice", [], "Model-specific content", [
@@ -34,8 +33,6 @@
       [5, "assessment_plan", "AssessmentPlan", [], "Assessment layer: scope and activities"],
       [6, "assessment_results", "AssessmentResults", [], "Assessment layer: information produced from assessment activities"],
       [7, "poam", "POAM", [], "Assessment layer: Plan of action and milestones: findings to be addressed by system owner"]
-    ]],
-
-    ["UUID", "Binary", [], "An RFC4122 Version 4 Universally Unique Identifier that identifies a specific document instance", []]
+    ]]
   ]
 }

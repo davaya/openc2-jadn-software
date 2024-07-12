@@ -1,0 +1,59 @@
+       title: "OSCAL Plan of Action and Milestones"
+     package: "https://example.gov/ns/oscal/0.0.1/poam/"
+  namespaces: [["", "https://example.gov/ns/oscal/0.0.1/assessment-common/"], ["", "https://example.gov/ns/oscal/0.0.1/control-common/"], ["", "https://example.gov/ns/oscal/0.0.1/implementation-common/"], ["", "https://example.gov/ns/oscal/0.0.1/profile/"], ["", "https://example.gov/ns/oscal/0.0.1/metadata/"]]
+     exports: ["Plan-of-action-and-milestones"]
+      config: {"$MaxString": 1000, "$TypeName": "^[$A-Z][-.$A-Za-z0-9]{0,96}$", "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$", "$NSID": "^([A-Za-z][-A-Za-z0-9]{0,31})?$"}
+
+Plan-of-action-and-milestones = Record             // A plan of action and milestones which identifies initial and residual risks, deviations, and disposition, such as those required by FedRAMP.
+   1 uuid             UUIDDatatype                 // A machine-oriented, globally unique identifier with instancescope that can be used to reference this POA&M instance in this OSCAL instance. This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
+   2 metadata         Metadata
+   3 import-ssp       Import-ssp optional
+   4 system-id        System-id optional
+   5 local-definitions Local-definitions optional
+   6 observations     Observation [0..*]
+   7 risks            Risk [0..*]
+   8 findings         Finding [0..*]
+   9 poam-items       Poam-item [1..*]
+  10 back-matter      Back-matter optional
+
+Local-definitions = Record                         // Allows components, and inventory-items to be defined within the POA&M for circumstances where no OSCAL-based SSP exists, or is not delivered with the POA&M.
+   1 components       System-component [0..*]
+   2 inventory-items  Inventory-item [0..*]
+   3 assessment-assets Assessment-assets optional
+   4 remarks          Remarks optional
+
+Assessment-assets = Record                         // Identifies the assets used to perform this assessment, such as the assessment team, scanning tools, and assumptions.
+   1 components       System-component [0..*]
+   2 assessment-platforms Assessment-assets.assessment-platforms-list [1..*]
+
+Poam-item = Record                                 // Describes an individual POA&M item.
+   1 uuid             UUIDDatatype optional        // A machine-oriented, globally unique identifier with instance scope that can be used to reference this POA&M item entry in this OSCAL instance. This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
+   2 title            String                       // The title or name for this POA&M item .
+   3 description      String                       // A human-readable description of POA&M item.
+   4 props            Property [0..*]
+   5 links            Link [0..*]
+   6 origins          Poam-item.origins-list [0..*]
+   7 related-findings Poam-item.related-findings-list [0..*]
+   8 related-observations Poam-item.related-observations-list [0..*]
+   9 related-risks    Poam-item.related-risks-list [0..*]
+  10 remarks          Remarks optional
+
+Poam-item.origins-list = ArrayOf(Poam-item.origins){1..*}
+
+Poam-item.origins = Record                         // Identifies the source of the finding, such as a tool or person.
+   1 actors           Origin-actor [1..*]
+
+Poam-item.related-findings-list = ArrayOf(Poam-item.related-findings){1..*}
+
+Poam-item.related-findings = Record                // Relates the poam-item to referenced finding(s).
+   1 finding-uuid     UUIDDatatype                 // A machine-oriented identifier reference to a finding defined in the list of findings.
+
+Poam-item.related-risks-list = ArrayOf(Poam-item.related-risks){1..*}
+
+Poam-item.related-risks = Record                   // Relates the finding to a set of referenced risks that were used to determine the finding.
+   1 risk-uuid        UUIDDatatype                 // A machine-oriented identifier reference to a risk defined in the list of risks.
+
+Poam-item.related-observations-list = ArrayOf(Poam-item.related-observations){1..*}
+
+Poam-item.related-observations = Record            // Relates the poam-item to a set of referenced observations that were used to determine the finding.
+   1 observation-uuid UUIDDatatype                 // A machine-oriented identifier reference to an observation defined in the list of observations.
