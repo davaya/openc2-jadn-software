@@ -1,13 +1,10 @@
 import jadn
 import json
 import os
-from collections import defaultdict, deque
+from collections import defaultdict
 from jadn.definitions import (TypeName, BaseType, TypeOptions, has_fields)
-# from graphlib import TopologicalSorter
 
-# SCHEMA_DIR = os.path.join('..', '..', 'Schemas', 'Metaschema')
-# JSCHEMA = os.path.join(SCHEMA_DIR, 'oscal_catalog_schema_1.1.0.json')
-SPLIT = False    # Split set of combined schemas into packages, otherwise process each schema individually
+SPLIT = False    # Split set of combined schemas into packages, otherwise process each combined schema
 SCHEMA_DIR = os.path.join('oscal-1.1.2', 'json', 'schema')
 OUT_DIR = '../../Out'
 DEBUG = False
@@ -45,31 +42,6 @@ def typerefname(jsref: dict) -> str:
     return ''
 
 
-def singular(name: str) -> str:
-    """
-    Guess a singular type name for the anonymous items in a plural ArrayOf type
-    """
-    if name.endswith('ies'):
-        return name[:-3] + 'y'
-    elif name.endswith('es'):
-        n = -2 if name[-4:-3] == 's' else -1
-        return name[:n]
-    elif name.endswith('s'):
-        return name[:-1]
-    return name + '-item'
-
-
-def plural(name: str) -> str:
-    """
-    Guess a plural type name for anonymous ArrayOf types with named item types
-    """
-    if name.endswith('y'):
-        return name[:-1] + 'ies'
-    elif name.endswith('s'):
-        return name + 'es'
-    return name + 's'
-
-
 def maketypename(tn: str, name: str) -> str:
     """
     Convert a type and property name to type name
@@ -90,7 +62,6 @@ def scandef(tn: str, key: str, tv: dict, nt: list):
     """
     basetype = ''
     fields = []
-    popts = ''
     global idlist, rflist
     idlist.add(tv.get('$id', None))
     rflist.add(tv.get('$ref', None))
@@ -100,43 +71,44 @@ def scandef(tn: str, key: str, tv: dict, nt: list):
             tva = jss['definitions'][dn if dn in jss['definitions'] else rn]
             scandef(dn, '', tva, nt)
             rseen.update((ref,))
-        if tn not in seen and '.' not in tn and ':' not in tn and tn != 'json-schema-directive':  # Construct referenced "Alias" type from Choice
-            print(f'Alias {tn} -> {dn}')
+
+        # Construct "Alias" type using degenerate untagged union
+        if tn not in seen and '.' not in tn and ':' not in tn and tn != 'json-schema-directive':
+            print(f'  alias {tn} -> {dn}')
             seen.update({tn: tv})
             tdesc = tv.get('description', tv.get('title', ''))
             nt.append([tn, 'Choice', ['CA'], tdesc, [[1, 'alias', dn, [], '']]])
         return dn
+
     elif (vtype := tv.get('type', '')) in {'string', 'integer', 'number', 'boolean'}:
         basetype = vtype.capitalize()
+
     elif vtype == 'object':
         if tn not in seen:
             seen.update({tn: tv})
             basetype = 'Record'
             for k, v in tv.get('properties', {}).items():
                 fields.append((k, scandef(f'{tn}.{k}', k, v, nt), v))
+
     elif vtype == 'array':
         if isinstance(items := tv.get('items', {}), dict):
             fields.append((scandef(f'{tn}', '', items, nt)))
-            # if is_defined(items):
-            #     return fields[0]
             return fields[0]
-            # basetype = 'ArrayOf'
-            # tn += '-list'
-            # popts = f'({fields[0]})'
         elif isinstance(items, list):
             for n, v in enumerate(items):
                 scandef(f'{tn}.{n}', '', v, nt)
             print(f'- {tn}: ArrayX')
+
     elif enum := tv.get('enum', []):
         basetype = 'Enumerated'
         for v in enum:
             fields.append(v)
-        popts = f'({len(fields)})'
+
     elif cc := [c for c in ('anyOf', 'allOf', 'oneOf') if c in tv][0]:
         basetype = 'Choice'
         for n, v in enumerate(tv[cc]):
             fields.append(scandef(f'{tn}.{n}', '', v, nt))
-        popts = f'({cc})({len(fields)})'
+
     else:
         raise ValueError(f'- {tn}: Unexpected type: {vtype}: {tv}')
 
@@ -247,7 +219,7 @@ def convert_js_to_jadn(jsfile, outfile):
     # Remove self-referencing dependencies
     for k, v in deps.items():
         if k in v:
-            print(f'### self-loop: {k} ({len(v)}):{v}')
+            print(f'  self-loop: {k} ({len(v)}):{v}')
             deps[k].remove(k)
 
     # Sort type definitions with designated root first, then collections in dependency order, then primitives
