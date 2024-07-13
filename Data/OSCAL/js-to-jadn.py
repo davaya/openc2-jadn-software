@@ -2,9 +2,8 @@ import jadn
 import json
 import os
 from collections import defaultdict, deque
-from jadn.definitions import (TypeName, BaseType, TypeOptions, Fields, FieldType, FieldOptions,
-                              OPTION_ID, is_builtin, has_fields)
-from graphlib import TopologicalSorter
+from jadn.definitions import (TypeName, BaseType, TypeOptions, has_fields)
+# from graphlib import TopologicalSorter
 
 # SCHEMA_DIR = os.path.join('..', '..', 'Schemas', 'Metaschema')
 # JSCHEMA = os.path.join(SCHEMA_DIR, 'oscal_catalog_schema_1.1.0.json')
@@ -85,7 +84,7 @@ def is_defined(items: dict) -> bool:
 
 
 def scandef(tn: str, key: str, tv: dict, nt: list):
-    global seen, rseen, level, rlevel
+    global seen, rseen
     """
     Process nested type definitions, add to list nt
     """
@@ -95,14 +94,11 @@ def scandef(tn: str, key: str, tv: dict, nt: list):
     global idlist, rflist
     idlist.add(tv.get('$id', None))
     rflist.add(tv.get('$ref', None))
-    # print(f'->{rlevel:3}{min(level, 10)*" ."}{key}:  {tv.get("$ref", tv.get("type", tv.get("allOf", tv.get("anyOf", tv))))}')
     if ref := tv.get('$ref', ''):
         dn = typedefname(rn := jssx.get(ref, ref))
         if ref not in rseen:
             tva = jss['definitions'][dn if dn in jss['definitions'] else rn]
-            rlevel += 1
-            d = scandef(dn, '', tva, nt)
-            rlevel -= 1
+            scandef(dn, '', tva, nt)
             rseen.update((ref,))
         if tn not in seen and '.' not in tn and ':' not in tn and tn != 'json-schema-directive':  # Construct referenced "Alias" type from Choice
             print(f'Alias {tn} -> {dn}')
@@ -116,12 +112,8 @@ def scandef(tn: str, key: str, tv: dict, nt: list):
         if tn not in seen:
             seen.update({tn: tv})
             basetype = 'Record'
-            level += 1
-            # print(f'->{level} Record({tn})')
             for k, v in tv.get('properties', {}).items():
                 fields.append((k, scandef(f'{tn}.{k}', k, v, nt), v))
-            popts = f'\n<-{level} Record({tn}){[k[0] for k in fields]}'
-            level -= 1
     elif vtype == 'array':
         if isinstance(items := tv.get('items', {}), dict):
             fields.append((scandef(f'{tn}', '', items, nt)))
@@ -149,18 +141,12 @@ def scandef(tn: str, key: str, tv: dict, nt: list):
         raise ValueError(f'- {tn}: Unexpected type: {vtype}: {tv}')
 
     if basetype:
-        lv = f'< {rlevel:3}{min(level,10)*" ."} '
-        # if rlevel < 15:
-            # print(f'{lv} {tn:80}: {basetype}' if ref else f'{lv} {tn}: {basetype}{popts}')
         td = make_jadn_type(tn, basetype, fields, tv)
         if '.' in tn:   # if generated type and built-in with no options, optimize it out. TODO: match $SYS
             if td[BaseType] in {'String', 'Integer', 'Number', 'Boolean'} and len(td[TypeOptions]) == 0:
                 return td[BaseType]
         nt.append(td)
         return td[TypeName]
-
-    # if rlevel < 15:
-        # print(f'  {rlevel:3}{min(level,10)*" ."} {key}: *** No basetype {tn}')
 
 
 def make_jadn_type(tn: str, basetype: str, flist: list, tv: dict):
@@ -208,7 +194,7 @@ def make_jadn_type(tn: str, basetype: str, flist: list, tv: dict):
         pass # process integer opts
     elif basetype == 'Number':
         pass # process number opts
-    elif basetype == ('Boolean'):
+    elif basetype == 'Boolean':
         pass # done - no opts on boolean
     elif basetype:
         raise ValueError(f'unsupported type {basetype}')
@@ -222,32 +208,10 @@ def make_jadn_type(tn: str, basetype: str, flist: list, tv: dict):
 
 
 def convert_js_to_jadn(jsfile, outfile):
-    global jss, jssx, seen, rseen, level, rlevel, typelist
+    global jss, jssx, seen, rseen, typelist
     """
     Create a JADN type from each definition in a Metaschema-generated JSON Schema
     """
-
-    def build_deps(tdefs: dict[list]) -> dict[str, list[str]]:
-        """
-        Build a Dependency dict: {TypeName: [Dep1, Dep2, ...]}
-        """
-        def get_refs(tdef: list) -> list[str]:  # Return all type references from a type definition
-            # Options whose value is/has a type name: strip option id
-            oids = [OPTION_ID['ktype'], OPTION_ID['vtype']]
-            # Options that enumerate fields: keep option id
-            oids2 = [OPTION_ID['enum'], OPTION_ID['pointer']]
-            refs = [to[1:] for to in tdef[TypeOptions] if to[0] in oids and not is_builtin(to[1:])]
-            refs += ([to for to in tdef[TypeOptions] if to[0] in oids2])
-            if has_fields(tdef[BaseType]):  # Ignore Enumerated
-                for f in tdef[Fields]:
-                    if not is_builtin(f[FieldType]):
-                        # Add reference to type name
-                        refs.append(f[FieldType])
-                    # Get refs from type opts in field (extension)
-                    refs += get_refs(['', f[FieldType], f[FieldOptions], ''])
-            return refs
-
-        return {t[TypeName]: get_refs(t) for t in tdefs['types']}
 
     with open(jsfile, encoding='utf-8') as fp:
         jss = json.load(fp)
@@ -256,8 +220,6 @@ def convert_js_to_jadn(jsfile, outfile):
     assert len(jssx) == len(jss['definitions']), f'$ids {len(jssx)} != defs {len(jss["definitions"])}'
     seen = {}   # Index of $refs to jss definitions
     rseen = set()   # Set of $refs already processed
-    level = 0
-    rlevel = 0
 
     info = {'package': jss['$id'].rstrip('.json')}
     for k in 'title', 'description', 'comment':
@@ -273,64 +235,36 @@ def convert_js_to_jadn(jsfile, outfile):
         '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$',
         '$NSID': '^([A-Za-z][-A-Za-z0-9]{0,31})?$'}})
 
-    nt = []     # Walk nested type definition tree to build type list
+    # Walk nested type definition tree to build type list
+    nt = []
     scandef('$Root', '', jss, nt)
     for tn, tv in jss['definitions'].items():
         scandef(tn, '', tv, nt)
     ntx = {k[TypeName]: k for k in nt}
-    deps = build_deps({'types': nt})
+    deps, roots = jadn.build_deps({'types': nt})
+    print(f'{len(roots)} detected roots: {roots}')
+
+    # Remove self-referencing dependencies
     for k, v in deps.items():
         if k in v:
-            print(f'### self-loop: {k}({len(v)}) {v}')
-            # deps[k] = deps[k] - {k, }
+            print(f'### self-loop: {k} ({len(v)}):{v}')
             deps[k].remove(k)
 
-    def place_type(tname: str) -> None:
-        if tdef := ntx.pop(tname):
+    # Sort type definitions with designated root first, then collections in dependency order, then primitives
+    nt1, nt2 = [], []
+    start = k if len(k := info.get('exports', [])) else [ntx.get('$Root')[TypeName]]
+    tlist = jadn.utils.topo_sort(deps, start)
+    for k in tlist:
+        if tdef := ntx.pop(k):
             if tdef[BaseType] == 'Enumerated':
                 nt1.append(tdef)
             elif has_fields(tdef[BaseType]):
                 nt1.append(tdef)
             else:
                 nt2.append(tdef)
-
-    """
-    Breadth-first traversal of type definitions
-    """
-    def bft(roots: list[str], adjacency: dict[str, list[str]]) -> None:
-        q = deque()
-        seen = set()
-        for type_name in roots:
-            seen |= {type_name, }
-            q.append(type_name)
-            while q:
-                place_type(tn := q.popleft())
-                for n in adjacency[tn]:
-                    if n not in seen:
-                        seen |= {n, }
-                        q.append(n)
-
-    nt1, nt2, nt3 = [], [], []
-    bft(r if len(r := info.get('exports', [])) else [ntx.get('$Root')[TypeName]], deps)
     nt3 = [tdef for tdef in ntx.values()]   # include unreferenced types at end
-
     print(f'{len(ntx)} unreferenced types: { {k for k in ntx} }')
-    """
-    ts = TopologicalSorter(deps)
-    ts.prepare()
-    nodes = []
-    roots = {k: 0 for k in deps}
-    while ts.is_active():
-        nodes.append(n := ts.get_ready())
-        ts.done(*n)
-        for k in n:
-            for j in deps[k]:
-                roots[j] = len(nodes)
-    ns = set(ntx)
-    n = '$Root'
-    for k in deps[n]:
-        ns -= set(k)
-    """
+
     if not SPLIT:
         schema = {'info': info, 'types': nt1 + nt2 + nt3}
         jadn.dump(schema, outfile)
@@ -341,12 +275,10 @@ def convert_js_to_jadn(jsfile, outfile):
 
 
 if __name__ == '__main__':
-    jss = {}    # JSON-Schema schema
+    jss = {}    # JSON Schema schema
     jssx = {}   # Index of $ids to jss definitions
     seen = {}   # Index of $refs to jss definitions
     rseen = set()   # Set of $refs already processed
-    level = 0
-    rlevel = 0
     idlist, rflist = set(), set()
     typelist = defaultdict(list)
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -355,26 +287,31 @@ if __name__ == '__main__':
         fn, fe = os.path.splitext(f)
         outfile = os.path.join(OUT_DIR, fn) + '.jadn'
         try:
-            print(f'=== {jsfile}')
+            print(f'\n=== {jsfile}')
             convert_js_to_jadn(jsfile, outfile)
         except (ValueError, IndexError) as e:
-            print(f'### {f}: {e}')
+            print(f'### Error: {f}: {e}')
             raise
-    print(f'{len(idlist):4} ids: {idlist}')
-    print(f'{len(rflist):4} refs: {rflist}')
+
+    print(f'\nJSON schema')
+    print(f'  {len(idlist):3} ids: {idlist}')
+    print(f'  {len(rflist):3} refs: {rflist}')
     idrn, idrp = defaultdict(list), defaultdict(list)
+    print('Non-$ids')
     for idr in idlist | rflist:
         if idr and len(x := idr.split('_')) == 3:
             idrn[x[1]].append(x[2])
             idrp[x[2]].append(x[1])
         else:
-            print(x)
+            print(f'  {x}')
 
+    print('Namespaces:')
     for k, v in idrn.items():
-        print(f' {k:30}:{len(v):3} {v}')
+        print(f'  {k:30} {len(v):2} {v}')
+    print('Qualified Types:')
     for k, v in idrp.items():
         if len(v) > 1:
-            print(f' {k:30}: {v}')
+            print(f'  {k:30} {v}')
 
     if SPLIT:
         for namespace in idrn:
