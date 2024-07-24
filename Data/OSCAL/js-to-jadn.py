@@ -3,79 +3,34 @@ import json
 import os
 from collections import defaultdict
 from jadn.definitions import (TypeName, BaseType, TypeOptions, TypeDesc, Fields, ItemID, ItemValue, ItemDesc,
-                              FieldID, FieldName, FieldType, FieldOptions, FieldDesc, has_fields)
+                              FieldID, FieldName, FieldType, FieldOptions, FieldDesc, OPTION_ID)
 from typing import Union
 
-SPLIT = True    # Split set of combined schemas into packages, otherwise process each combined schema
 SCHEMA_DIR = os.path.join('oscal-1.1.2', 'json', 'schema')
-OUT_DIR = '../../Out'
-DEBUG = False
-SYS = '.'   # Separator character used in generated type names
-D = [(f'${n}' if DEBUG else '') for n in range(10)]
-
-
-def typedefname(jsdef: str) -> str:
-    """
-    Infer type name from a JSON Schema definition
-    """
-    assert isinstance(jsdef, str), f'Not a type definition name: {jsdef}'
-    ns = prefix['']     # use default
-    if d := jss['definitions'].get(jsdef, ''):
-        if (ref := d.get('$id', d.get('$ref', None))):
-            if len(x := ref.split('_')) == 3:
-                ns = prefix[x[1]]
-                name = {x[2].capitalize()}
-            elif ref.startswith ('#/definitions'):    # primitive, add common namespace
-                name = ref.removeprefix("#/definitions")
-            elif ref == '#json-schema-directive':     # ignore, we don't use it
-                pass
-            else:
-                print(f'unexpected typedefname {jsdef} {ref}')
-        if ':' in jsdef:  # qualified definition name
-            name = maketypename('', jsdef.split(':', maxsplit=1)[1]) + D[1]
-        if ref := d.get('$ref', ''):
-            name = ref.removeprefix('#/definitions/')
-    else:
-        name = jsdef
-    return f'{ns}:{name}'     # Exact type name or none
-
-
-def typerefname(jsref: dict) -> str:
-    """
-    Infer a type name from a JSON Schema property reference
-    """
-    if (t := jsref.get('type', '')) in ('string', 'integer', 'number', 'boolean', 'binary'):
-        return t.capitalize() + D[4]    # Built-in type
-    if ref := jsref.get('$ref', ''):
-        if len(x := ref.split('_')) == 3:
-            ns = prefix[x[1]]
-            return f'{ns}:{x[2].capitalize()}'
-        td = jssx.get(ref, ref)
-        if ':' in td:
-            return maketypename('', td.split(':', maxsplit=1)[1]) + D[6]  # Extract type name from $id
-    return ''
-
-
-def maketypename(tn: str, name: str) -> str:
-    """
-    Convert a type and property name to type name
-    """
-    tn = typedefname(tn)
-    name = f'{tn}${name}' if tn else name.capitalize()
-    return name + '1' if jadn.definitions.is_builtin(name) else name
-
-
-def is_defined(items: dict) -> bool:
-    return '$ref' in items or items.get('type', '') in {'string', 'integer', 'number', 'boolean'}
-
-
-def add_type(id: str, iid: str, type: tuple, type_list: list[tuple]) -> None:
-    if SYS in type[TypeName]:
-        id = id if id else iid.get('$iid', None)
-    if (id, type) not in tuple(type_list):
-        type_list.append((id, type))
-    else:
-        pass
+OUT_DIR_COMBINED = '../../Out/Combined'
+OUT_DIR_PACKAGE = '../../Out/Package'
+SYS = '.'       # Separator character used in generated type names
+PREFIXES = {    # Pre-define OSCAL-specific namespaces
+    'oscal-catalog': 'cat:',
+    'oscal-profile': 'prf:',
+    'oscal-component-definition': 'cmp:',
+    'oscal-ssp': 'ssp:',
+    'oscal-ap': 'ap:',
+    'oscal-ar': 'ar:',
+    'oscal-poam': 'poam:',
+    'oscal-metadata': 'm:',
+    'oscal-control-common': 'cc:',
+    'oscal-implementation-common': 'ic:',
+    'oscal-assessment-common': 'ac:',
+    '': 'c:',
+}
+BLANK_PREFIX = 'oscal-common'
+CONFIG = {
+    '$MaxString': 1000,
+    '$Sys': '.',
+    '$TypeName': '^[$A-Z][-.$A-Za-z0-9]{0,96}$',
+    '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$',
+}
 
 
 def freeze_type(t: list[list]) -> tuple[tuple]:    # Freeze a JADN type to make hashable
@@ -94,306 +49,324 @@ def unfreeze_type(t: Union[list, tuple]) -> list[list]:  # Unfreeze a JADN type
     return [t[TypeName], t[BaseType], list(t[TypeOptions]), t[TypeDesc], [uf(k) for k in t[Fields]]]
 
 
-def scandef(type_name: str, tv: dict, type_list: list):
-    global seen, rseen, prefix
+def un_namespace_names(names: list, ns: str) -> None:
+    for n, na in enumerate(names):
+        names[n] = na.removeprefix(ns)
+
+
+def un_namespace_type(t: list, ns: str) -> None:
+    t[TypeName] = t[TypeName].removeprefix(ns)
+    for f in t[Fields]:
+        f[FieldType] = f[FieldType].removeprefix(ns)
+        if len(f) > FieldOptions:
+            for n, fo in enumerate(f[FieldOptions]):    # TODO: check for double option
+                f[FieldOptions][n] = fo[0] + fo[1:].removeprefix(ns)
+
+
+def sort_types(schema: dict) -> dict:
+    # deps = jadn.build_deps(schema)
+    # types = []
+    return {'info': schema['info'], 'types': schema['types']}
+
+
+def make_info(ns_prefix: str, ref_info: dict, prefixes: dict) -> dict:
+    px = {v: k for k, v in prefixes.items()}
+    v = ref_info['info']
+    types = [k for k in ref_info['types'] if k[TypeName].startswith(prefixes[ns_prefix])]
+    deps, refs = jadn.build_deps({'types': types})
+    ns_base = v['package'].rsplit('/', maxsplit=1)[0] + '/'
+    info = {
+        'package': ns_base + ns_prefix,
+        'roots': [k.removeprefix(prefixes[ns_prefix]) for k in set(deps) - refs],
+    }
+    if ns_list := {k.split(':', maxsplit=1)[0] for k in refs - set(deps)}:
+        info.update({'namespaces': [[k + ':', ns_base + px[k + ':']] for k in ns_list]})
+    info.update(CONFIG)
+    return info
+
+
+class JADN:
     """
-    Process nested type definitions, add to type list
+    Build a JADN schema from JSON Schema definitions
     """
-    basetype = ''
-    fields = []
-    global idlist, rflist
-    idlist.add(id := tv.get('$id', None))
-    rflist.add(ref := tv.get('$ref', None))
-    iid = tv.get('$iid', None)
-    iid = {'$iid': id} if id else {'$iid': iid} if iid else {}  # Create "inherited $id" for generated types
-    if ref:
-        if len(x := ref.split('_')) == 3:
-            if x[1] not in prefix:
-                prefix.update({x[1]: f'n{len(prefix) + 1}'})
-        dn = typedefname(rn := jssx.get(ref, ref))
-        if ref not in rseen:
-            tva = jss['definitions'][dn if dn in jss['definitions'] else rn]
-            scandef(dn, tva, type_list)
-            rseen.update((ref,))
+    def __init__(self, jss: dict, prefixes: dict):
+        self.jss = jss              # JSON-Schema schema
+        jd = jss['definitions']     # Index from $id to definition
+        self.jsx = {v.get('$id', k): jd[k] for k, v in jd.items()}
+        self.ids = set()            # all $id values seen in this schema
+        self.refs = set()           # all $ref values seen in this schema (internal ids + external)
+        self.aliases = set()        # all types that pass $id to $ref
+        self.type_names = set()     # JADN type names
+        self.info = {}              # JADN package info
+        self.types = []             # JADN types
+        self.prefixes = prefixes    # JADN prefix list, supplied or generated when seen
+        self.pf_used = set()        # Prefixes seen in this schema
+        self.ns_uri = {}            # id to URI
+        self.namespace = ''         # JSON Schema namespace of this schema
 
-        # Construct "Alias" type using degenerate untagged union
-        if type_name not in seen and SYS not in type_name and ':' not in type_name and type_name != 'json-schema-directive':
-            print(f'  alias {type_name} -> {dn}')
-            seen.update({type_name: tv})
-            tdesc = tv.get('description', tv.get('title', ''))
-            add_type(id, iid, (type_name, 'Choice', ('CA', ), tdesc, ((1, 'alias', dn, (), ''), )), type_list)
-        return dn
+        self.info = {'package': jss['$id'].removesuffix('-schema.json')}
+        self.info.update({k.removeprefix('$'): jss[k] for k in
+            ('title', 'description', '$comment', 'version', 'copyright', 'license') if k in jss})
 
-    elif (vtype := tv.get('type', '')) in {'string', 'integer', 'number', 'boolean'}:
-        basetype = vtype.capitalize()
+        if 'properties' in jss:     # Single root
+            self.info.update({'roots': (root := jss['required'][0])})
+            assert len(x := jss['properties'][root]['$ref'].split('_')) == 3
+            self.namespace = x[1]
+        elif 'oneOf' in jss:        # Multiple roots
+            roots = []
+            for k in jss['oneOf']:
+                roots.append(root := k['required'][0])
+            self.info.update({'roots': roots})
 
-    elif vtype == 'object':
-        if type_name not in seen:
-            seen.update({type_name: tv})
-            basetype = 'Record'
-            for k, v in tv.get('properties', {}).items():
-                fields.append((k, scandef(f'{type_name}.{k}', v | iid, type_list), v))
+    def set_prefixes(self, prefixes: dict[str, str]):
+        self.prefixes = prefixes
 
-    elif vtype == 'array':
-        if isinstance(items := tv.get('items', {}), dict):
-            fields.append((scandef(f'{type_name}', items | iid, type_list)))
-            return fields[0]
-        elif isinstance(items, list):
-            for n, v in enumerate(items):
-                scandef(f'{type_name}.{n}', v | iid, type_list)
-            print(f'- {type_name}: ArrayX')
+    def get_info(self) -> dict:
+        """
+        Build package info and return JADN schema
+        """
+        info = self.info
+        p = info['package'].rsplit('/', maxsplit=1)[0] + '/'
+        info.update({'namespaces':
+            [[v, p + (k if k else BLANK_PREFIX)] for k, v in self.prefixes.items() if k in self.pf_used]})
+        roots = [k['properties'][k['required'][0]] for k in jss.get('oneOf', []) + [jss] if 'required' in k]
+        info.update({'roots': [self._make_tn('', k, [], '') for k in roots]})
+        self.add_info(info)
+        return info
 
-    elif enum := tv.get('enum', []):
-        basetype = 'Enumerated'
-        for v in enum:
-            fields.append(v)
+    def get_types(self) -> list:
+        return [unfreeze_type(k) for k in self.types]
 
-    elif cc := [c for c in ('anyOf', 'allOf', 'oneOf') if c in tv][0]:
-        basetype = 'Choice'
-        for n, v in enumerate(tv[cc]):
-            fields.append(scandef(f'{type_name}.{n}', v | iid, type_list))
-
-    else:
-        raise ValueError(f'- {type_name}: Unexpected type: {vtype}: {tv}')
-
-    if basetype:
-        td = make_jadn_type(type_name, basetype, fields, tv)
-        if SYS in type_name:   # if generated type and built-in with no options, optimize it out.
-            if td[BaseType] in {'String', 'Integer', 'Number', 'Boolean'} and len(td[TypeOptions]) == 0:
-                return td[BaseType]
-        add_type(id, iid, td, type_list)
-        return td[TypeName]
-
-
-def make_jadn_type(type_name: str, basetype: str, flist: list, tv: dict):
-    tnroot, tnpath = type_name.split(SYS, maxsplit=1) if SYS in type_name else (type_name, '')
-    typename = typedefname(tnroot) + (f'.{tnpath}' if tnpath else '')
-    topts = []
-    fields = []
-    tdesc = tv.get('description', tv.get('title', ''))
-    if basetype == 'Record':
-        req = tv.get('required', [])
-        for n, f in enumerate(flist, start=1):
-            k, v, fv = f
-            fdesc = fv.get('description', '')
-            fopts = ['[0'] if k not in req else []
-            if fv.get('type', '') == 'array':
-                fopts.append(f']{fv.get("maxItems", 0)}')
-            fields.append((n, k, v, fopts, fdesc))
-
-    elif basetype == 'ArrayOf':
-        topts = [f'{{{tv["minItems"]}'] if 'minItems' in tv else []
-        topts.append(f'}}{tv["maxItems"]}') if 'maxItems' in tv else '}0'
-        topts.append(f'*{flist[0]}')
-
-    elif basetype == 'Enumerated':
-        for n, f in enumerate(flist, start=1):
-            fields.append((n, f, ''))
-
-    elif basetype == 'Choice':
-        cc = [c for c in ('anyOf', 'allOf', 'oneOf') if c in tv][0]
-        topts = [{
-            'anyOf': 'CO',
-            'allOf': 'CA',
-            'oneOf': 'CX'
-        }[cc]]
-        for n, v in enumerate(flist, start=1):
-            fields.append((n, f'c{n}', v, [], ''))
-
-    elif basetype == 'String':  # process string opts
-        if x := tv.get('format', ''):
-            topts.append(f'/{x}')
-        if x := tv.get('pattern', ''):
-            topts.append(f'%{x}')
-    elif basetype == 'Integer':
-        pass # process integer opts
-    elif basetype == 'Number':
-        pass # process number opts
-    elif basetype == 'Boolean':
-        pass # done - no opts on boolean
-    elif basetype:
-        raise ValueError(f'unsupported type {basetype}')
-
-    td = (typename, basetype, tuple(topts), tdesc, tuple(fields))
-    return td
-
-
-def convert_js_to_jadn(jsfile: str, outfile: str, type_list: list[tuple]) -> None:
-    global jss, jssx, seen, rseen, prefix
-    """
-    Create a JADN type from each definition in a Metaschema-generated JSON Schema
-    """
-
-    with open(jsfile, encoding='utf-8') as fp:
-        jss = json.load(fp)
-    assert jss['type'] == 'object', f'Unsupported JSON Schema format {jss["type"]}'
-    jssx = {v.get('$id', k): k for k, v in jss['definitions'].items()}      # Index from $id to definition
-    assert len(jssx) == len(jss['definitions']), f'$ids {len(jssx)} != defs {len(jss["definitions"])}'
-    for k, v in jss['definitions'].items():
-        if (id := v.get('$id', None)) and len(x := id.split('_')) == 3:
-            if x[1] not in prefix:
-                prefix.update({x[1]: f'n{len(prefix) + 1 :02d}'})
-        elif id == '#json-schema-directive':    # ignore, not used
-            pass
-        else:  # primitives don't have $id
-            assert id is None
-            assert '$ref' not in v
-
-    seen = {}   # Index of $refs to jss definitions
-    rseen = set()   # Set of $refs already processed
-
-    info = {'package': jss['$id'].rstrip('.json')}
-    for k in 'title', 'description', 'comment':
-        if v := jss.get('$' + k, ''):
-            info.update({k: v})
-    exports = []
-    for v in jss.get('oneOf', []):
-        exports += [typerefname(v['properties'][k]) for k in v.get('required', '')]
-    info.update({'exports': exports if exports else [typerefname(jss['properties'][k]) for k in jss.get('required', '')]})
-    info.update({'config': {
-        '$MaxString': 1000,
-        '$TypeName': '^[$A-Z][-.$A-Za-z0-9]{0,96}$',
-        '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$',
-        '$NSID': '^([A-Za-z][-A-Za-z0-9]{0,31})?$'}})
-
-    # Walk nested type definition tree to build type list
-    scandef('$Root', jss, type_list)
-    for k, v in jss['definitions'].items():
-        scandef(k, v, type_list)
-    ntx = {t[1][TypeName]: t for t in type_list}
-    deps, refs = jadn.build_deps({'types': [t[1] for t in type_list]})
-    roots = set(deps) - refs
-    print(f'{len(roots)} detected roots: {roots}')
-
-    # Remove self-referencing dependencies
-    for k, v in deps.items():
-        if k in v:
-            print(f'  self-loop: {k} ({len(v)}):{v}')
-            deps[k].remove(k)
-
-    # Sort type definitions with designated root first, then collections in dependency order, then primitives
-    nt1, nt2 = [], []
-    start = k if len(k := info.get('exports', [])) else [ntx.get('$Root')[TypeName]]
-    tlist = jadn.topo_sort(deps, start)
-    for k in tlist:
-        if tdef := ntx.pop(k):
-            if tdef[BaseType] == 'Enumerated':
-                nt1.append(tdef)
-            elif has_fields(tdef[BaseType]):
-                nt1.append(tdef)
+    def add_info(self, info: dict) -> None:
+        """
+        Add checks later.
+        {
+            "package": {"type": "#/definitions/Namespace"},
+            "version": {"type": "string"},
+            "title": {"type": "string"},
+            "description": {"type": "string"},
+            "comment": {"type":  "string"},
+            "copyright": {"type": "string"},
+            "license": {"type": "string"},
+            "namespaces": {"$ref": "#/definitions/Namespaces"},
+            "roots": {"$ref": "#/definitions/Roots"},
+            "config": {"$ref": "#/definitions/Config"}
+        }
+        """
+        for k, v in info.items():   # Build JADN package information
+            if k in {'package', 'version', 'title', 'description', 'comment', 'copyright', 'license',
+                     'namespaces', 'roots', 'config'}:
+                self.info.update({k: v})
             else:
-                nt2.append(tdef)
-    nt3 = [tdef for tdef in ntx.values()]   # include unreferenced types at end
-    print(f'{len(ntx)} unreferenced types: { {k for k in ntx} }')
+                raise ValueError(f'Unrecognized package info: {k}: {v}')
 
-    if not SPLIT:
-        schema = {'info': info, 'types': nt1 + nt2 + nt3}
-        jadn.dump(schema, outfile)
-        try:
-            print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
-        except ValueError as e:
-            print(f'### {f}: {e}')
+    def _make_tn(self, jsn: str, jsd: dict, path: list[str], cur_type: str) -> str:
+        """
+        Create JADN type names from Metaschema-specific JSON Schema $id's
+
+        jsn: string name default when no $id is available
+        jsd: JSON Schema definition
+        path: fieldname path from #definition for anonymous types
+        cur_type: current #definition for anonymous types
+        """
+        jtn = jsd.get('$id', jsd.get('$ref', cur_type))
+        jtn = '#/definitions/Json-schema-directive' if jtn == '#json-schema-directive' else jtn     # fix special case
+        ps = SYS + SYS.join(path) if path else ''   # convert path array to string
+        if len(x := jtn.split('_')) == 3:   # Metaschema-style qualified names: '#assembly_oscal-ap_assessment-plan'
+            self.prefixes.update({x[1]: f'n{len(self.prefixes) + 1 :02d}:'} if x[1] not in self.prefixes else {})
+            self.pf_used |= {x[1], }
+            return f'{self.prefixes[x[1]]}{x[2].capitalize()}{ps}'
+        elif jtn.startswith('#/definitions/') or (jtn := jsn):
+            if jss.get(tn := jtn.removeprefix('#/definitions/'), '') != tn:
+                self.pf_used |= {'', }
+                return f'{self.prefixes[""]}{tn + ps}'  # Primitives
+            raise ValueError(f'unexpected definition {jtn}')
+        return jtn     # return root URI unchanged
+
+    def add_type(self, jsn: str, jsd: dict, path: list[str], cur_type: str) -> str:
+        jst = jsd.get('type', None)
+        tid = jsd.get('$id', None)
+        ref = jsd.get('$ref', None)
+        self.ids |= {tid, } if tid else set()
+        self.refs |= {ref, } if ref else set()
+        if (k := jsd.get('$id', jsd.get('$ref', cur_type))) != cur_type:
+            cur_type = k
+            path = []
+
+        type_name = self._make_tn(jsn, jsd, path, cur_type)
+        if type_name in self.type_names:
+            return type_name
+        base_type = ''      # JADN BaseType
+        type_opts = []      # JADN TypeOptions
+        type_desc = jsd.get('description', jsd.get('title', ''))
+        fields = []         # JADN Fields
+
+        if ref:
+            if tid:
+                rn = self._make_tn(jsn, {}, [], ref)     # force ref instead of id
+                # Generate alias type using single-field untagged union
+                td = (type_name, 'Choice', tuple(['CA']), type_desc, ((1, 'alias', rn, tuple(), ''), ))
+                self.types.append(td)
+                self.type_names |= {type_name}
+                self.aliases |= {tid, }
+                print(f'  alias {type_name} -> {rn}')
+            return type_name
+
+        if jst == 'object':
+            base_type = 'Record'
+            req = jsd.get('required', [])
+            for n, (k, v) in enumerate(jsd.get('properties', {}).items(), start=1):
+                f_type = self.add_type(jsn, v, path + [k], cur_type)
+                f_opts = [OPTION_ID['minc'] + '0'] if k not in req else []
+                f_desc = v.get('description', '')
+                if v.get('type', '') == 'array':
+                    f_opts.append(f']{v.get("maxItems", 0)}')
+                fields.append((n, k, f_type, tuple(f_opts), f_desc))
+
+        elif jst == 'array':
+            if isinstance(items := jsd.get('items', {}), dict):
+                base_type = 'ArrayOf'
+                if x := jsd.get('minItems', 0):
+                    type_opts.append(OPTION_ID['minv'] + str(x))
+                if x := jsd.get('maxItems', 0):
+                    type_opts.append(OPTION_ID['maxv'] + str(x))
+                if '$ref' in items:
+                    i_type = self._make_tn(jsn, items, [], cur_type)
+                    type_name = i_type
+                    base_type = ''
+                else:
+                    i_type = self.add_type(jsn, items, path, cur_type)
+                    if i_type == type_name:
+                        base_type = ''
+                type_opts.append(OPTION_ID['vtype'] + i_type)
+
+            elif isinstance(items, list):
+                base_type = 'Array'
+                for n, v in enumerate(items):
+                    pass    # TODO: process Array like Record
+                    # flist.append((str(n), v, scandef(v, path + [f'n{n}'])))
+
+        elif jse := jsd.get('enum', None):
+            base_type = 'Enumerated'
+            for n, v in enumerate(jse, start=1):
+                fields.append((n, v, ''))
+
+        elif cc := [c for c in ('anyOf', 'allOf', 'oneOf') if c in jsd]:
+            base_type = 'Choice'
+            type_opts = {'anyOf': 'CO', 'allOf': 'CA', 'oneOf': 'CX'}[cc[0]]
+            for n, v in enumerate(jsd[cc[0]], start=1):
+                f_type = self.add_type(jsn, v, path + [str(n)], cur_type)
+                f_opts = []
+                f_desc = v.get('description', '')
+                fields.append((n, f'c{n}', f_type, tuple(f_opts), f_desc))
+
+        elif jst in {'string', 'integer', 'number', 'boolean'}:
+            base_type = str(jst).capitalize()  # There is no "binary" type in JSON Schema
+            if base_type == 'String':  # process string opts
+                if x := jsd.get('format', ''):
+                    type_opts.append(f'{OPTION_ID["format"]}{x}')
+                if x := jsd.get('pattern', ''):
+                    type_opts.append(f'{OPTION_ID["pattern"]}{x}')
+            elif base_type == 'Integer':
+                pass # process integer opts
+            elif base_type == 'Number':
+                pass # process number opts
+            elif base_type == 'Boolean':
+                pass # done - no opts on boolean
+            elif base_type:
+                raise ValueError(f'unsupported type {base_type}')
+            if path:    # Don't create JADN built-in types
+                return base_type
+
+        if base_type:
+            td = (type_name, base_type, tuple(type_opts), type_desc, tuple(fields))
+            self.types.append(td)
+        return type_name
 
 
 if __name__ == '__main__':
-    global jss, jssx, seen, rseen, prefix
-
-    prefix = {'': 'n01'}    # default
-    type_list_all = []
-    idlist, rflist = set(), set()
-    os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(OUT_DIR_COMBINED, exist_ok=True)
+    os.makedirs(OUT_DIR_PACKAGE, exist_ok=True)
+    sc = defaultdict(dict)                          # Combined schemas
+    sp = defaultdict(lambda: defaultdict(list))     # Package schemas
     for f in os.listdir(SCHEMA_DIR):
         jsfile = os.path.join(SCHEMA_DIR, f)
         fn, fe = os.path.splitext(f)
-        outfile = os.path.join(OUT_DIR, fn) + '.jadn'
+        print(f'\n=== {jsfile}')
+        with open(jsfile, encoding='utf-8') as fp:
+            jss = json.load(fp)
         try:
-            print(f'\n=== {jsfile}')
-            type_list = []
-            convert_js_to_jadn(jsfile, outfile, type_list)
-            newt = [t for t in type_list if t not in type_list_all]
-            type_list_all += newt
+            # Convert JSON Schema to JADN schema
+            jv = JADN(jss, PREFIXES)  # JADN schema instance
+            for jsn, jsd in jss['definitions'].items():
+                jv.add_type(jsn, jsd, [], '')  # Add rest of the definition and anonymous types
         except (ValueError, IndexError) as e:
             print(f'### Error: {f}: {e}')
             raise
 
-    print(f'\nJSON schema')
-    print(f'  {len(idlist):3} ids: {idlist}')
-    print(f'  {len(rflist):3} refs: {rflist}')
-    idrn, idrp = defaultdict(list), defaultdict(list)
-    print('Non-$ids')
-    for idr in idlist | rflist:
-        if idr and len(x := idr.split('_')) == 3:
-            idrn[x[1]].append(x[2])
-            idrp[x[2]].append(x[1])
+        ns = jv.info['package'].rsplit('/', maxsplit=1)[1]
+        jv.add_info({'config': CONFIG})
+        sc[ns]['pf_used'] = jv.pf_used
+        sc[ns]['ids'] = jv.ids
+        sc[ns]['refs'] = jv.refs
+        sc[ns]['types'] = jv.types                  # keep frozen types
+        sc[ns]['info'] = (info := jv.get_info())    # build current info
+        print(f'\nJSON schema: {info.get("title", "")} {info.get("comment", "")}')
+        print(f'{len(jv.ids):2} ids, {len(jv.aliases):2} aliases, {len(jv.refs):2} refs,',
+              f'{len(jv.pf_used):2} namespaces, {len(jv.types):3} types')
+        print('Namespaces:')
+        for k, v in jv.prefixes.items():
+            if k in jv.pf_used:
+                print(f'{v:>6} http:.../{k if k else BLANK_PREFIX}')
+
+        schema = {'info': info, 'types': jv.get_types()}
+        deps, refs = jadn.build_deps(schema)
+        unref = (set(deps) - refs) or ''
+        undef = (refs - set(deps)) or ''
+        print(f'undefined: {len(undef)} {undef}')
+        print(f'unreferenced: {len(unref)} {unref}')
+
+        sorted_schema = sort_types(schema)
+        assert len(schema['types']) == len(sorted_schema['types'])
+        outfile = os.path.join(OUT_DIR_COMBINED, fn) + '.jadn'
+        jadn.dump(sorted_schema, outfile)
+
+        px = {v: (k if k else BLANK_PREFIX) for k, v in jv.prefixes.items()}
+        for t in jv.types:
+            ns, tn = t[TypeName].split(':', maxsplit=1)
+            sp[px[ns + ':']][tn].append(t)
+
+    ################
+    # Split combined schemas into package schemas
+
+    print('\nNamespaces:')
+    for k, v in jv.prefixes.items():
+        print(f'{v:>6} http:.../{k if k else BLANK_PREFIX}')
+
+    nqn = defaultdict(list)     # Find non-qualified name collisions
+    for ns, tlist in sp.items():
+        for tn, td in tlist.items():
+            nqn[tn].append({tn: td})
+            if (nt := len(set(td))) > 1:    # check for type definition conflicts (should not happen)
+                if tn != '$Root':
+                    raise ValueError(f'{ns}:{tn:30} - {nt} defs: {set(td)}')
+    print()
+    for tn, td in nqn.items():
+        if len(td) > 1:
+            print(f'non-qualified name collision: {[k[tn][0][TypeName] for k in td]}')
+
+    pf = {(k if k else BLANK_PREFIX): v for k, v in jv.prefixes.items()}
+    for ns, tlist in sp.items():
+        if ns in sc:
+            info = sc[ns]['info']
         else:
-            print(f'  {x}')
+            info = make_info(ns, sc[list(sc)[0]], pf)
 
-    print('Namespaces:')
-    for k, v in idrn.items():
-        print(f'  {k:30} {len(v):2} {v}')
-    print('Qualified Types:')
-    for k, v in idrp.items():
-        if len(v) > 1:
-            print(f'  {k:30} {v}')
-
-    if SPLIT:
-        roots = {}
-        ss = defaultdict(dict)
-        for k, v in type_list_all:
-            if k:
-                if len(x := k.split('_')) == 3:
-                    ss[x[1]][f'{prefix[x[1]]}:{v[TypeName]}'] = v
-                    common = x[1]
-                else:
-                    assert len(v) == 5 and v[TypeName] == '$Root'
-                    pkg = k.rsplit('/', maxsplit=1)
-                    t = f"{pkg[1].removesuffix('-schema.json')}"
-                    roots[t] = {'package': k.removesuffix('-schema.json'), 'types': v}
-                    print(f'  Schema namespace for {k}: {v}')
-            else:
-                ss['common'][v[TypeName]] = v
-                print(f'  No namespace for {k}: {v}')
-
-        k = common.split('-', maxsplit=1)[0] + '-common'
-        ss[k] = ss.pop('common')
-        for ns in ss:
-            if ns in roots:
-                info = {'package': roots[ns]['package']}  # id
-                info.update({'exports': [roots[ns]['types'][Fields][1][FieldType]]})  # Designated root
-            else:
-                info = {'package': f'{pkg[0]}/{ns}'}
-                # info.update({'exports': []})    # TODO: list DAG roots
-
-            info.update({'config': {
-                '$MaxString': 1000,
-                '$TypeName': '^[$A-Z][-.$A-Za-z0-9]{0,96}$',
-                '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$',
-            }})
-
-            outfile = os.path.join(OUT_DIR, ns) + '.jadn'
-            schema = {'info': info, 'types': [unfreeze_type(v) for v in ss[ns].values()]}
-            sschema = jadn.sort_types(schema)
-            assert len(schema['types']) == len(sschema['types'])
-            jadn.dump(sschema, outfile)
-            print(f'\n=== {ns}')
-            try:
-                print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
-            except ValueError as e:
-                print(f'### {f}: {e}')
-
-
-"""
-    info = {'package': jss['$id'].rstrip('.json')}
-    for k in 'title', 'description', 'comment':
-        if v := jss.get('$' + k, ''):
-            info.update({k: v})
-    exports = []
-    for v in jss.get('oneOf', []):
-        exports += [typerefname(v['properties'][k]) for k in v.get('required', '')]
-    info.update({'exports': exports if exports else [typerefname(jss['properties'][k]) for k in jss.get('required', '')]})
-    info.update({'config': {
-        '$MaxString': 1000,
-        '$TypeName': '^[$A-Z][-.$A-Za-z0-9]{0,96}$',
-        '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$',
-        '$NSID': '^([A-Za-z][-A-Za-z0-9]{0,31})?$'}})
-"""
+        types = [unfreeze_type(v[0]) for k, v in tlist.items()]
+        un_namespace_names(info.get('roots', []), pf[ns])
+        for t in types:
+            un_namespace_type(t, pf[ns])
+        if t := [i for i in info.get('namespaces', []) if i[0] != pf[ns]]:
+            info['namespaces'] = t
+        outfile = os.path.join(OUT_DIR_PACKAGE, ns) + '.jadn'
+        jadn.dump(sort_types({'info': info, 'types': types}), outfile)
