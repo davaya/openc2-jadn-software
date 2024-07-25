@@ -10,11 +10,11 @@
       "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"
     },
     "namespaces": [
-      ["m:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"],
-      ["cc:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common"],
-      ["ic:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-implementation-common"],
-      ["ac:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-assessment-common"],
-      ["c:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"]
+      ["m", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"],
+      ["cc", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common"],
+      ["ic", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-implementation-common"],
+      ["ac", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-assessment-common"],
+      ["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"]
     ]
   },
 
@@ -39,6 +39,19 @@
       [4, "remarks", "m:Remarks", ["[0"], ""]
     ]],
 
+    ["Poam-item", "Record", [], "Describes an individual POA&M item.", [
+      [1, "uuid", "c:UUIDDatatype", ["[0"], "A machine-oriented, globally unique identifier with instance scope that can be used to reference this POA&M item entry in this OSCAL instance. This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
+      [2, "title", "String", [], "The title or name for this POA&M item ."],
+      [3, "description", "String", [], "A human-readable description of POA&M item."],
+      [4, "props", "m:Property", ["[0", "]0"], ""],
+      [5, "links", "m:Link", ["[0", "]0"], ""],
+      [6, "origins", "Poam-item.origins", ["[0", "]0"], ""],
+      [7, "related-findings", "Poam-item.related-findings", ["[0", "]0"], ""],
+      [8, "related-observations", "Poam-item.related-observations", ["[0", "]0"], ""],
+      [9, "related-risks", "Poam-item.related-risks", ["[0", "]0"], ""],
+      [10, "remarks", "m:Remarks", ["[0"], ""]
+    ]],
+
     ["Poam-item.origins", "Record", [], "Identifies the source of the finding, such as a tool or person.", [
       [1, "actors", "ac:Origin-actor", ["]0"], ""]
     ]],
@@ -53,19 +66,6 @@
 
     ["Poam-item.related-risks", "Record", [], "Relates the finding to a set of referenced risks that were used to determine the finding.", [
       [1, "risk-uuid", "c:UUIDDatatype", [], "A machine-oriented identifier reference to a risk defined in the list of risks."]
-    ]],
-
-    ["Poam-item", "Record", [], "Describes an individual POA&M item.", [
-      [1, "uuid", "c:UUIDDatatype", ["[0"], "A machine-oriented, globally unique identifier with instance scope that can be used to reference this POA&M item entry in this OSCAL instance. This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document."],
-      [2, "title", "String", [], "The title or name for this POA&M item ."],
-      [3, "description", "String", [], "A human-readable description of POA&M item."],
-      [4, "props", "m:Property", ["[0", "]0"], ""],
-      [5, "links", "m:Link", ["[0", "]0"], ""],
-      [6, "origins", "Poam-item.origins", ["[0", "]0"], ""],
-      [7, "related-findings", "Poam-item.related-findings", ["[0", "]0"], ""],
-      [8, "related-observations", "Poam-item.related-observations", ["[0", "]0"], ""],
-      [9, "related-risks", "Poam-item.related-risks", ["[0", "]0"], ""],
-      [10, "remarks", "m:Remarks", ["[0"], ""]
     ]]
   ]
 }

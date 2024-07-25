@@ -10,10 +10,10 @@
       "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"
     },
     "namespaces": [
-      ["m:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"],
-      ["cc:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common"],
-      ["ic:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-implementation-common"],
-      ["c:", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"]
+      ["m", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"],
+      ["cc", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common"],
+      ["ic", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-implementation-common"],
+      ["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"]
     ]
   },
 
@@ -31,25 +31,6 @@
       [1, "href", "c:URIReferenceDatatype", [], "A link to a resource that defines a set of components and/or capabilities to import into this collection."]
     ]],
 
-    ["Defined-component.type.2", "Enumerated", [], "", [
-      [1, "interconnection", ""],
-      [2, "software", ""],
-      [3, "hardware", ""],
-      [4, "service", ""],
-      [5, "policy", ""],
-      [6, "physical", ""],
-      [7, "process-procedure", ""],
-      [8, "plan", ""],
-      [9, "guidance", ""],
-      [10, "standard", ""],
-      [11, "validation", ""]
-    ]],
-
-    ["Defined-component.type", "Choice", ["C", "O"], "A category describing the purpose of the component.", [
-      [1, "c1", "c:StringDatatype", [], ""],
-      [2, "c2", "Defined-component.type.2", [], ""]
-    ]],
-
     ["Defined-component", "Record", [], "A defined component that can be part of an implemented system.", [
       [1, "uuid", "c:UUIDDatatype", [], "Provides a globally unique means to identify a given component."],
       [2, "type", "Defined-component.type", [], "A category describing the purpose of the component."],
@@ -64,20 +45,23 @@
       [11, "remarks", "m:Remarks", ["[0"], ""]
     ]],
 
-    ["Capability", "Record", [], "A grouping of other components and/or capabilities.", [
-      [1, "uuid", "c:UUIDDatatype", [], "Provides a globally unique means to identify a given capability."],
-      [2, "name", "c:StringDatatype", [], "The capability's human-readable name."],
-      [3, "description", "String", [], "A summary of the capability."],
-      [4, "props", "m:Property", ["[0", "]0"], ""],
-      [5, "links", "m:Link", ["[0", "]0"], ""],
-      [6, "incorporates-components", "Incorporates-component", ["[0", "]0"], ""],
-      [7, "control-implementations", "Control-implementation", ["[0", "]0"], ""],
-      [8, "remarks", "m:Remarks", ["[0"], ""]
+    ["Defined-component.type", "Choice", ["CO"], "A category describing the purpose of the component.", [
+      [1, "c1", "c:StringDatatype", [], ""],
+      [2, "c2", "Defined-component.type.2", [], ""]
     ]],
 
-    ["Incorporates-component", "Record", [], "The collection of components comprising this capability.", [
-      [1, "component-uuid", "c:UUIDDatatype", [], "A machine-oriented identifier reference to a component."],
-      [2, "description", "String", [], "A description of the component, including information about its function."]
+    ["Defined-component.type.2", "Enumerated", [], "", [
+      [1, "interconnection", ""],
+      [2, "software", ""],
+      [3, "hardware", ""],
+      [4, "service", ""],
+      [5, "policy", ""],
+      [6, "physical", ""],
+      [7, "process-procedure", ""],
+      [8, "plan", ""],
+      [9, "guidance", ""],
+      [10, "standard", ""],
+      [11, "validation", ""]
     ]],
 
     ["Control-implementation", "Record", [], "Defines how the component or capability supports a set of controls.", [
@@ -110,6 +94,22 @@
       [5, "links", "m:Link", ["[0", "]0"], ""],
       [6, "responsible-roles", "m:Responsible-role", ["[0", "]0"], ""],
       [7, "remarks", "m:Remarks", ["[0"], ""]
+    ]],
+
+    ["Capability", "Record", [], "A grouping of other components and/or capabilities.", [
+      [1, "uuid", "c:UUIDDatatype", [], "Provides a globally unique means to identify a given capability."],
+      [2, "name", "c:StringDatatype", [], "The capability's human-readable name."],
+      [3, "description", "String", [], "A summary of the capability."],
+      [4, "props", "m:Property", ["[0", "]0"], ""],
+      [5, "links", "m:Link", ["[0", "]0"], ""],
+      [6, "incorporates-components", "Incorporates-component", ["[0", "]0"], ""],
+      [7, "control-implementations", "Control-implementation", ["[0", "]0"], ""],
+      [8, "remarks", "m:Remarks", ["[0"], ""]
+    ]],
+
+    ["Incorporates-component", "Record", [], "The collection of components comprising this capability.", [
+      [1, "component-uuid", "c:UUIDDatatype", [], "A machine-oriented identifier reference to a component."],
+      [2, "description", "String", [], "A description of the component, including information about its function."]
     ]]
   ]
 }

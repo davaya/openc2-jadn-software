@@ -11,18 +11,18 @@ OUT_DIR_COMBINED = '../../Out/Combined'
 OUT_DIR_PACKAGE = '../../Out/Package'
 SYS = '.'       # Separator character used in generated type names
 PREFIXES = {    # Pre-define OSCAL-specific namespaces
-    'oscal-catalog': 'cat:',
-    'oscal-profile': 'prf:',
-    'oscal-component-definition': 'cmp:',
-    'oscal-ssp': 'ssp:',
-    'oscal-ap': 'ap:',
-    'oscal-ar': 'ar:',
-    'oscal-poam': 'poam:',
-    'oscal-metadata': 'm:',
-    'oscal-control-common': 'cc:',
-    'oscal-implementation-common': 'ic:',
-    'oscal-assessment-common': 'ac:',
-    '': 'c:',
+    'oscal-catalog': 'cat',
+    'oscal-profile': 'prf',
+    'oscal-component-definition': 'cmp',
+    'oscal-ssp': 'ssp',
+    'oscal-ap': 'ap',
+    'oscal-ar': 'ar',
+    'oscal-poam': 'poam',
+    'oscal-metadata': 'm',
+    'oscal-control-common': 'cc',
+    'oscal-implementation-common': 'ic',
+    'oscal-assessment-common': 'ac',
+    '': 'c',
 }
 BLANK_PREFIX = 'oscal-common'
 CONFIG = {
@@ -51,37 +51,40 @@ def unfreeze_type(t: Union[list, tuple]) -> list[list]:  # Unfreeze a JADN type
 
 def un_namespace_names(names: list, ns: str) -> None:
     for n, na in enumerate(names):
-        names[n] = na.removeprefix(ns)
+        names[n] = na.removeprefix(ns + ':')
 
 
 def un_namespace_type(t: list, ns: str) -> None:
-    t[TypeName] = t[TypeName].removeprefix(ns)
+    t[TypeName] = t[TypeName].removeprefix(ns + ':')
     for f in t[Fields]:
-        f[FieldType] = f[FieldType].removeprefix(ns)
+        f[FieldType] = f[FieldType].removeprefix(ns + ':')
         if len(f) > FieldOptions:
             for n, fo in enumerate(f[FieldOptions]):    # TODO: check for double option
-                f[FieldOptions][n] = fo[0] + fo[1:].removeprefix(ns)
+                f[FieldOptions][n] = fo[0] + fo[1:].removeprefix(ns + ':')
 
 
 def sort_types(schema: dict) -> dict:
-    # deps = jadn.build_deps(schema)
-    # types = []
-    return {'info': schema['info'], 'types': schema['types']}
+    deps, refs = jadn.build_deps(schema)
+    ndeps = {}
+    for k, v in deps.items():
+        ndeps[k] = [i for i in v if ':' not in i]
+    tx = {k[TypeName]: k for k in schema['types']}
+    tlist = [tx[t] for t in jadn.topo_sort(ndeps, schema['info']['roots']) if t in tx]
+    return {'info': schema['info'], 'types': tlist}
 
 
-def make_info(ns_prefix: str, ref_info: dict, prefixes: dict) -> dict:
-    px = {v: k for k, v in prefixes.items()}
-    v = ref_info['info']
-    types = [k for k in ref_info['types'] if k[TypeName].startswith(prefixes[ns_prefix])]
+def make_info(ns_prefix: str, ns_ref: str, prefixes: dict, all_types: set) -> dict:
+    ns_base = ns_ref.rsplit('/', maxsplit=1)[0] + '/'
+    types = [k for k in all_types if k[TypeName].startswith(prefixes[ns_prefix] + ':')]
     deps, refs = jadn.build_deps({'types': types})
-    ns_base = v['package'].rsplit('/', maxsplit=1)[0] + '/'
     info = {
         'package': ns_base + ns_prefix,
-        'roots': [k.removeprefix(prefixes[ns_prefix]) for k in set(deps) - refs],
+        'roots': [k.removeprefix(prefixes[ns_prefix] + ':') for k in set(deps) - refs],
     }
+    px = {v: k for k, v in prefixes.items()}
     if ns_list := {k.split(':', maxsplit=1)[0] for k in refs - set(deps)}:
-        info.update({'namespaces': [[k + ':', ns_base + px[k + ':']] for k in ns_list]})
-    info.update(CONFIG)
+        info.update({'namespaces': [[k, ns_base + px[k]] for k in ns_list]})
+    info.update({'config': CONFIG})
     return info
 
 
@@ -173,13 +176,13 @@ class JADN:
         jtn = '#/definitions/Json-schema-directive' if jtn == '#json-schema-directive' else jtn     # fix special case
         ps = SYS + SYS.join(path) if path else ''   # convert path array to string
         if len(x := jtn.split('_')) == 3:   # Metaschema-style qualified names: '#assembly_oscal-ap_assessment-plan'
-            self.prefixes.update({x[1]: f'n{len(self.prefixes) + 1 :02d}:'} if x[1] not in self.prefixes else {})
+            self.prefixes.update({x[1]: f'n{len(self.prefixes) + 1 :02d}'} if x[1] not in self.prefixes else {})
             self.pf_used |= {x[1], }
-            return f'{self.prefixes[x[1]]}{x[2].capitalize()}{ps}'
+            return f'{self.prefixes[x[1]]}:{x[2].capitalize()}{ps}'
         elif jtn.startswith('#/definitions/') or (jtn := jsn):
             if jss.get(tn := jtn.removeprefix('#/definitions/'), '') != tn:
                 self.pf_used |= {'', }
-                return f'{self.prefixes[""]}{tn + ps}'  # Primitives
+                return f'{self.prefixes[""]}:{tn + ps}'  # Primitives
             raise ValueError(f'unexpected definition {jtn}')
         return jtn     # return root URI unchanged
 
@@ -252,8 +255,8 @@ class JADN:
                 fields.append((n, v, ''))
 
         elif cc := [c for c in ('anyOf', 'allOf', 'oneOf') if c in jsd]:
+            type_opts = [{'anyOf': 'CO', 'allOf': 'CA', 'oneOf': 'CX'}[cc[0]]]
             base_type = 'Choice'
-            type_opts = {'anyOf': 'CO', 'allOf': 'CA', 'oneOf': 'CX'}[cc[0]]
             for n, v in enumerate(jsd[cc[0]], start=1):
                 f_type = self.add_type(jsn, v, path + [str(n)], cur_type)
                 f_opts = []
@@ -289,6 +292,7 @@ if __name__ == '__main__':
     os.makedirs(OUT_DIR_PACKAGE, exist_ok=True)
     sc = defaultdict(dict)                          # Combined schemas
     sp = defaultdict(lambda: defaultdict(list))     # Package schemas
+    all_types = set()
     for f in os.listdir(SCHEMA_DIR):
         jsfile = os.path.join(SCHEMA_DIR, f)
         fn, fe = os.path.splitext(f)
@@ -304,6 +308,7 @@ if __name__ == '__main__':
             print(f'### Error: {f}: {e}')
             raise
 
+        all_types |= {t for t in jv.types}
         ns = jv.info['package'].rsplit('/', maxsplit=1)[1]
         jv.add_info({'config': CONFIG})
         sc[ns]['pf_used'] = jv.pf_used
@@ -317,7 +322,7 @@ if __name__ == '__main__':
         print('Namespaces:')
         for k, v in jv.prefixes.items():
             if k in jv.pf_used:
-                print(f'{v:>6} http:.../{k if k else BLANK_PREFIX}')
+                print(f'{v:>6}: http:.../{k if k else BLANK_PREFIX}')
 
         schema = {'info': info, 'types': jv.get_types()}
         deps, refs = jadn.build_deps(schema)
@@ -326,22 +331,20 @@ if __name__ == '__main__':
         print(f'undefined: {len(undef)} {undef}')
         print(f'unreferenced: {len(unref)} {unref}')
 
-        sorted_schema = sort_types(schema)
-        assert len(schema['types']) == len(sorted_schema['types'])
         outfile = os.path.join(OUT_DIR_COMBINED, fn) + '.jadn'
-        jadn.dump(sorted_schema, outfile)
+        jadn.dump(schema, outfile)
 
         px = {v: (k if k else BLANK_PREFIX) for k, v in jv.prefixes.items()}
         for t in jv.types:
             ns, tn = t[TypeName].split(':', maxsplit=1)
-            sp[px[ns + ':']][tn].append(t)
+            (sp[px[ns]][tn]).append(t)
 
     ################
     # Split combined schemas into package schemas
 
     print('\nNamespaces:')
     for k, v in jv.prefixes.items():
-        print(f'{v:>6} http:.../{k if k else BLANK_PREFIX}')
+        print(f'{v:>6}: http:.../{k if k else BLANK_PREFIX}')
 
     nqn = defaultdict(list)     # Find non-qualified name collisions
     for ns, tlist in sp.items():
@@ -360,7 +363,7 @@ if __name__ == '__main__':
         if ns in sc:
             info = sc[ns]['info']
         else:
-            info = make_info(ns, sc[list(sc)[0]], pf)
+            info = make_info(ns, sc[list(sc)[0]]['info']['package'], pf, all_types)
 
         types = [unfreeze_type(v[0]) for k, v in tlist.items()]
         un_namespace_names(info.get('roots', []), pf[ns])

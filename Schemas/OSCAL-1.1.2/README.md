@@ -1,7 +1,8 @@
 # OSCAL Information Modeling with JADN
 
 The NIST Open Security Controls Assessment Language (OSCAL) is defined using NIST Metaschema.
-OSCAL can also be defined using OASIS JSON Abstract Data Notation (JADN).
+OSCAL can also be defined using OASIS JSON Abstract Data Notation 
+([JADN](https://github.com/oasis-tcs/openc2-jadn/blob/working/jadn-v1.1.md)).
 This paper describes information modeling approaches and contrasts them using OSCAL as a non-trivial
 example that illustrates their differences in practical applications.
 
@@ -82,24 +83,28 @@ serialized in any data format. This is useful when doing conceptual design; it a
 and documented in a domain-specific language (DSL) without using XML or other serialized data. JADN DSLs are
 neither normative nor exclusive:
 * The normative structure of a JADN IM is application state that exhibits the required behavior.
-An IM can be instantiated as a single variable or set of class variables.
+An IM can be instantiated within applications as, for example, a
+[single variable](../../Images/oscal-concept-schema.jpg) or set of class variables.
 * JADN Information Definition Language (IDL) is a DSL used to represent JADN information models.
-Other hypothetical DSLs, such as one that mimics the syntax of ASN.1 or the terse grammar of CDDL,
+Other hypothetical DSLs, such as one that mimics the syntax of ASN.1 or the terse grammar of
+[CDDL](https://datatracker.ietf.org/doc/html/rfc8610),
 could represent the identical application state.
 *  The small number and regular structure of JADN elements facilitates design of both DSLs and serialized data formats.
 
-A conceptual OSCAL IM can be defined in JADN IDL solely from the OSCAL top-level description:
+A conceptual OSCAL IM can be defined in JADN IDL from the OSCAL top-level description:
 
 ![concept](../../Images/OSCAL-JADN-Notes.png)
 
 This conceptual JADN design minimizes duplication - the overall model structure is defined once
 as opposed to the OSCAL designer's approach of repeating the same Metaschema structure in each of the models.
-A goal of any information modeling language is to provide the expressive power to allow model designers
-to communicate their intent unambiguously, clearly and succinctly.
+A goal of any information modeling language is not to impose a design philosophy but to provide the
+expressive power to allow model designers to communicate their intent unambiguously, clearly and succinctly.
 
 The actual JADN information model for OSCAL matches the published OSCAL specification, which does not require
 content to appear in any particular order. Back-matter could appear at the front of an OSCAL document,
 or Metadata after the Body, because Metaschema Assembly definitions do not impose a serialization order.
+A JADN IM can define field ordering if that is the designer's intent.
+
 ```
        title: "OSCAL"
      package: "https://example.gov/ns/oscal/0.0.1/"
@@ -137,11 +142,13 @@ Model = Choice                                       // Model-specific content
 ## Summary
 | Feature           | JADN                                            | Metaschema                              |
 |-------------------|-------------------------------------------------|-----------------------------------------|
-| Model definition  | Logical value: IDL or serialized as data        | Data value: XML                         |
+| Model definition  | IDL or serialized as data in any format         | XML data                                |
+| Model instance    | Logical value: state in an application          | Data value: XML                         | 
 | Data translation  | Hub/spoke (data->logical->data): N translations | Star (data->data): N^2 translations     |
 | Information       | Logical model defines significant content       | Insignificant content is undefined      |
 | Datatypes         | Every type is a datatype                        | Only primitives (flags) are Datatypes   |
-| Fields/Properties | Assembly binds local name to type               | Field name bound globally to type       |
+| Fields/Properties | Assembly binds local name to type               | Field names are bound globally to types |
 | Field names       | Enumerated (numeric id and text name/label)     | Text name only                          |
+| Field order       | Assemblies are ordered or unordered set         | Assemblies are an unordered set         |
 | Data formats      | Character sequence (text) or byte sequence      | Character sequence only                 |
 | Packaging         | Models can be grouped in non-semantic bundles   | Types from multiple models can be mixed |

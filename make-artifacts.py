@@ -10,25 +10,25 @@ SCHEMA_DIR = 'Schemas'
 OUTPUT_DIR = 'Out'
 
 
-def translate(filename: str, sdir: str, odir: str) -> None:
-    if not os.path.isfile(p := os.path.join(sdir, filename)):
+def translate(filename: str, schema_dir: str, output_dir: str) -> None:
+    if not os.path.isfile(p := os.path.join(schema_dir, filename)):
         return
     with open(p, encoding='utf8') as fp:
         schema = jadn.load_any(fp)
     print(f'{filename}:\n' + '\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
 
     fn, ext = os.path.splitext(filename)
-    jadn.dump(schema, os.path.join(odir, fn + '.jadn'))
+    jadn.dump(schema, os.path.join(output_dir, fn + '.jadn'))
     jadn.dump(jadn.transform.unfold_extensions(jadn.transform.strip_comments(schema)),
-        os.path.join(odir, fn + '-core.jadn'))
-    jadn.convert.diagram_dump(schema, os.path.join(odir, fn + '_ia.dot'),
+        os.path.join(output_dir, fn + '-core.jadn'))
+    jadn.convert.diagram_dump(schema, os.path.join(output_dir, fn + '_ia.dot'),
         style={'format': 'graphviz', 'detail': 'information', 'attributes': True, 'links': True})
-    jadn.convert.diagram_dump(schema, os.path.join(odir, fn + '_i.puml'),
+    jadn.convert.diagram_dump(schema, os.path.join(output_dir, fn + '_i.puml'),
         style={'format': 'plantuml', 'detail': 'information', 'attributes': False, 'links': False})
-    jadn.convert.jidl_dump(schema, os.path.join(odir, fn + '.jidl'), style={'desc': 60, 'name': 24})
-    jadn.convert.html_dump(schema, os.path.join(odir, fn + '.html'))
-    jadn.convert.markdown_dump(schema, os.path.join(odir, fn + '.md'))
-    jadn.translate.json_schema_dump(schema, os.path.join(odir, fn + '.json'))
+    jadn.convert.jidl_dump(schema, os.path.join(output_dir, fn + '.jidl'), style={'desc': 60, 'name': 24})
+    jadn.convert.html_dump(schema, os.path.join(output_dir, fn + '.html'))
+    jadn.convert.markdown_dump(schema, os.path.join(output_dir, fn + '.md'))
+    jadn.translate.json_schema_dump(schema, os.path.join(output_dir, fn + '.json'))
 
 
 def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
