@@ -12,7 +12,7 @@ Information-centric information modeling methods are also available, including
 This note describes information modeling approaches and contrasts them using OSCAL as a non-trivial
 example and JADN as an IM to illustrate their differences in a practical application.
 
-## Background
+## 1 Background
 
 ASN.1 describes the difference between data-centric and information-centric approaches:
 
@@ -51,28 +51,28 @@ data format without losing information. Or phrased the other way, if it is a pro
 to not be preserved in another, then the definition of "significant" needs to be expanded so that every
 format represents the identical information.
 
-### Ontologies and Semantics
+### 1.1 Ontologies and Semantics
 
 Ontologies are concerned with semantics - the meaning of and relationships among resources.
 Datatypes define logical (information) and lexical (data) values and the lexical-to-(logical)-value (L2V)
 mapping between them, but today's ontologies support only primitive datatypes such as strings and numbers.
 An abstract syntax defines the L2V mapping for all logical values including data structures, messages and
-documents, and in an information-centric ontology every digital resource can be modeled by a datatype
+documents, and in an information-centric ontology every digital resource could be modeled as a datatype
 with an L2V mapping.
 
 Data modeling has a history beginning long before the advent of ontologies, with semantics defined
 by conceptual and logical data models illustrated using entity relationship diagrams, and physical
-data models for specific storage formats.
+data models for specific storage formats. But the ontology terminology of datatypes performing L2V
+mapping is a particularly precise way of explaining the logical/lexical relationship.
 
 ![ERD](../../Images/erd-template.png)
 
-As described by ASN.1, abstract syntaxes define the semantics of logical values, whether originating
-with logical data models or ontological relationships, with the translation from logical information to
-physical/lexical data defined in separate mapping/encoding/serialization specifications. JADN supports
-the semantics of foreign key links to types with a primary key field: "contain" and "reference" are
-the only kinds of relationship between logical values.
+As described by ASN.1, abstract syntaxes define the semantics of logical values,
+with the translation from logical to physical/lexical defined in encoding specifications separate
+from the logical type definitions. References from instances of one type to another are included
+in that semantics, and an information model graph has only two kinds of edge: *contain* and *reference*.
 
-### Common Platform Enumeration
+### 1.2 Common Platform Enumeration
 
 Before getting to OSCAL, the Common Platform Enumeration
 ([CPE](https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf))
@@ -85,7 +85,9 @@ included in some data formats, or an Array type if field names are annotations t
 in lexical data, supporting natural language agnostic documents and protocols (I18N).
 * The designer can designate Record and Array semantics as sets or ordered sets, which
 determines which serializations are possible. An ordered set cannot have an L2V mapping to a JSON object
-because objects do not preserve order. Any set can have an L2V mapping to a JSON array because the
+using just a data model because objects do not preserve order. If messages are processed at runtime
+by an information model, object properties can be reordered as needed to conform to the logical type definition.
+Any set can have an L2V mapping to a JSON array because the
 array preserves positioning and the L2V mapping assigns logical names to lexical positions.
 * An L2V mapping from the 12-field logical WFN to a single-string lexical value would be defined using
 format options such as /cpe-22 or /cpe-23.
@@ -93,7 +95,7 @@ format options such as /cpe-22 or /cpe-23.
 Defining CPE using Metaschema would illustrate the issues information-centric information models are
 designed to address.
 
-## JADN Description
+## 2 Metaschema and JADN Comparison
 
 Information models
 
@@ -128,8 +130,6 @@ Metaschema defines "combined" schemas and "unified model of models".
   * blank namespace prefixes allow types to be merged from multiple packages into a single package if contexts are compatible
 * **Bundle** is a set of packages serialized together for transmission or storage
   * has no logical value: no id, no nesting, no association among packages, no persistent group after parsing
-
-## Metaschema and JADN Comparison
 
 ### Data-centric
 
@@ -195,9 +195,8 @@ Model = Choice                                       // Model-specific content
    7 poam             Plan-of-action-and-milestones  // Assessment layer: Plan of action and milestones: findings to be addressed by system owner
 ```
 
-![loops vs links](../../Images/erd-template.png)
 
-## Summary
+## 4 Summary
 | Feature           | JADN                                            | Metaschema                              |
 |-------------------|-------------------------------------------------|-----------------------------------------|
 | Model definition  | IDL or serialized as data in any format         | XML data                                |
