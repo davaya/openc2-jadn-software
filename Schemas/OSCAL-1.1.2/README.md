@@ -46,15 +46,16 @@ therefore any data in excess of the smallest possible serialized value is insign
 Whitespace is a common example of insignificant data; the meaning of a message is unaffected by
 inserting or deleting it.
 Information modeling defines significance at the logical level: any data that does not affect a logical
-value (isn't included in the smallest serialized value) is insignificant and can be discarded from any
+value (isn't included the abstract type definition) is insignificant and can be discarded from any
 data format without losing information. Or phrased the other way, if it is a problem for data in one format
-to not be preserved in another, then the definition of "significant" needs to be expanded so that every
-format represents the identical information.
+to not be preserved when translated to another format, then the definition of significant needs to be
+expanded to include that information.
 
 ### 1.1 Ontologies and Semantics
 
 Ontologies are concerned with semantics - the meaning of and relationships among resources.
-Datatypes define logical (information) and lexical (data) values and the lexical-to-(logical)-value (L2V)
+[Datatypes](https://www.w3.org/TR/rdf12-concepts/#section-Datatypes) define
+logical (information) and lexical (data) values and the lexical-to-(logical)-value (L2V)
 mapping between them, but today's ontologies support only primitive datatypes such as strings and numbers.
 An abstract syntax defines the L2V mapping for all logical values including data structures, messages and
 documents, and in an information-centric ontology every digital resource could be modeled as a datatype
