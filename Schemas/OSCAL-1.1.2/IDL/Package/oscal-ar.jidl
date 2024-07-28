@@ -1,8 +1,8 @@
      package: "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-ar"
   namespaces: [["m", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"], ["cc", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common"], ["ic", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-implementation-common"], ["ac", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-assessment-common"], ["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"]]
       config: {"$MaxString": 1000, "$Sys": ".", "$TypeName": "^[$A-Z][-.$A-Za-z0-9]{0,96}$", "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"}
-       roots: ["Assessment-results"]
      comment: "OSCAL Assessment Results Model: JSON Schema"
+       roots: ["Assessment-results"]
 
 Assessment-results = Record                                  // Security assessment results, such as those provided by a FedRAMP assessor in the FedRAMP Security Assessment Report.
    1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this assessment results instance in this or other OSCAL instances. The locally defined UUID of the assessment result can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.

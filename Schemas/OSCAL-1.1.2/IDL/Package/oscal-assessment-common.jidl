@@ -1,7 +1,7 @@
      package: "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-assessment-common"
-  namespaces: [["m", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"], ["ic", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-implementation-common"], ["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"], ["cc", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common"]]
+  namespaces: [["cc", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common"], ["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"], ["ic", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-implementation-common"], ["m", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"]]
       config: {"$MaxString": 1000, "$Sys": ".", "$TypeName": "^[$A-Z][-.$A-Za-z0-9]{0,96}$", "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"}
-       roots: ["Activity", "Assessment-assets", "Assessment-subject-placeholder", "Observation", "Finding", "Risk", "Local-objective", "Import-ssp", "Assessment-method"]
+       roots: ["Activity", "Assessment-assets", "Assessment-method", "Assessment-subject-placeholder", "Finding", "Import-ssp", "Local-objective", "Observation", "Risk"]
 
 Activity = Record                                            // Identifies an assessment or related process that can be performed. In the assessment plan, this is an intended activity which may be associated with an assessment task. In the assessment results, this an activity that was actually performed as part of an assessment.
    1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this assessment activity elsewhere in this or other OSCAL instances. The locally defined UUID of the activity can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
@@ -76,6 +76,34 @@ Assessment-assets.assessment-platforms.uses-components = Record // The set of co
    4 responsible-parties      m:Responsible-party [0..*]
    5 remarks                  m:Remarks optional
 
+Assessment-method = Record                                   // A local definition of a control objective. Uses catalog syntax for control objective and assessment activities.
+   1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this assessment method elsewhere in this or other OSCAL instances. The locally defined UUID of the assessment method can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
+   2 description              String optional                // A human-readable description of this assessment method.
+   3 props                    m:Property [0..*]
+   4 links                    m:Link [0..*]
+   5 part                     Assessment-part
+   6 remarks                  m:Remarks optional
+
+Assessment-part = Record                                     // A partition of an assessment plan or results or a child of another part.
+   1 uuid                     c:UUIDDatatype optional        // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this part elsewhere in this or other OSCAL instances. The locally defined UUID of the part can be used to reference the data item locally or globally (e.g., in an ported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
+   2 name                     Assessment-part.name           // A textual label that uniquely identifies the part's semantic type.
+   3 ns                       c:URIDatatype optional         // A namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name.
+   4 class                    c:TokenDatatype optional       // A textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns.
+   5 title                    String optional                // A name given to the part, which may be used by a tool for display and navigation.
+   6 props                    m:Property [0..*]
+   7 prose                    String optional                // Permits multiple paragraphs, lists, tables etc.
+   8 parts                    Assessment-part [0..*]
+   9 links                    m:Link [0..*]
+
+Assessment-part.name = Choice(anyOf)                         // A textual label that uniquely identifies the part's semantic type.
+   1  c:TokenDatatype                                        // c1::
+   2  Assessment-part.name.2                                 // c2::
+
+Assessment-part.name.2 = Enumerated
+   1 asset
+   2 method
+   3 objective
+
 Assessment-subject-placeholder = Record                      // Used when the assessment subjects will be determined as part of one or more other assessment activities. These assessment subjects will be recorded in the assessment results in the assessment log.
    1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier for a set of assessment subjects that will be identified by a task or an activity that is part of a task. The locally defined UUID of the assessment subject placeholder can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
    2 description              String optional                // A human-readable description of intent of this assessment subject placeholder.
@@ -87,41 +115,18 @@ Assessment-subject-placeholder = Record                      // Used when the as
 Assessment-subject-placeholder.sources = Record              // Assessment subjects will be identified while conducting the referenced activity-instance.
    1 task-uuid                c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference (in this or other OSCAL instances) an assessment activity to be performed as part of the event. The locally defined UUID of the task can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
 
-Observation = Record                                         // Describes an individual observation.
-   1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this observation elsewhere in this or other OSCAL instances. The locally defined UUID of the observation can be used to reference the data item locally or globally (e.g., in an imorted OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
-   2 title                    String optional                // The title for this observation.
-   3 description              String                         // A human-readable description of this assessment observation.
+Finding = Record                                             // Describes an individual finding.
+   1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this finding in this or other OSCAL instances. The locally defined UUID of the finding can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
+   2 title                    String                         // The title for this finding.
+   3 description              String                         // A human-readable description of this finding.
    4 props                    m:Property [0..*]
    5 links                    m:Link [0..*]
-   6 methods                  Observation.methods [1..*]
-   7 types                    Observation.types [0..*]
-   8 origins                  Origin [0..*]
-   9 subjects                 Subject-reference [0..*]
-  10 relevant-evidence        Observation.relevant-evidence [0..*]
-  11 collected                c:DateTimeWithTimezoneDatatype // Date/time stamp identifying when the finding information was collected.
-  12 expires                  c:DateTimeWithTimezoneDatatype optional // Date/time identifying when the finding information is out-of-date and no longer valid. Typically used with continuous assessment scenarios.
-  13 remarks                  m:Remarks optional
-
-Observation.methods = Choice(anyOf)                          // Identifies how the observation was made.
-   1  c:StringDatatype                                       // c1::
-   2  Observation.methods.2                                  // c2::
-
-Observation.methods.2 = Enumerated
-   1 EXAMINE
-   2 INTERVIEW
-   3 TEST
-   4 UNKNOWN
-
-Observation.types = Choice(anyOf)                            // Identifies the nature of the observation. More than one may be used to further qualify and enable filtering.
-   1  c:TokenDatatype                                        // c1::
-   2  Observation.types.2                                    // c2::
-
-Observation.types.2 = Enumerated
-   1 ssp-statement-issue
-   2 control-objective
-   3 mitigation
-   4 finding
-   5 historic
+   6 origins                  Origin [0..*]
+   7 target                   Finding-target
+   8 implementation-statement-uuid c:UUIDDatatype optional   // A machine-oriented identifier reference to the implementation statement in the SSP to which this finding is related.
+   9 related-observations     Finding.related-observations [0..*]
+  10 related-risks            Finding.related-risks [0..*]
+  11 remarks                  m:Remarks optional
 
 Origin = Record                                              // Identifies the source of the finding, such as a tool, interviewed person, or activity.
    1 actors                   Origin-actor [1..*]
@@ -196,46 +201,6 @@ Related-task.identified-subject = Record                     // Used to detail a
    1 subject-placeholder-uuid c:UUIDDatatype                 // A machine-oriented identifier reference to a unique assessment subject placeholder defined by this task.
    2 subjects                 Assessment-subject [1..*]
 
-Subject-reference = Record                                   // A human-oriented identifier reference to a resource. Use type to indicate whether the identified resource is a component, inventory item, location, user, or something else.
-   1 subject-uuid             c:UUIDDatatype                 // A machine-oriented identifier reference to a component, inventory-item, location, party, user, or resource using it's UUID.
-   2 type                     Subject-reference.type         // Used to indicate the type of object pointed to by the uuid-ref within a subject.
-   3 title                    String optional                // The title or name for the referenced subject.
-   4 props                    m:Property [0..*]
-   5 links                    m:Link [0..*]
-   6 remarks                  m:Remarks optional
-
-Subject-reference.type = Choice(anyOf)                       // Used to indicate the type of object pointed to by the uuid-ref within a subject.
-   1  c:TokenDatatype                                        // c1::
-   2  Subject-reference.type.2                               // c2::
-
-Subject-reference.type.2 = Enumerated
-   1 component
-   2 inventory-item
-   3 location
-   4 party
-   5 user
-   6 resource
-
-Observation.relevant-evidence = Record                       // Links this observation to relevant evidence.
-   1 href                     c:URIReferenceDatatype optional // A resolvable URL reference to relevant evidence.
-   2 description              String                         // A human-readable description of this evidence.
-   3 props                    m:Property [0..*]
-   4 links                    m:Link [0..*]
-   5 remarks                  m:Remarks optional
-
-Finding = Record                                             // Describes an individual finding.
-   1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this finding in this or other OSCAL instances. The locally defined UUID of the finding can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
-   2 title                    String                         // The title for this finding.
-   3 description              String                         // A human-readable description of this finding.
-   4 props                    m:Property [0..*]
-   5 links                    m:Link [0..*]
-   6 origins                  Origin [0..*]
-   7 target                   Finding-target
-   8 implementation-statement-uuid c:UUIDDatatype optional   // A machine-oriented identifier reference to the implementation statement in the SSP to which this finding is related.
-   9 related-observations     Finding.related-observations [0..*]
-  10 related-risks            Finding.related-risks [0..*]
-  11 remarks                  m:Remarks optional
-
 Finding-target = Record                                      // Captures an assessor's conclusions regarding the degree to which an objective is satisfied.
    1 type                     Finding-target.type            // Identifies the type of the target.
    2 target-id                c:TokenDatatype                // A machine-oriented identifier reference for a specific target qualified by the type.
@@ -282,6 +247,81 @@ Finding.related-observations = Record                        // Relates the find
 
 Finding.related-risks = Record                               // Relates the finding to a set of referenced risks that were used to determine the finding.
    1 risk-uuid                c:UUIDDatatype                 // A machine-oriented identifier reference to a risk defined in the list of risks.
+
+Import-ssp = Record                                          // Used by the assessment plan and POA&M to import information about the system.
+   1 href                     c:URIReferenceDatatype         // A resolvable URL reference to the system security plan for the system being assessed.
+   2 remarks                  m:Remarks optional
+
+Local-objective = Record                                     // A local definition of a control objective for this assessment. Uses catalog syntax for control objective and assessment actions.
+   1 control-id               c:TokenDatatype                // A reference to a control with a corresponding id value. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference).
+   2 description              String optional                // A human-readable description of this control objective.
+   3 props                    m:Property [0..*]
+   4 links                    m:Link [0..*]
+   5 parts                    cc:Part [1..*]
+   6 remarks                  m:Remarks optional
+
+Observation = Record                                         // Describes an individual observation.
+   1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this observation elsewhere in this or other OSCAL instances. The locally defined UUID of the observation can be used to reference the data item locally or globally (e.g., in an imorted OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
+   2 title                    String optional                // The title for this observation.
+   3 description              String                         // A human-readable description of this assessment observation.
+   4 props                    m:Property [0..*]
+   5 links                    m:Link [0..*]
+   6 methods                  Observation.methods [1..*]
+   7 types                    Observation.types [0..*]
+   8 origins                  Origin [0..*]
+   9 subjects                 Subject-reference [0..*]
+  10 relevant-evidence        Observation.relevant-evidence [0..*]
+  11 collected                c:DateTimeWithTimezoneDatatype // Date/time stamp identifying when the finding information was collected.
+  12 expires                  c:DateTimeWithTimezoneDatatype optional // Date/time identifying when the finding information is out-of-date and no longer valid. Typically used with continuous assessment scenarios.
+  13 remarks                  m:Remarks optional
+
+Observation.methods = Choice(anyOf)                          // Identifies how the observation was made.
+   1  c:StringDatatype                                       // c1::
+   2  Observation.methods.2                                  // c2::
+
+Observation.methods.2 = Enumerated
+   1 EXAMINE
+   2 INTERVIEW
+   3 TEST
+   4 UNKNOWN
+
+Observation.types = Choice(anyOf)                            // Identifies the nature of the observation. More than one may be used to further qualify and enable filtering.
+   1  c:TokenDatatype                                        // c1::
+   2  Observation.types.2                                    // c2::
+
+Observation.types.2 = Enumerated
+   1 ssp-statement-issue
+   2 control-objective
+   3 mitigation
+   4 finding
+   5 historic
+
+Subject-reference = Record                                   // A human-oriented identifier reference to a resource. Use type to indicate whether the identified resource is a component, inventory item, location, user, or something else.
+   1 subject-uuid             c:UUIDDatatype                 // A machine-oriented identifier reference to a component, inventory-item, location, party, user, or resource using it's UUID.
+   2 type                     Subject-reference.type         // Used to indicate the type of object pointed to by the uuid-ref within a subject.
+   3 title                    String optional                // The title or name for the referenced subject.
+   4 props                    m:Property [0..*]
+   5 links                    m:Link [0..*]
+   6 remarks                  m:Remarks optional
+
+Subject-reference.type = Choice(anyOf)                       // Used to indicate the type of object pointed to by the uuid-ref within a subject.
+   1  c:TokenDatatype                                        // c1::
+   2  Subject-reference.type.2                               // c2::
+
+Subject-reference.type.2 = Enumerated
+   1 component
+   2 inventory-item
+   3 location
+   4 party
+   5 user
+   6 resource
+
+Observation.relevant-evidence = Record                       // Links this observation to relevant evidence.
+   1 href                     c:URIReferenceDatatype optional // A resolvable URL reference to relevant evidence.
+   2 description              String                         // A human-readable description of this evidence.
+   3 props                    m:Property [0..*]
+   4 links                    m:Link [0..*]
+   5 remarks                  m:Remarks optional
 
 Risk = Record                                                // An identified risk.
    1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this risk elsewhere in this or other OSCAL instances. The locally defined UUID of the risk can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
@@ -483,43 +523,3 @@ Risk.risk-log.entries.related-responses = Record             // Identifies an in
 
 Risk.related-observations = Record                           // Relates the finding to a set of referenced observations that were used to determine the finding.
    1 observation-uuid         c:UUIDDatatype                 // A machine-oriented identifier reference to an observation defined in the list of observations.
-
-Local-objective = Record                                     // A local definition of a control objective for this assessment. Uses catalog syntax for control objective and assessment actions.
-   1 control-id               c:TokenDatatype                // A reference to a control with a corresponding id value. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference).
-   2 description              String optional                // A human-readable description of this control objective.
-   3 props                    m:Property [0..*]
-   4 links                    m:Link [0..*]
-   5 parts                    cc:Part [1..*]
-   6 remarks                  m:Remarks optional
-
-Import-ssp = Record                                          // Used by the assessment plan and POA&M to import information about the system.
-   1 href                     c:URIReferenceDatatype         // A resolvable URL reference to the system security plan for the system being assessed.
-   2 remarks                  m:Remarks optional
-
-Assessment-method = Record                                   // A local definition of a control objective. Uses catalog syntax for control objective and assessment activities.
-   1 uuid                     c:UUIDDatatype                 // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this assessment method elsewhere in this or other OSCAL instances. The locally defined UUID of the assessment method can be used to reference the data item locally or globally (e.g., in an imported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
-   2 description              String optional                // A human-readable description of this assessment method.
-   3 props                    m:Property [0..*]
-   4 links                    m:Link [0..*]
-   5 part                     Assessment-part
-   6 remarks                  m:Remarks optional
-
-Assessment-part = Record                                     // A partition of an assessment plan or results or a child of another part.
-   1 uuid                     c:UUIDDatatype optional        // A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this part elsewhere in this or other OSCAL instances. The locally defined UUID of the part can be used to reference the data item locally or globally (e.g., in an ported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.
-   2 name                     Assessment-part.name           // A textual label that uniquely identifies the part's semantic type.
-   3 ns                       c:URIDatatype optional         // A namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name.
-   4 class                    c:TokenDatatype optional       // A textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns.
-   5 title                    String optional                // A name given to the part, which may be used by a tool for display and navigation.
-   6 props                    m:Property [0..*]
-   7 prose                    String optional                // Permits multiple paragraphs, lists, tables etc.
-   8 parts                    Assessment-part [0..*]
-   9 links                    m:Link [0..*]
-
-Assessment-part.name = Choice(anyOf)                         // A textual label that uniquely identifies the part's semantic type.
-   1  c:TokenDatatype                                        // c1::
-   2  Assessment-part.name.2                                 // c2::
-
-Assessment-part.name.2 = Enumerated
-   1 asset
-   2 method
-   3 objective

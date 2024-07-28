@@ -1,10 +1,90 @@
      package: "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"
   namespaces: [["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"]]
       config: {"$MaxString": 1000, "$Sys": ".", "$TypeName": "^[$A-Z][-.$A-Za-z0-9]{0,96}$", "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"}
-       roots: ["Role-id", "Metadata", "Responsible-role", "Back-matter"]
+       roots: ["Back-matter", "Metadata", "Responsible-role", "Role-id"]
 
-Role-id = Choice(allOf)                                      // Reference to a role by UUID.
-   1  c:TokenDatatype                                        // alias::
+Back-matter = Record                                         // A collection of resources that may be referenced from within the OSCAL document instance.
+   1 resources                Back-matter.resources [0..*]
+
+Back-matter.resources = Record                               // A resource associated with content in the containing document instance. A resource may be directly included in the document using base64 encoding or may point to one or more equivalent internet resources.
+   1 uuid                     c:UUIDDatatype                 // A unique identifier for a resource.
+   2 title                    String optional                // An optional name given to the resource, which may be used by a tool for display and navigation.
+   3 description              String optional                // An optional short summary of the resource used to indicate the purpose of the resource.
+   4 props                    Property [0..*]
+   5 document-ids             Document-id [0..*]
+   6 citation                 Back-matter.resources.citation optional // An optional citation consisting of end note text using structured markup.
+   7 rlinks                   Back-matter.resources.rlinks [0..*]
+   8 base64                   Back-matter.resources.base64 optional // A resource encoded using the Base64 alphabet defined by RFC 2045.
+   9 remarks                  Remarks optional
+
+Property = Record                                            // An attribute, characteristic, or quality of the containing object expressed as a namespace qualified name/value pair.
+   1 name                     c:TokenDatatype                // A textual label, within a namespace, that uniquely identifies a specific attribute, characteristic, or quality of the property's containing object.
+   2 uuid                     c:UUIDDatatype optional        // A unique identifier for a property.
+   3 ns                       c:URIDatatype optional         // A namespace qualifying the property's name. This allows different organizations to associate distinct semantics with the same name.
+   4 value                    c:StringDatatype               // Indicates the value of the attribute, characteristic, or quality.
+   5 class                    c:TokenDatatype optional       // A textual label that provides a sub-type or characterization of the property's name.
+   6 group                    c:TokenDatatype optional       // An identifier for relating distinct sets of properties.
+   7 remarks                  Remarks optional
+
+Remarks = String                                             // Additional commentary about the containing object.
+
+Document-id = Record                                         // A document identifier qualified by an identifier scheme.
+   1 scheme                   Document-id.scheme optional    // Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters.
+   2 identifier               c:StringDatatype
+
+Document-id.scheme = Choice(anyOf)                           // Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters.
+   1  c:URIDatatype                                          // c1::
+   2  Document-id.scheme.2                                   // c2::
+
+Document-id.scheme.2 = Enumerated
+   1 http://www.doi.org/
+
+Back-matter.resources.citation = Record                      // An optional citation consisting of end note text using structured markup.
+   1 text                     String                         // A line of citation text.
+   2 props                    Property [0..*]
+   3 links                    Link [0..*]
+
+Link = Record                                                // A reference to a local or remote resource, that has a specific relation to the containing object.
+   1 href                     c:URIReferenceDatatype         // A resolvable URL reference to a resource.
+   2 rel                      Link.rel optional              // Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose.
+   3 media-type               c:StringDatatype optional      // A label that indicates the nature of a resource, as a data serialization or format.
+   4 resource-fragment        c:StringDatatype optional      // In case where the href points to a back-matter/resource, this value will indicate the URI fragment to append to any rlink associated with the resource. This value MUST be URI encoded.
+   5 text                     String optional                // A textual label to associate with the link, which may be used for presentation in a tool.
+
+Link.rel = Choice(anyOf)                                     // Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose.
+   1  c:TokenDatatype                                        // c1::
+   2  Link.rel.2                                             // c2::
+
+Link.rel.2 = Enumerated
+   1 reference
+
+Back-matter.resources.rlinks = Record                        // A URL-based pointer to an external resource with an optional hash for verification and change detection.
+   1 href                     c:URIReferenceDatatype         // A resolvable URL pointing to the referenced resource.
+   2 media-type               c:StringDatatype optional      // A label that indicates the nature of a resource, as a data serialization or format.
+   3 hashes                   Hash [0..*]
+
+Hash = Record                                                // A representation of a cryptographic digest generated over a resource using a specified hash algorithm.
+   1 algorithm                Hash.algorithm                 // The digest method by which a hash is derived.
+   2 value                    c:StringDatatype
+
+Hash.algorithm = Choice(anyOf)                               // The digest method by which a hash is derived.
+   1  c:StringDatatype                                       // c1::
+   2  Hash.algorithm.2                                       // c2::
+
+Hash.algorithm.2 = Enumerated
+   1 SHA-224
+   2 SHA-256
+   3 SHA-384
+   4 SHA-512
+   5 SHA3-224
+   6 SHA3-256
+   7 SHA3-384
+   8 SHA3-512
+
+Back-matter.resources.base64 = Record                        // A resource encoded using the Base64 alphabet defined by RFC 2045.
+   1 filename                 c:TokenDatatype optional       // Name of the file before it was encoded as Base64 to be embedded in a resource. This is the name that will be assigned to the file when the file is decoded.
+   2 media-type               c:StringDatatype optional      // A label that indicates the nature of a resource, as a data serialization or format.
+   3 value                    c:Base64Datatype
 
 Metadata = Record                                            // Provides information about the containing document, and defines concepts that are shared across the document.
    1 title                    String                         // A name given to the document, which may be used by a tool for display and navigation.
@@ -44,42 +124,6 @@ Metadata.revisions = Record                                  // An entry in a se
    6 props                    Property [0..*]
    7 links                    Link [0..*]
    8 remarks                  Remarks optional
-
-Property = Record                                            // An attribute, characteristic, or quality of the containing object expressed as a namespace qualified name/value pair.
-   1 name                     c:TokenDatatype                // A textual label, within a namespace, that uniquely identifies a specific attribute, characteristic, or quality of the property's containing object.
-   2 uuid                     c:UUIDDatatype optional        // A unique identifier for a property.
-   3 ns                       c:URIDatatype optional         // A namespace qualifying the property's name. This allows different organizations to associate distinct semantics with the same name.
-   4 value                    c:StringDatatype               // Indicates the value of the attribute, characteristic, or quality.
-   5 class                    c:TokenDatatype optional       // A textual label that provides a sub-type or characterization of the property's name.
-   6 group                    c:TokenDatatype optional       // An identifier for relating distinct sets of properties.
-   7 remarks                  Remarks optional
-
-Remarks = String                                             // Additional commentary about the containing object.
-
-Link = Record                                                // A reference to a local or remote resource, that has a specific relation to the containing object.
-   1 href                     c:URIReferenceDatatype         // A resolvable URL reference to a resource.
-   2 rel                      Link.rel optional              // Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose.
-   3 media-type               c:StringDatatype optional      // A label that indicates the nature of a resource, as a data serialization or format.
-   4 resource-fragment        c:StringDatatype optional      // In case where the href points to a back-matter/resource, this value will indicate the URI fragment to append to any rlink associated with the resource. This value MUST be URI encoded.
-   5 text                     String optional                // A textual label to associate with the link, which may be used for presentation in a tool.
-
-Link.rel = Choice(anyOf)                                     // Describes the type of relationship provided by the link's hypertext reference. This can be an indicator of the link's purpose.
-   1  c:TokenDatatype                                        // c1::
-   2  Link.rel.2                                             // c2::
-
-Link.rel.2 = Enumerated
-   1 reference
-
-Document-id = Record                                         // A document identifier qualified by an identifier scheme.
-   1 scheme                   Document-id.scheme optional    // Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters.
-   2 identifier               c:StringDatatype
-
-Document-id.scheme = Choice(anyOf)                           // Qualifies the kind of document identifier using a URI. If the scheme is not provided the value of the element will be interpreted as a string of characters.
-   1  c:URIDatatype                                          // c1::
-   2  Document-id.scheme.2                                   // c2::
-
-Document-id.scheme.2 = Enumerated
-   1 http://www.doi.org/
 
 Metadata.roles = Record                                      // Defines a function, which might be assigned to a party in a specific situation.
    1 id                       c:TokenDatatype                // A unique identifier for the role.
@@ -200,49 +244,5 @@ Responsible-role = Record                                    // A reference to a
    4 party-uuids              Party-uuid [0..*]
    5 remarks                  Remarks optional
 
-Back-matter = Record                                         // A collection of resources that may be referenced from within the OSCAL document instance.
-   1 resources                Back-matter.resources [0..*]
-
-Back-matter.resources = Record                               // A resource associated with content in the containing document instance. A resource may be directly included in the document using base64 encoding or may point to one or more equivalent internet resources.
-   1 uuid                     c:UUIDDatatype                 // A unique identifier for a resource.
-   2 title                    String optional                // An optional name given to the resource, which may be used by a tool for display and navigation.
-   3 description              String optional                // An optional short summary of the resource used to indicate the purpose of the resource.
-   4 props                    Property [0..*]
-   5 document-ids             Document-id [0..*]
-   6 citation                 Back-matter.resources.citation optional // An optional citation consisting of end note text using structured markup.
-   7 rlinks                   Back-matter.resources.rlinks [0..*]
-   8 base64                   Back-matter.resources.base64 optional // A resource encoded using the Base64 alphabet defined by RFC 2045.
-   9 remarks                  Remarks optional
-
-Back-matter.resources.citation = Record                      // An optional citation consisting of end note text using structured markup.
-   1 text                     String                         // A line of citation text.
-   2 props                    Property [0..*]
-   3 links                    Link [0..*]
-
-Back-matter.resources.rlinks = Record                        // A URL-based pointer to an external resource with an optional hash for verification and change detection.
-   1 href                     c:URIReferenceDatatype         // A resolvable URL pointing to the referenced resource.
-   2 media-type               c:StringDatatype optional      // A label that indicates the nature of a resource, as a data serialization or format.
-   3 hashes                   Hash [0..*]
-
-Hash = Record                                                // A representation of a cryptographic digest generated over a resource using a specified hash algorithm.
-   1 algorithm                Hash.algorithm                 // The digest method by which a hash is derived.
-   2 value                    c:StringDatatype
-
-Hash.algorithm = Choice(anyOf)                               // The digest method by which a hash is derived.
-   1  c:StringDatatype                                       // c1::
-   2  Hash.algorithm.2                                       // c2::
-
-Hash.algorithm.2 = Enumerated
-   1 SHA-224
-   2 SHA-256
-   3 SHA-384
-   4 SHA-512
-   5 SHA3-224
-   6 SHA3-256
-   7 SHA3-384
-   8 SHA3-512
-
-Back-matter.resources.base64 = Record                        // A resource encoded using the Base64 alphabet defined by RFC 2045.
-   1 filename                 c:TokenDatatype optional       // Name of the file before it was encoded as Base64 to be embedded in a resource. This is the name that will be assigned to the file when the file is decoded.
-   2 media-type               c:StringDatatype optional      // A label that indicates the nature of a resource, as a data serialization or format.
-   3 value                    c:Base64Datatype
+Role-id = Choice(allOf)                                      // Reference to a role by UUID.
+   1  c:TokenDatatype                                        // alias::

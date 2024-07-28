@@ -45,11 +45,22 @@ vs. insignificance. No data value can be smaller than the information content of
 therefore any data in excess of the smallest possible serialized value is insignificant.
 Whitespace is a common example of insignificant data; the meaning of a message is unaffected by
 inserting or deleting it.
+
 Information modeling defines significance at the logical level: any data that does not affect a logical
 value (isn't included the abstract type definition) is insignificant and can be discarded from any
 data format without losing information. Or phrased the other way, if it is a problem for data in one format
 to not be preserved when translated to another format, then the definition of significant needs to be
 expanded to include that information.
+
+Entropy is directly involved in the semantics of strings - unrestricted strings have the most, classes
+of strings restricted by character set or patterns have less, and enumerated sets such as field names,
+map keys, or vocabularies have by far the least and are thus most efficient. There is no syntactic
+difference between an observation type of "mitigation" chosen from a set of five possibilities
+("ssp-statement-issue", "control-objective", "mitigation", "finding", "historic") and the identical
+string chosen from an unlimited set of possibilities including "parameter-constraint", "purina-cat-chow",
+and "four-score-and-seven-years-ago-our-forefathers-brought-forth-to-this-continent-a-new-nation".
+But the semantic difference between enumerated and general string types is obvious - enumerated and
+restricted string types are preferred for practical, not just theoretical, reasons.
 
 ### 1.1 Ontologies and Semantics
 
@@ -77,8 +88,8 @@ in that semantics, and an information model graph has only two kinds of edge: *c
 
 Before getting to OSCAL, the Common Platform Enumeration
 ([CPE](https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf))
-is a clear illustration of logical vs. lexical values. CPE is a compound datatype with an L2V mapping
-between logical values (well-formed names) and lexical values (the result of a binding).
+is a clear illustration of the difference between logical and lexical values.
+CPE is a compound datatype with an L2V mapping between well-formed names and lexical representations.
 A JADN CPE type would define the logical value in terms of requirements:
 * A CPE instance is a set of 12 defined fields
 * The model designer can define CPE as either a Record type if field names are normative and optionally
@@ -93,8 +104,7 @@ array preserves positioning and the L2V mapping assigns logical names to lexical
 * An L2V mapping from the 12-field logical WFN to a single-string lexical value would be defined using
 format options such as /cpe-22 or /cpe-23.
 
-Defining CPE using Metaschema would illustrate the issues information-centric information models are
-designed to address.
+Defining CPE using Metaschema would illustrate the significance of logical values in information modeling.
 
 ## 2 Metaschema and JADN Comparison
 
@@ -109,7 +119,6 @@ UUID
 Character and byte sequences, hex and base64 strings
 
 ### Conceptual modeling
-No data required
 
 Class instances exist without being serialized
 
@@ -162,7 +171,8 @@ expressive power to allow model designers to communicate their intent unambiguou
 The actual JADN information model for OSCAL matches the published OSCAL specification, which does not require
 content to appear in any particular order. Back-matter could appear at the front of an OSCAL document,
 or Metadata after the Body, because Metaschema Assembly definitions do not impose a serialization order.
-A JADN IM can define field ordering if that is the designer's intent.
+A JADN IM can define field ordering if that is the designer's intent, but implementing it in JSON Schema
+would require a change to the serialization format.
 
 ```
        title: "OSCAL"
@@ -195,7 +205,13 @@ Model = Choice                                       // Model-specific content
    6 ar               Assessment-results             // Assessment layer: information produced from assessment activities
    7 poam             Plan-of-action-and-milestones  // Assessment layer: Plan of action and milestones: findings to be addressed by system owner
 ```
+## 3 Modeling OSCAL in JADN
+After understanding the differences in approach and demonstrating JADN's ability to validate existing OSCAL data,
+the question remains: what advantages does it have in this application?  
+A minimal set of logical types is easier to describe, understand, and edit.
+Logical types are essential content -> bare HTML, encoding rules add implementation detail -> css
 
+Example: Assessment plan unique constraint on component and user (uses key).  Logical: is_unique, has_key. Lexical: serialized as map or list.
 
 ## 4 Summary
 | Feature           | JADN                                            | Metaschema                              |

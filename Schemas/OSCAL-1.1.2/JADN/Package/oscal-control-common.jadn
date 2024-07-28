@@ -1,10 +1,10 @@
 {
   "info": {
     "package": "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-control-common",
-    "roots": ["Part", "Parameter", "Include-all"],
+    "roots": ["Include-all", "Parameter"],
     "namespaces": [
-      ["m", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"],
-      ["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"]
+      ["c", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-common"],
+      ["m", "http://csrc.nist.gov/ns/oscal/1.1.2/oscal-metadata"]
     ],
     "config": {
       "$MaxString": 1000,
@@ -15,17 +15,7 @@
   },
 
   "types": [
-    ["Part", "Record", [], "An annotated, markup-based textual element of a control's or catalog group's definition, or a child of another part.", [
-      [1, "id", "c:TokenDatatype", ["[0"], "A unique identifier for the part."],
-      [2, "name", "c:TokenDatatype", [], "A textual label that uniquely identifies the part's semantic type, which exists in a value space qualified by the ns."],
-      [3, "ns", "c:URIDatatype", ["[0"], "An optional namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name."],
-      [4, "class", "c:TokenDatatype", ["[0"], "An optional textual providing a sub-type or characterization of the part's name, or a category to which the part belongs."],
-      [5, "title", "String", ["[0"], "An optional name given to the part, which may be used by a tool for display and navigation."],
-      [6, "props", "m:Property", ["[0", "]0"], ""],
-      [7, "prose", "String", ["[0"], "Permits multiple paragraphs, lists, tables etc."],
-      [8, "parts", "Part", ["[0", "]0"], ""],
-      [9, "links", "m:Link", ["[0", "]0"], ""]
-    ]],
+    ["Include-all", "Record", [], "Include all controls from the imported catalog or profile resources.", []],
 
     ["Parameter", "Record", [], "Parameters provide a mechanism for the dynamic assignment of value(s) in a control.", [
       [1, "id", "c:TokenDatatype", [], "A unique identifier for the parameter."],
@@ -75,8 +65,6 @@
       [2, "one-or-more", ""]
     ]],
 
-    ["Parameter-selection.choice", "ArrayOf", ["{1", "*String"], "", []],
-
-    ["Include-all", "Record", [], "Include all controls from the imported catalog or profile resources.", []]
+    ["Parameter-selection.choice", "ArrayOf", ["{1", "*String"], "", []]
   ]
 }

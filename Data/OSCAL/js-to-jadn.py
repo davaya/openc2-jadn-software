@@ -10,6 +10,7 @@ SCHEMA_DIR = os.path.join('oscal-1.1.2', 'json', 'schema')
 OUT_DIR_COMBINED = '../../Out/Combined'
 OUT_DIR_PACKAGE = '../../Out/Package'
 SYS = '.'       # Separator character used in generated type names
+
 PREFIXES = {    # Pre-define OSCAL-specific namespaces
     'oscal-catalog': 'cat',
     'oscal-profile': 'prf',
@@ -65,6 +66,11 @@ def un_namespace_type(t: list, ns: str) -> None:
 
 def sort_types(schema: dict) -> dict:
     deps, refs = jadn.build_deps(schema)
+    # Remove self-referencing dependencies
+    for k, v in deps.items():
+        if k in v:
+            print(f'    self-loop: {k}')
+            deps[k].remove(k)
     ndeps = {}
     for k, v in deps.items():
         ndeps[k] = [i for i in v if ':' not in i]
@@ -79,7 +85,7 @@ def make_info(ns_prefix: str, ns_ref: str, prefixes: dict, all_types: set) -> di
     deps, refs = jadn.build_deps({'types': types})
     info = {
         'package': ns_base + ns_prefix,
-        'roots': [k.removeprefix(prefixes[ns_prefix] + ':') for k in set(deps) - refs],
+        'roots': sorted([k.removeprefix(prefixes[ns_prefix] + ':') for k in set(deps) - refs]),
     }
     px = {v: k for k, v in prefixes.items()}
     if ns_list := {k.split(':', maxsplit=1)[0] for k in refs - set(deps)}:
@@ -212,7 +218,6 @@ class JADN:
                 self.types.append(td)
                 self.type_names |= {type_name}
                 self.aliases |= {tid, }
-                print(f'  alias {type_name} -> {rn}')
             return type_name
 
         if jst == 'object':
@@ -294,10 +299,10 @@ if __name__ == '__main__':
     sp = defaultdict(lambda: defaultdict(list))     # Package schemas
     all_types = set()
     for f in os.listdir(SCHEMA_DIR):
-        jsfile = os.path.join(SCHEMA_DIR, f)
+        json_schema_file = os.path.join(SCHEMA_DIR, f)
         fn, fe = os.path.splitext(f)
-        print(f'\n=== {jsfile}')
-        with open(jsfile, encoding='utf-8') as fp:
+        print(f'\n=== {json_schema_file}')
+        with open(json_schema_file, encoding='utf-8') as fp:
             jss = json.load(fp)
         try:
             # Convert JSON Schema to JADN schema
@@ -316,13 +321,9 @@ if __name__ == '__main__':
         sc[ns]['refs'] = jv.refs
         sc[ns]['types'] = jv.types                  # keep frozen types
         sc[ns]['info'] = (info := jv.get_info())    # build current info
-        print(f'\nJSON schema: {info.get("title", "")} {info.get("comment", "")}')
+        print(f'JSON schema: {info.get("title", "")} {info.get("comment", "")}')
         print(f'{len(jv.ids):2} ids, {len(jv.aliases):2} aliases, {len(jv.refs):2} refs,',
               f'{len(jv.pf_used):2} namespaces, {len(jv.types):3} types')
-        print('Namespaces:')
-        for k, v in jv.prefixes.items():
-            if k in jv.pf_used:
-                print(f'{v:>6}: http:.../{k if k else BLANK_PREFIX}')
 
         schema = {'info': info, 'types': jv.get_types()}
         deps, refs = jadn.build_deps(schema)
@@ -341,11 +342,35 @@ if __name__ == '__main__':
 
     ################
     # Split combined schemas into package schemas
+    ################
+
+    # List anonymous types that could be elevated to named level
+
+    print('\nAnonymous Types:')
+    for ns, tlist in sp.items():
+        if ns in sc:
+            tnames = defaultdict(list)
+            for td in tlist:
+                tn = td.split(SYS, maxsplit=1)
+                if len(tn) > 1 and SYS not in tn[1]:
+                    tnames[tn[1]].append(td)
+            for k, v in tnames.items():
+                if len(v) == 1:
+                    print(f'  May replace {ns}:{v[0]} with {ns}:{k.capitalize()}')
+                else:
+                    print(f'  Can\'t replace {ns}:{v} with {ns}:{k.capitalize()}')
 
     print('\nNamespaces:')
     for k, v in jv.prefixes.items():
         print(f'{v:>6}: http:.../{k if k else BLANK_PREFIX}')
 
+    print('\nAliases:')
+    for ns, tlist in sp.items():
+        for k, td in tlist.items():
+            if td[0][BaseType] == 'Choice' and (f := td[0][Fields][0])[FieldName] == 'alias':
+                print(f'  alias {td[0][TypeName]} -> {f[FieldType]}')
+
+    print('\nNon-qualified Name Collisions:')
     nqn = defaultdict(list)     # Find non-qualified name collisions
     for ns, tlist in sp.items():
         for tn, td in tlist.items():
@@ -353,17 +378,19 @@ if __name__ == '__main__':
             if (nt := len(set(td))) > 1:    # check for type definition conflicts (should not happen)
                 if tn != '$Root':
                     raise ValueError(f'{ns}:{tn:30} - {nt} defs: {set(td)}')
-    print()
     for tn, td in nqn.items():
         if len(td) > 1:
-            print(f'non-qualified name collision: {[k[tn][0][TypeName] for k in td]}')
+            print(f'  {[k[tn][0][TypeName] for k in td]}')
 
+    print('\nSchemas:')
     pf = {(k if k else BLANK_PREFIX): v for k, v in jv.prefixes.items()}
     for ns, tlist in sp.items():
         if ns in sc:
             info = sc[ns]['info']
+            print(f'  Package: {info["package"]}')
         else:
             info = make_info(ns, sc[list(sc)[0]]['info']['package'], pf, all_types)
+            print(f'  Package: {info["package"]}  (derived)')
 
         types = [unfreeze_type(v[0]) for k, v in tlist.items()]
         un_namespace_names(info.get('roots', []), pf[ns])
