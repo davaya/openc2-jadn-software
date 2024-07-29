@@ -1,10 +1,10 @@
-# An Information-centric OSCAL Information Model
+# An Abstract OSCAL Information Model
 
 The NIST Open Security Controls Assessment Language ([OSCAL](https://pages.nist.gov/OSCAL/))
 is defined using NIST [Metaschema](https://pages.nist.gov/metaschema/),
 a data-centric information modeling framework.
 
-Information-centric information modeling methods are also available, including
+Abstract information modeling methods are also available, including
 * Abstract Syntax Notation number One ([ASN.1](https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx)),
 * Financial Information Exchange ([FIX](https://www.fixtrading.org/standards/)), and
 * OASIS JSON Abstract Data Notation ([JADN](https://github.com/oasis-tcs/openc2-jadn/blob/working/jadn-v1.1.md))
@@ -14,7 +14,7 @@ example and JADN as an IM to illustrate their differences in a practical applica
 
 ## 1 Background
 
-ASN.1 describes the difference between data-centric and information-centric approaches:
+ASN.1 describes the difference between data-centric and abstract modeling approaches:
 
 >ASN.1 definition can be contrasted to the concept in ABNF of "valid syntax", or in XSD of a "valid document",
 where the focus is entirely on what are valid encodings of data, without concern with any meaning that
@@ -31,7 +31,7 @@ the Metaschema Information Modeling Framework provides a means to consistently a
 maintain an information model, while avoiding the need to maintain each derivative data format individually.
 
 JADN is focused on abstract syntax, modeling logical information values as defined in information theory,
-i.e., the amount of "news" in a message quantified as bits of entropy.
+i.e., the amount of "news" or "essential information" contained in a message.
 
 > An Information Model defines the *essential content* of messages used in computing,
 independently of how those messages are represented (i.e., serialized) for communication or storage.
@@ -40,29 +40,30 @@ independently of how those messages are represented (i.e., serialized) for commu
 of data values to be compared for equality regardless of format, and enables hub-and-spoke
 lossless translation across formats. 
 
-Quantifying entropy is not an end goal of information modeling, but it is the key to defining significance
-vs. insignificance. No data value can be smaller than the information content of a message,
-therefore any data in excess of the smallest possible serialized value is insignificant.
-Whitespace is a common example of insignificant data; the meaning of a message is unaffected by
-inserting or deleting it.
+Information defines significant vs. insignificant in lexical values. Just as whitespace
+is often insignificant at the data level, an information model defines significance at the logical
+level: any data that is not included in a logical value is insignificant and has been ignored
+in the lexical to logical conversion.
 
-Information modeling defines significance at the logical level: any data that does not affect a logical
-value (isn't included the abstract type definition) is insignificant and can be discarded from any
-data format without losing information. Or phrased the other way, if it is a problem for data in one format
-to not be preserved when translated to another format, then the definition of significant needs to be
-expanded to include that information.
-
-Entropy is directly involved in the semantics of strings - unrestricted strings have the most, classes
-of strings restricted by character set or patterns have less, and enumerated sets such as field names,
-map keys, or vocabularies have by far the least and are thus most efficient. There is no syntactic
-difference between an observation type of "mitigation" chosen from a set of five possibilities
-("ssp-statement-issue", "control-objective", "mitigation", "finding", "historic") and the identical
-string chosen from an unlimited set of possibilities including "parameter-constraint", "purina-cat-chow",
-and "four-score-and-seven-years-ago-our-forefathers-brought-forth-to-this-continent-a-new-nation".
-But the semantic difference between enumerated and general string types is obvious - enumerated and
-restricted strings are preferred for practical, not just theoretical, reasons. This affects system
-design: the more varied the input, the more unexpected possibilities systems must be prepared to
-handle correctly.
+Information theory uses the word "entropy" to refer to the quantity of information carried in a
+message. The more restrictions that are placed on a value, the less data is required to
+carry its information regardless of how much data is actually used. Strings with no restrictions
+are least efficient; strings with restricted length, character set, or patterns are more efficient,
+and enumerations such as field names, enumerated map keys, and vocabularies are by far the most
+efficient.  The string "mitigation" is always the same at the data level, but when it represents
+one of only five possible observation types
+("ssp-statement-issue", "control-objective", "mitigation", "finding", "historic") it carries
+less than 3 bits of information in 80 bits of lexical data.
+The other 77 bits are not essential content and are not included in the logical value.
+If an information model allows generic strings (for example, "Purina-cat-chow" or
+"Four score and seven years ago our fathers brought forth on this continent a new nation,
+from the 🏔️ to the 🌾 to the 🏖️.") where restricted or enumerated values are appropriate,
+it requires both users and applications to deal with inappropriate content and presents a
+larger attack surface to adversaries.
+Designing information models to correctly distinguish between essential content and
+insignificant data is not just theoretical trivia, it's an operational and security benefit.
+Allowing a tokenized Gettysburg address as a telephone number type is an anti-pattern that
+can be tested for in the release pipeline.
 
 ### 1.1 Ontologies and Semantics
 
@@ -70,22 +71,16 @@ Ontologies are concerned with semantics - the meaning of and relationships among
 [Datatypes](https://www.w3.org/TR/rdf12-concepts/#section-Datatypes) define
 logical (information) and lexical (data) values and the lexical-to-(logical)-value (L2V)
 mapping between them, but today's ontologies support only primitive datatypes such as strings and numbers.
-An abstract syntax defines the L2V mapping for all logical values including data structures, messages and
-documents, and in an information-centric ontology every digital resource could be modeled as a datatype
-with an L2V mapping.
+An abstract information model defines the L2V mapping for all logical values including data structure,
+messages and documents, and an ontology that supports abstract information models would be able
+to define an L2V mapping for all messages and documents.
 
 Data modeling has a history beginning long before the advent of ontologies, with semantics defined
-by conceptual and logical data models illustrated using entity relationship diagrams, and physical
-data models for specific storage formats. But the ontology terminology of datatypes performing L2V
-mapping is a particularly precise way of explaining the logical/lexical relationship.
+by conceptual and logical data models separated from physical data models for storage formats.
+But the ontology terminology of datatypes performing L2V mapping is a novel and precise way of
+explaining the relationship between logical and lexical values.
 
 ![Entity Relationship Diagram](../../Images/erd-template.png)
-
-As described by ASN.1, abstract syntaxes define the semantics of logical values,
-with the translation from logical to physical/lexical defined in encoding specifications separate
-from the logical type definitions. Links between types are defined in the logical specification separately
-from the details of how they are represented as data in different formats, and a graph of logical type
-relationships has only two kinds of edge: contain and reference.
 
 ### 1.2 Common Platform Enumeration
 
@@ -93,17 +88,13 @@ Before getting to OSCAL, the Common Platform Enumeration
 ([CPE](https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf))
 is a clear illustration of the difference between logical and lexical values.
 CPE is a compound datatype with an L2V mapping between well-formed names and lexical representations.
-A JADN CPE type would define the logical value in semantic terms:
+An abstract information model would define the CPE logical value in semantic terms:
 * A CPE instance is a set of 12 defined fields
 * The model designer can define CPE as either a Record type if field names are normative and optionally
 included in some data formats, or an Array type if field names are annotations that can never appear
 in lexical data, supporting natural language agnostic documents and protocols (I18N).
-* The designer can designate Record and Array semantics as sets or ordered sets, which
-determines which serializations are possible. An ordered set cannot have an L2V mapping to a JSON object
-using just a data model because objects do not preserve order. If messages are processed using an information
-model at runtime, object properties can be reordered as needed to conform to the logical type definition.
-Any set can have an L2V mapping to a JSON array because the array preserves positioning and the L2V mapping
-assigns logical names to lexical positions.
+* The designer can designate Record, Map and Array semantics as sets or ordered sets, which
+determines which serializations are possible.
 * An L2V mapping from the 12-field logical WFN to a single-string lexical value would be defined using
 format options such as /cpe-22 or /cpe-23.
 
@@ -148,7 +139,7 @@ Metaschema defines "combined" schemas and "unified model of models".
 
 Metaschema models are defined as XML data.
 
-### Information-centric
+### Abstract
 Because a JADN IM is a logical value, it can be serialized in any data format, but does not need to be
 serialized in any data format. This is useful when doing conceptual design; it allows an IM to be created
 and documented in a domain-specific language (DSL) without using XML or other serialized data. JADN DSLs are

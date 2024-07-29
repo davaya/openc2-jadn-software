@@ -11,7 +11,7 @@ OUT_DIR_COMBINED = '../../Out/Combined'
 OUT_DIR_PACKAGE = '../../Out/Package'
 SYS = '.'       # Separator character used in generated type names
 
-PREFIXES = {    # Pre-define OSCAL-specific namespaces
+PREFIXES = {    # Pre-define short prefixes for OSCAL prefix names (last component of namespace)
     'oscal-catalog': 'cat',
     'oscal-profile': 'prf',
     'oscal-component-definition': 'cmp',
@@ -25,10 +25,11 @@ PREFIXES = {    # Pre-define OSCAL-specific namespaces
     'oscal-assessment-common': 'ac',
     '': 'c',
 }
-BLANK_PREFIX = 'oscal-common'
+BLANK_PREFIX_NAME = 'oscal-common'
+
 CONFIG = {
-    '$MaxString': 1000,
-    '$Sys': '.',
+    '$MaxString': 1000,     # TODO: Add JADN config item $MaxDesc
+    '$Sys': '.',            # TODO: Change JADN default $SYS
     '$TypeName': '^[$A-Z][-.$A-Za-z0-9]{0,96}$',
     '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$',
 }
@@ -137,7 +138,7 @@ class JADN:
         info = self.info
         p = info['package'].rsplit('/', maxsplit=1)[0] + '/'
         info.update({'namespaces':
-            [[v, p + (k if k else BLANK_PREFIX)] for k, v in self.prefixes.items() if k in self.pf_used]})
+            [[v, p + (k if k else BLANK_PREFIX_NAME)] for k, v in self.prefixes.items() if k in self.pf_used]})
         roots = [k['properties'][k['required'][0]] for k in jss.get('oneOf', []) + [jss] if 'required' in k]
         info.update({'roots': [self._make_tn('', k, [], '') for k in roots]})
         self.add_info(info)
@@ -335,7 +336,7 @@ if __name__ == '__main__':
         outfile = os.path.join(OUT_DIR_COMBINED, fn) + '.jadn'
         jadn.dump(schema, outfile)
 
-        px = {v: (k if k else BLANK_PREFIX) for k, v in jv.prefixes.items()}
+        px = {v: (k if k else BLANK_PREFIX_NAME) for k, v in jv.prefixes.items()}
         for t in jv.types:
             ns, tn = t[TypeName].split(':', maxsplit=1)
             (sp[px[ns]][tn]).append(t)
@@ -362,7 +363,7 @@ if __name__ == '__main__':
 
     print('\nNamespaces:')
     for k, v in jv.prefixes.items():
-        print(f'{v:>6}: http:.../{k if k else BLANK_PREFIX}')
+        print(f'{v:>6}: http:.../{k if k else BLANK_PREFIX_NAME}')
 
     print('\nAliases:')
     for ns, tlist in sp.items():
@@ -383,7 +384,7 @@ if __name__ == '__main__':
             print(f'  {[k[tn][0][TypeName] for k in td]}')
 
     print('\nSchemas:')
-    pf = {(k if k else BLANK_PREFIX): v for k, v in jv.prefixes.items()}
+    pf = {(k if k else BLANK_PREFIX_NAME): v for k, v in jv.prefixes.items()}
     for ns, tlist in sp.items():
         if ns in sc:
             info = sc[ns]['info']
