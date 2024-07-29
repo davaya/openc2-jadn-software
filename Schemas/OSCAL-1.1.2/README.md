@@ -60,7 +60,9 @@ difference between an observation type of "mitigation" chosen from a set of five
 string chosen from an unlimited set of possibilities including "parameter-constraint", "purina-cat-chow",
 and "four-score-and-seven-years-ago-our-forefathers-brought-forth-to-this-continent-a-new-nation".
 But the semantic difference between enumerated and general string types is obvious - enumerated and
-restricted string types are preferred for practical, not just theoretical, reasons.
+restricted strings are preferred for practical, not just theoretical, reasons. This affects system
+design: the more varied the input, the more unexpected possibilities systems must be prepared to
+handle correctly.
 
 ### 1.1 Ontologies and Semantics
 
@@ -77,12 +79,13 @@ by conceptual and logical data models illustrated using entity relationship diag
 data models for specific storage formats. But the ontology terminology of datatypes performing L2V
 mapping is a particularly precise way of explaining the logical/lexical relationship.
 
-![ERD](../../Images/erd-template.png)
+![Entity Relationship Diagram](../../Images/erd-template.png)
 
 As described by ASN.1, abstract syntaxes define the semantics of logical values,
 with the translation from logical to physical/lexical defined in encoding specifications separate
-from the logical type definitions. References from instances of one type to another are included
-in that semantics, and an information model graph has only two kinds of edge: *contain* and *reference*.
+from the logical type definitions. Links between types are defined in the logical specification separately
+from the details of how they are represented as data in different formats, and a graph of logical type
+relationships has only two kinds of edge: contain and reference.
 
 ### 1.2 Common Platform Enumeration
 
@@ -90,17 +93,17 @@ Before getting to OSCAL, the Common Platform Enumeration
 ([CPE](https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf))
 is a clear illustration of the difference between logical and lexical values.
 CPE is a compound datatype with an L2V mapping between well-formed names and lexical representations.
-A JADN CPE type would define the logical value in terms of requirements:
+A JADN CPE type would define the logical value in semantic terms:
 * A CPE instance is a set of 12 defined fields
 * The model designer can define CPE as either a Record type if field names are normative and optionally
 included in some data formats, or an Array type if field names are annotations that can never appear
 in lexical data, supporting natural language agnostic documents and protocols (I18N).
 * The designer can designate Record and Array semantics as sets or ordered sets, which
 determines which serializations are possible. An ordered set cannot have an L2V mapping to a JSON object
-using just a data model because objects do not preserve order. If messages are processed at runtime
-by an information model, object properties can be reordered as needed to conform to the logical type definition.
-Any set can have an L2V mapping to a JSON array because the
-array preserves positioning and the L2V mapping assigns logical names to lexical positions.
+using just a data model because objects do not preserve order. If messages are processed using an information
+model at runtime, object properties can be reordered as needed to conform to the logical type definition.
+Any set can have an L2V mapping to a JSON array because the array preserves positioning and the L2V mapping
+assigns logical names to lexical positions.
 * An L2V mapping from the 12-field logical WFN to a single-string lexical value would be defined using
 format options such as /cpe-22 or /cpe-23.
 

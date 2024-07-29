@@ -164,7 +164,7 @@ class JADN:
         """
         for k, v in info.items():   # Build JADN package information
             if k in {'package', 'version', 'title', 'description', 'comment', 'copyright', 'license',
-                     'namespaces', 'roots', 'config'}:
+                     'namespaces', 'roots', 'config', 'type_docs'}:
                 self.info.update({k: v})
             else:
                 raise ValueError(f'Unrecognized package info: {k}: {v}')
