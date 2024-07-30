@@ -14,80 +14,87 @@ example and JADN as an IM to illustrate their differences in a practical applica
 
 ## 1 Background
 
-ASN.1 describes the difference between data-centric and abstract modeling approaches:
-
->ASN.1 definition can be contrasted to the concept in ABNF of "valid syntax", or in XSD of a "valid document",
-where the focus is entirely on what are valid encodings of data, without concern with any meaning that
-might be attached to such encodings. That is, without any of the necessary semantic linkages.
-
-Metaschema is focused on data syntax:
-
 > Metaschema is a framework for consistently organizing information into machine-readable data formats.  
->
->The Metaschema Information Modeling Framework provides a means to represent an information model
+The Metaschema Information Modeling Framework provides a means to represent an information model
 for a given information domain, consisting of many related information elements, in a data format
 neutral form. By abstracting information modeling away from data format specific forms,
 the Metaschema Information Modeling Framework provides a means to consistently and sustainably
 maintain an information model, while avoiding the need to maintain each derivative data format individually.
 
-JADN is focused on abstract syntax, modeling logical information values as defined in information theory,
-i.e., the amount of "news" or "essential information" contained in a message.
+Although Metaschema performs abstraction by defining a data format neutral form, it is an
+abstract "information model", not an "abstract information" model, because its building blocks -
+Assemblies, Fields and Flags - are defined in XML and implemented by performing transformations on XML data.
 
-> An Information Model defines the *essential content* of messages used in computing,
+> An Information Model defines the essential content of messages used in computing,
 independently of how those messages are represented (i.e., serialized) for communication or storage.
->
-> The core purpose of an IM is to define information equivalence. This allows the essential content
+The core purpose of an IM is to define information equivalence. This allows the essential content
 of data values to be compared for equality regardless of format, and enables hub-and-spoke
-lossless translation across formats. 
+lossless translation across formats.
 
-Information defines significant vs. insignificant in lexical values. Just as whitespace
-is often insignificant at the data level, an information model defines significance at the logical
-level: any data that is not included in a logical value is insignificant and has been ignored
-in the lexical to logical conversion.
+In a model of "abstract information", types and instances exist within applications independently
+of any data format, and exist even if no data formats have been defined.
+Transformations between data formats are implemented by loading data into application information
+then saving information back out to data.
+Any method of loading and saving program state, such as Python's pickle, ECMAScript's JSON or Java's JAXB,
+does so by marshalling or serializing program state into a data format.
 
-Information theory uses the word "entropy" to refer to the quantity of information carried in a
-message. The more restrictions that are placed on a value, the less data is required to
-carry its information regardless of how much data is actually used. Strings with no restrictions
-are least efficient; strings with restricted length, character set, or patterns are more efficient,
-and enumerations such as field names, enumerated map keys, and vocabularies are by far the most
-efficient.  The string "mitigation" is always the same at the data level, but when it represents
-one of only five possible observation types
-("ssp-statement-issue", "control-objective", "mitigation", "finding", "historic") it carries
-less than 3 bits of information in 80 bits of lexical data.
-The other 77 bits are not essential content and are not included in the logical value.
-If an information model allows generic strings (for example, "Purina-cat-chow" or
-"Four score and seven years ago our fathers brought forth on this continent a new nation,
-from the 🏔️ to the 🌾 to the 🏖️.") where restricted or enumerated values are appropriate,
-it requires both users and applications to deal with inappropriate content and presents a
-larger attack surface to adversaries.
-Designing information models to correctly distinguish between essential content and
-insignificant data is not just theoretical trivia, it's an operational and security benefit.
-Allowing a tokenized Gettysburg address as a telephone number type is an anti-pattern that
-can be tested for in the release pipeline.
+JADN Information Definition Language (IDL) is a non-normative and non-exclusive domain-specific language
+(DSL) used to load and store JADN information models without requiring JSON, XML, or other data format.
+Other hypothetical DSLs, such as one that mimics the syntax of ASN.1 or the terse grammar of
+[CDDL](https://datatracker.ietf.org/doc/html/rfc8610),
+could represent the identical information models.
 
-### 1.1 Ontologies and Semantics
+JADN defines a small set of abstract types that represent behavior commonly supported in programming languages
+and commonly understood by programmers:
+* Five primitive types: Binary, Boolean, Integer, Number, String
+* One collection type: ArrayOf - with UML multiplicity semantics: Sequence, Set, OrderedSet, Bag
+* Four collection member access types: Array, Record, Map, MapOf
+* Two union types for selecting among alternatives: Enumerated, Choice
 
-Ontologies are concerned with semantics - the meaning of and relationships among resources.
-[Datatypes](https://www.w3.org/TR/rdf12-concepts/#section-Datatypes) define
-logical (information) and lexical (data) values and the lexical-to-(logical)-value (L2V)
-mapping between them, but today's ontologies support only primitive datatypes such as strings and numbers.
-An abstract information model defines the L2V mapping for all logical values including data structure,
-messages and documents, and an ontology that supports abstract information models would be able
-to define an L2V mapping for all messages and documents.
+All abstract type definitions have the same program state: five values, one of which is a list of fields that
+may be empty. Fields, when present, have five values except for enumerations which have three:
+```
+[TypeName, BaseType, [TypeOptions], TypeDescription, [Fields]]
 
-Data modeling has a history beginning long before the advent of ontologies, with semantics defined
-by conceptual and logical data models separated from physical data models for storage formats.
-But the ontology terminology of datatypes performing L2V mapping is a novel and precise way of
-explaining the relationship between logical and lexical values.
+if BaseType = Array, Record, or Map, Field is:
+    [FieldID, FieldName, FieldType, [FieldOptions], FieldDescription]
+
+if BaseType = Enumerated, Field is:
+    [ItemID, ItemValue, ItemDescription]
+```
+A JADN information model is a set of these type definitions plus metadata about the set. The definitions
+include options that specify both how information instances are validated and how they are serialized.
+
+![Abstract Information](../../Images/logical-types.png)
+
+### 1.1 Data Modeling and Ontologies
+
+Data modeling has a long rich history, with semantics defined by conceptual and logical data models
+that represent information separately from physical storage format.
 
 ![Entity Relationship Diagram](../../Images/erd-template.png)
+
+Ontologies express the semantics of and relationships among resources. Physical resources
+are described by ontology nodes, while concrete digital resources (documents, messages, images, etc.)
+can be both described by ontologies and defined by abstract information models composed of
+[Datatypes](https://www.w3.org/TR/rdf12-concepts/#section-Datatypes),
+("types whose instances are distinguished only by their value" -- UML). Datatypes
+define the logical value of digital resources and their serialized representations, and
+the ontology terminology of datatypes performing lexical-to-(logical)-value (L2V) mapping is a
+novel and precise way of describing the difference between logical and lexical values.
+
+Unfortunately the only datatypes supported by today's ontologies are primitives such as strings and numbers,
+and the only supported lexical space is character strings.
+Ontologies that extended the datatype lexical space to include byte strings, and extended datatype
+support to simple structures (like CPE), complete messages, and documents would be able to define
+L2V mappings for these digital resources, not just their relationships to other resources.
 
 ### 1.2 Common Platform Enumeration
 
 Before getting to OSCAL, the Common Platform Enumeration
 ([CPE](https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf))
 is a clear illustration of the difference between logical and lexical values.
-CPE is a compound datatype with an L2V mapping between well-formed names and lexical representations.
+CPE is a compound datatype with an L2V mapping between well-formed names (WFNs) and lexical representations.
 An abstract information model would define the CPE logical value in semantic terms:
 * A CPE instance is a set of 12 defined fields
 * The model designer can define CPE as either a Record type if field names are normative and optionally
@@ -135,25 +142,9 @@ Metaschema defines "combined" schemas and "unified model of models".
 * **Bundle** is a set of packages serialized together for transmission or storage
   * has no logical value: no id, no nesting, no association among packages, no persistent group after parsing
 
-### Data-centric
+## 3 Modeling OSCAL in JADN
 
-Metaschema models are defined as XML data.
-
-### Abstract
-Because a JADN IM is a logical value, it can be serialized in any data format, but does not need to be
-serialized in any data format. This is useful when doing conceptual design; it allows an IM to be created
-and documented in a domain-specific language (DSL) without using XML or other serialized data. JADN DSLs are
-neither normative nor exclusive:
-* The normative structure of a JADN IM is application state that exhibits the required behavior.
-An IM can be instantiated within applications as, for example, a
-[single variable](../../Images/oscal-concept-schema.jpg) or set of class variables.
-* JADN Information Definition Language (IDL) is a DSL used to represent JADN information models.
-Other hypothetical DSLs, such as one that mimics the syntax of ASN.1 or the terse grammar of
-[CDDL](https://datatracker.ietf.org/doc/html/rfc8610),
-could represent the identical application state.
-*  The small number and regular structure of JADN elements facilitates design of both DSLs and serialized data formats.
-
-A conceptual OSCAL IM can be defined in JADN IDL from the OSCAL top-level description:
+A conceptual OSCAL IM can be defined based on the OSCAL top-level description:
 
 ![concept](../../Images/OSCAL-JADN-Notes.png)
 
@@ -199,7 +190,7 @@ Model = Choice                                       // Model-specific content
    6 ar               Assessment-results             // Assessment layer: information produced from assessment activities
    7 poam             Plan-of-action-and-milestones  // Assessment layer: Plan of action and milestones: findings to be addressed by system owner
 ```
-## 3 Modeling OSCAL in JADN
+
 After understanding the differences in approach and demonstrating JADN's ability to validate existing OSCAL data,
 the question remains: what advantages does it have in this application?  
 A minimal set of logical types is easier to describe, understand, and edit.
