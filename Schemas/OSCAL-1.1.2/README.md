@@ -65,12 +65,19 @@ may be empty. Fields, when present, are five-tuples except for enumerations whic
 ```
 The "n-tuple" notation denotes an immutable value, an instance of a constant rather than a variable.
 This is because the schema is composed of datatypes:
-"DataTypes model Types whose instances are distinguished only by their value",
-and "All instances of a DataType with the same value are considered to be equal instances." --
-[UML](https://www.omg.org/spec/UML/2.5/PDF/) section 10.2. A different constant is by definition
-a different instance, whereas two variables might be mistakenly considered the same instance even
-if values within them were different. (This could occur in programming languages that copy by reference rather than
-by value).
+
+> "DataTypes model Types whose instances are distinguished only by their value",
+and "All instances of a DataType with the same value are considered to be equal instances."
+
+-- [UML](https://www.omg.org/spec/UML/2.5/PDF/) section 10.2.
+
+A different constant is by definition a different instance, whereas two variables might be
+mistakenly considered the same instance even if values within them were different.
+This could occur due to references being treated as equivalent to data being referenced,
+or even if external references to a collection are treated as adding members to it.
+A document is useful only if it is defined to be an immutable lexical value that could
+in principle be hashed or signed, unaffected by anything that exists outside that value
+now or in the future.
 
 An abstract schema is a set of datatypes in a package, plus package metadata. The type definitions
 include options that specify both how information instances are validated and how they are serialized.
@@ -94,6 +101,7 @@ information models.
 
 ### 1.3 Data Modeling and Ontologies
 
+The concept that logical types and instances exist independently of physical data is not new.
 Data modeling has a long rich history, with semantics defined by conceptual and logical data models
 that represent information at a higher layer of abstraction than physical data.
 
@@ -110,7 +118,7 @@ novel and precise way of describing the difference between logical and physical 
 Unfortunately the only datatypes supported by today's ontologies are primitives such as
 strings and numbers, and the only lexical space is character strings.
 
-Ontologies that extended the lexical space to include byte strings, and extended datatypes to
+Ontologies that extend the lexical space to include byte strings, and extend datatypes to
 support simple structures, complete messages, and documents would be able to define
 the lexical values of digital resources instead of just describing them and their relationships
 to other resources.
@@ -147,7 +155,7 @@ EmailAddressDatatype and the like are redundantly named; UUID and EmailAddress w
 Metaschema treats fields as having an independent existence akin to assemblies. JADN has no such thing as
 a field type. Its compound types are composed of other types, and fields within a compound type have:
 1. a name/id with local scope, and
-2. a type of any kind
+2. any type
 
 There is no difference between a primitive, compound or union type that appears as a field in one or more
 types and one that does not.
@@ -157,19 +165,22 @@ types and one that does not.
 Metaschema treats flags as being pre-defined primitive types. JADN has only five primitive types; all subtypes
 of those five must be defined in a schema like all other types. A "common types" schema can be defined as
 a library for other schemas to use, but it still must be created and referenced like all other schemas,
-it is not built into the definition of JADN itself.
+only the 12 types listed above are built into the definition of JADN.
 
 ### 2.3 Packages and Bundles
 Metaschema defines "combined" schemas and "unified model of models".
 
-* JADN schemas are organized using packages; there is no combination other than making packages available together in a bundle
-* **Package** has two fields
-  * package context (package namespace, referenced namespaces, root types, name, constraints, ...)
-  * types defined within the package
-  * type definitions can reference types from other packages by their namespace
-  * blank namespace prefixes allow packages to be merged into a single package if type names are unique and contexts are compatible
-* **Bundle** is a set of packages serialized together for transmission or storage
-  * has no logical value: no id, no nesting, no association among packages, no persistent grouping after being read
+JADN schemas are organized using packages. There is no combination of packages other than being bundled together.
+* **Package** has two fields:
+  * "info": context header (package namespace, referenced namespaces, root types, name, constraints, ...)
+  * "types": types defined within the package
+* type definitions can reference types from other packages by their namespace
+* blank namespace prefixes allow packages to be merged into a single package if type names are unique and contexts are compatible
+
+
+* **Bundle** is a set of packages packed together for transmission or storage
+  * a bundle has no logical value: no id, no nesting, no association among packages, no persistent grouping after being unpacked
+  * a bundle can be implemented by an archiver such as zip or tar, or by concatenating package content as in JSON streaming
 
 ### 2.4
 
@@ -177,7 +188,7 @@ Character and byte sequences, hex and base64 strings
 
 ## 3 Modeling OSCAL in JADN
 
-A conceptual OSCAL IM can be defined based on the OSCAL top-level description:
+When beginning the OSCAL project, a conceptual IM could be defined based on the OSCAL top-level description:
 
 ![concept](../../Images/OSCAL-JADN-Notes.png)
 
@@ -186,11 +197,11 @@ as opposed to the OSCAL designer's approach of repeating the same Metaschema str
 A goal of any information modeling language is not to impose a design philosophy but to provide the
 expressive power to allow model designers to communicate their intent unambiguously, clearly and succinctly.
 
-The actual JADN information model for OSCAL matches the published OSCAL specification, which does not require
-content to appear in any particular order. Back-matter could appear at the front of an OSCAL document,
-or Metadata after the Body, because Metaschema Assembly definitions do not impose a serialization order.
-A JADN IM can define field ordering if that is the designer's intent, but implementing it in JSON Schema
-would require a change to the serialization format.
+The actual JADN information model for OSCAL uses a different pattern that matches the published OSCAL
+specification, which does not require content to appear in any particular order. Back-matter could appear
+at the front of an OSCAL document, or Metadata after the Body, because the current Metaschema does not
+impose a serialization order. A JADN IM can define field ordering if that is the designer's intent,
+but implementing it in JSON Schema would require a change to the serialization format.
 
 ```
        title: "OSCAL"
@@ -232,18 +243,18 @@ Logical types are essential content -> bare HTML, encoding rules add implementat
 Example: Assessment plan unique constraint on component and user (uses key).  Logical: is_unique, has_key. Lexical: serialized as map or list.
 
 ## 4 Summary
-| Feature                                   | JADN                                            | Metaschema                              |
-|-------------------------------------------|-------------------------------------------------|-----------------------------------------|
-| [Model instance](#12-logical-types)       | Logical value: state in an application          | Data value: XML                         | 
-| [Data translation](#12-logical-types)     | Hub/spoke (data->logical->data): N translations | Star (data->data): N^2 translations     |
-| [Datatypes](#121-abstract-schema)         | Every type is a datatype                        | Only primitives (flags) are Datatypes   |
-| [Model definition](#122-im-serialization) | IDL or serialized as data in any format         | XML data                                |
-| Information                               | Logical model defines significant content       | Insignificant content is undefined      |
-| Type names                                | Every type has a name                           | Anonymous (nested) types are allowed    |
-| Type references                           | Single id format: ns:Type.field                 | Multiple id formats                     |
-| Fields/Properties                         | Assembly binds local id/name to type            | Field names are bound globally to types |
-| Field names                               | Enumerated (numeric id and text name/label)     | Text name only                          |
-| Field order                               | Assemblies are ordered or unordered set         | Assemblies are only unordered set       |
-| Data formats                              | Character sequence (text) or byte sequence      | Character sequence only                 |
-| Packaging                                 | Models can be grouped in non-semantic bundles   | Types from multiple models can be mixed |
-| Documentation                             | Short comments, external docs incorporate types | Type definitions include documentation  |
+| Feature                                          | JADN                                            | Metaschema                              |
+|--------------------------------------------------|-------------------------------------------------|-----------------------------------------|
+| [Model instance](#12-logical-types)              | Logical value: state in an application          | Data value: XML                         | 
+| [Data translation](#12-logical-types)            | Hub/spoke (data->logical->data): N translations | Star (data->data): N^2 translations     |
+| [Datatypes](#121-abstract-schema)                | Every type is a datatype                        | Only primitives (flags) are Datatypes   |
+| [Model definition](#122-im-serialization)        | IDL or serialized as data in any format         | XML data                                |
+| [Data formats](#13-data-modeling-and-ontologies) | Character sequence (text) or byte sequence      | Character sequence only                 |
+| [Fields/Properties](#22-fields)                  | Assembly binds local id/name to type            | Field names are bound globally to types |
+| [Packaging](#23-packages-and-bundles)            | Models can be grouped in non-semantic bundles   | Types from multiple models can be mixed |
+| [Field order](#3-modeling-oscal-in-jadn)         | Assemblies are ordered or unordered sets        | Assemblies are only unordered sets      |
+| Information                                      | Logical model defines significant content       | Insignificant content is undefined      |
+| Type names                                       | Every type has a name                           | Anonymous (nested) types are allowed    |
+| Type references                                  | Single id format: ns:Type.field                 | Multiple id formats                     |
+| Field names                                      | Enumerated (numeric id and text name/label)     | Text name only                          |
+| Documentation                                    | Short line comments, docs in header or external | Type definitions include documentation  |
