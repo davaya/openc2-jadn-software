@@ -1,11 +1,10 @@
 
-JADN models information as defined in information theory, to represent the amount of "news" or
-"essential information" contained in a message. 
-
-Information defines significant vs. insignificant in lexical values. Just as whitespace
-is often insignificant at the data level, an information model defines significance at the logical
-level: any data that is not included in a logical value is insignificant and has been ignored
-in the lexical to logical conversion.
+"Information" in JADN is defined by information theory: the amount of "news" or "essential content"
+contained in a message. Information defines what is significant vs. insignificant in lexical values.
+Just as whitespace is often insignificant at the data level, an information model defines
+significance at the logical level: any data not present in a logical value is insignificant. It is
+ignored when converting lexical to logical values, and isn't included when converting logical
+to lexical because it doesn't exist.
 
 Information theory uses the word "entropy" to refer to the quantity of information carried in a
 message. The more restrictions that are placed on a value, the less data is required to
