@@ -318,22 +318,23 @@ def make_jadn_info(element: etree.Element, fields: list, info: dict) -> None:
     Generate package info from root element
     """
     assert etree.QName(element).localname == 'METASCHEMA'
-    assert attr == {'abstract': 'yes'}
+    root_attr = {k: v for k, v in element.items()}
+
     ir = {}
     imports = []
     roots = []
     for (fd, txt) in fields:
         assert txt == ''
         for k, v in fd.items():
-            if k in ('schema-name', 'schema-version', 'short-name', 'namespace', 'json-base-uri', 'remarks'):
-                ir.update({k: v})
-            elif k in 'import':
+            if k == 'define-assembly':
+                roots.append(v)
+            elif k == 'import':
                 assert len(n := v.split('_')) > 2
                 imports.append(n[0] + '-' + n[1])
-            elif k in 'define-assembly':
-                roots.append(v)
-            elif k in ('define-field', 'define-flag'):
+            elif {k} & {'define-field', 'define-flag'}:
                 pass
+            elif {k} & {'schema-name', 'schema-version', 'short-name', 'namespace', 'json-base-uri', 'remarks'}:
+                ir.update({k: v})
             else:
                 print(f'# Undefined root item {k}: {v}')
     pkg_ns = f'{ir["json-base-uri"]}/{ir["schema-version"]}/'
@@ -389,29 +390,28 @@ def make_jadn_type(element: etree.Element, path: tuple, schema: dict) -> Union[t
                 else:
                     fa.update({t.localname: txt})
                     txt = ''
-            elif {t.localname, }.intersection({'description', 'remarks', }):
+            elif {t.localname} & {'description', 'remarks'}:
                 fa.update({t.localname: get_text(e)})
-            elif {t.localname, }.intersection({'enum', 'allowed-values', }):
+            elif {t.localname, } & {'enum', 'allowed-values'}:
                 # txt = get_text(e)
                 pass
             else:
                 assert txt == ''
                 if t.localname == 'define-flag':
                     fa = {'name': fa['as-type']}
-                elif {t.localname,}.intersection({'assembly', 'field', 'flag'}):
+                elif {t.localname} & {'assembly', 'field', 'flag'}:
                     if 'ref' in fa:
                         rn = fa.pop('ref')
                         fa.update({rn: rn.capitalize()})
                     children.append((e, path))
-                elif {t.localname,}.intersection({
+                elif {t.localname} & {
                         'model', 'constraint', 'example',
-                        'choice', 'is-unique'
-                }):
+                        'choice', 'is-unique'}:
                     path = path + (t.localname,)
                     fa.update({'name': t.localname})
                     children.append((e, path))
                 elif name := fa.pop('name', ''):
-                    assert {t.localname, }.intersection({'define-assembly', 'define-field', })
+                    assert {t.localname} & {'define-assembly', 'define-field'}
                     fa.update({t.localname: name})
                     base_name = name.capitalize() if etree.QName(element).localname == 'METASCHEMA' else name
                     children.append((e, (path + (base_name,))))
@@ -421,7 +421,7 @@ def make_jadn_type(element: etree.Element, path: tuple, schema: dict) -> Union[t
     if etree.QName(element).localname == 'METASCHEMA':
         make_jadn_info(element, fields, schema['info'])
     else:
-        
+        pass    # Process type definition
     return children
 
 
@@ -439,6 +439,20 @@ def make_jadn(element: etree.Element, path: tuple, schema: dict) -> list:
     return types
 
 
+def flatten_elements(element: etree.Element, path: tuple, ep_list: list) -> None:
+    for e in element:
+        if isinstance(e.tag, str) and len(e) > 0:
+            # print(f'..{element.tag} {element.get("name", "")}')
+            if etree.QName(element.tag).localname == 'METASCHEMA':
+                path = ()
+            tag = etree.QName(e.tag).localname
+            if {tag} & {'define-assembly', 'define-field', 'define-flag', 'enum'}:
+                path = path + (e.get('name', ''), )
+                flatten_elements(e, path, ep_list)
+            else:
+                ep_list.append((e, path))
+
+
 if __name__ == '__main__':
     os.makedirs(OUT_DIR_PACKAGE, exist_ok=True)
     sp = defaultdict(lambda: defaultdict(list))     # Package schemas
@@ -452,7 +466,9 @@ if __name__ == '__main__':
         root_ns = etree.QName(root.tag).namespace
         path = ()
         schema = {'info': {}, 'types': []}
-        make_jadn(root, path, schema)
+        ep_list = []
+        flatten_elements(root, path, ep_list)
+        # make_jadn(root, path, schema)
         pass
 
 """
