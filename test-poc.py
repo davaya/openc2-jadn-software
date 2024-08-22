@@ -34,7 +34,7 @@ Environment variable "GitHubToken" must have a Personal Access Token to prevent 
 
 VALIDATE_JADN = True    # Use JAON schema if True, JSON schema if False
 
-ROOT_DIR = 'Test'
+ROOT_DIR = 'Projects/OpenC2/Test'
 ROOT_REPO = 'https://api.github.com/repos/oasis-open/openc2-jadn-software/contents/Test'
 TEST_ROOT = ROOT_DIR          # Select local directory or GitHub root of test tree
 

@@ -92,7 +92,7 @@ assembly.
 
 * The work-in-progress (many errors to be fixed) module [out.jidl](out.jidl) illustrates what a JADN IM
 would look like. It is currently ~200 lines, vs. 1451 lines for the
-[JSON Schema](../../Schemas/Metaschema/oscal_catalog_schema_1.1.0.json) from which it was generated.
+[JSON Schema](../../Projects/Metaschema/oscal_catalog_schema_1.1.0.json) from which it was generated.
 
 ## Recommendations
 

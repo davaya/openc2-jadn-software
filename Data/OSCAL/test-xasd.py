@@ -6,7 +6,7 @@ import jadn
 import os
 import xasd
 
-SCHEMA_DIR = '../../Schemas/JADN'
+SCHEMA_DIR = '../../Projects/JADN'
 OUTPUT_DIR = 'Out'
 
 

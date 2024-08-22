@@ -3,7 +3,7 @@ import jadn
 import json
 import os
 
-SCHEMA_DIR = 'Schemas'
+SCHEMA_DIR = 'Projects'
 DATA_DIR = 'Data'
 
 """

@@ -4,7 +4,7 @@ import json
 import os
 from jsf import JSF
 
-SCHEMA_DIR = 'Schemas'
+SCHEMA_DIR = 'Projects'
 OUT_DIR = 'Out'
 
 

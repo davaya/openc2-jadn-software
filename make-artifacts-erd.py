@@ -6,7 +6,7 @@ import jadn
 import os
 import shutil
 
-SCHEMA_DIR = 'Schemas'
+SCHEMA_DIR = 'Projects'
 OUTPUT_DIR = 'Out'
 
 

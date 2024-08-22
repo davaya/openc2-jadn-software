@@ -8,7 +8,7 @@ import fire
 import jadn
 import os
 
-SCHEMA_DIR = 'Schemas'
+SCHEMA_DIR = 'Projects'
 OUTPUT_DIR = 'Out'
 
 

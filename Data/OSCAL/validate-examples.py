@@ -2,7 +2,7 @@ import jadn
 import json
 import os
 
-SCHEMA = os.path.join('..', '..', 'Schemas', 'Metaschema', 'oscal.jadn')
+SCHEMA = os.path.join('..', '..', 'Projects', 'Metaschema', 'oscal.jadn')
 
 with open(SCHEMA, encoding='utf-8') as fp:
     sc = jadn.load(fp)
