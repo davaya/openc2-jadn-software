@@ -1,0 +1,167 @@
+{
+  "info": {
+    "title": "CACAO",
+    "package": "http://oasis-open.org/cacao/v2.1/playbook.jadn",
+    "description": "Syntax of a Collaborative Automated Course of Action Operations (CACAO) Playbook",
+    "exports": ["Playbook"],
+    "config": {
+      "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"
+    }
+  },
+
+  "types": [
+    ["Playbook", "Map", [], "", [
+      [1, "type", "CacaoType", [], ""],
+      [2, "spec_version", "CacaoVersion", [], ""],
+      [3, "id", "Identifier", ["K"], ""],
+      [4, "name", "String", [], ""],
+      [5, "description", "String", ["[0"], ""],
+      [6, "playbook_types", "PlaybookType", ["[0", "]0"], ""],
+      [7, "playbook_activities", "PlaybookActivity", ["[0", "]0"], ""],
+      [8, "playbook_processing_summary", "ProcessingSummary", ["[0", "]0"], ""],
+      [9, "created_by", "Identifier", [], ""],
+      [10, "created", "Timestamp", [], ""],
+      [11, "modified", "Timestamp", [], ""],
+      [12, "revoked", "Timestamp", ["[0"], ""],
+      [13, "valid_from", "Timestamp", ["[0"], ""],
+      [14, "valid_until", "Timestamp", ["[0"], ""],
+      [15, "derived_from", "Identifier", ["[0", "]0"], ""],
+      [16, "related_to", "Identifier", ["[0", "]0"], ""],
+      [17, "priority", "Integer", ["[0"], ""],
+      [18, "severity", "Integer", ["[0"], ""],
+      [19, "impact", "Integer", ["[0"], ""],
+      [20, "industry_sectors", "IndustrySector", ["[0", "]0"], ""],
+      [21, "labels", "String", ["[0", "]0"], ""],
+      [22, "external_references", "ExternalRef", ["[0", "]0"], ""],
+      [23, "markings", "Identifier", ["[0", "]0"], ""],
+      [24, "canvas_size", "Canvas", ["[0"], ""],
+      [25, "playbook_variables", "Dictionary", ["[0"], ""],
+      [30, "workflow_start", "Identifier", [], ""],
+      [31, "workflow_exception", "Identifier", ["[0"], ""],
+      [32, "workflow", "Workflow", [], ""],
+      [33, "playbook_extensions", "Extensions", ["[0"], ""],
+      [34, "authentication_info_definitions", "AuthenticationInfos", ["[0"], ""],
+      [35, "agent_definitions", "AgentTargets", ["[0"], ""],
+      [36, "target_definitions", "AgentTargets", ["[0"], ""],
+      [37, "extension_definitions", "Extensions", ["[0"], ""],
+      [38, "data_marking_definitions", "DataMarkings", ["[0"], ""],
+      [50, "signatures", "Signature", ["[0", "]0"], ""]
+    ]],
+
+    ["CacaoType", "Enumerated", [], "", [[1, "playbook", ""]]],
+    ["CacaoVersion", "Enumerated", [], "", [[1, "cacao-2.1", ""]]],
+    ["Workflow", "MapOf", ["+Identifier", "*WorkflowStep"], ""],
+    ["AuthenticationInfos", "MapOf", ["+Identifier", "*AuthenticationInfo"], ""],
+    ["Extensions", "MapOf", ["+Identifier", "*Extension"], ""],
+    ["DataMarkings", "MapOf", ["+Identifier", "*DataMarking"], ""],
+
+    ["WorkflowStep", "Choice", [], "", [
+      [1, "start", "Step", [], ""],
+      [2, "end", "Step", [], ""],
+      [3, "action", "ActionStep", [], ""],
+      [4, "playbook-action", "PlaybookActionStep", [], ""],
+      [5, "parallel", "ParallelActionStep", [], ""],
+      [6, "if-condition", "IfConditionStep", [], ""],
+      [7, "while-condition", "WhileConditionStep", [], ""],
+      [8, "switch-condition", "SwitchConditionStep", [], ""]
+    ]],
+    ["WorkflowStepType", "Enumerated", ["#WorkflowStep"], "", []],
+
+    ["Step", "Record", [], "", [
+      [1, "type", "WorkflowStepType", [], ""],
+      [2, "name", "String", ["[0"], ""],
+      [3, "description", "String", ["[0"], ""],
+      [4, "external_references", "ExternalReference", ["[0", "]0"], ""],
+      [5, "delay", "Integer", ["[0"], ""],
+      [6, "timeout", "Integer", ["[0"], ""],
+      [7, "step_variables", "StepVariables", ["[0"], ""],
+      [8, "owner", "Identifier", ["[0"], ""],
+      [9, "step_coordinates", "Coordinates", ["[0"], ""],
+      [10, "on_completion", "Identifier", ["[0"], ""],
+      [11, "on_success", "Identifier", ["[0"], ""],
+      [12, "on_failure", "Identifier", ["[0"], ""],
+      [13, "step_extensions", "Extensions", ["[0"], ""]
+    ]],
+
+    ["ActionStep", "Choice", ["CO"], "", [
+      [1, "step", "Step", [], ""]
+    ]],
+
+    ["PlaybookActionStep", "Choice", ["CO"], "", [
+      [1, "step", "Step", [], ""]
+    ]],
+
+
+    ["AgentTargets", "MapOf", ["+Identifier", "*AgentTarget"], ""],
+    ["AgentTarget", "Record", [], "", [
+      [1, "type", "AgentTargetType", [], ""],
+      [2, "name", "String", [], ""],
+      [3, "description", "String", ["[0"], ""],
+      [4, "location", "CivicLocation", ["[0"], ""],
+      [5, "agent_target_coordinates", "Coordinates", ["[0"], ""],
+      [6, "agent_target_extensions", "Extensions", ["[0"], ""]
+    ]],
+
+    ["ProcessingSummary", "Record", ["{1"], "", [
+      [1, "manual_playbook", "Boolean", ["[0"], ""],
+      [2, "external_playbooks", "Boolean", ["[0"], ""],
+      [3, "parallel_processing", "Boolean", ["[0"], ""],
+      [4, "if_logic", "Boolean", ["[0"], ""],
+      [5, "while_logic", "Boolean", ["[0"], ""],
+      [6, "switch_logic", "Boolean", ["[0"], ""],
+      [7, "temporal_logic", "Boolean", ["[0"], ""],
+      [8, "data_markings", "Boolean", ["[0"], ""],
+      [9, "digital_signatures", "Boolean", ["[0"], ""],
+      [10, "countersigned_signatures", "Boolean", ["[0"], ""],
+      [11, "extensions", "Boolean", ["[0"], ""]
+    ]],
+
+    ["Extension", "Record", [], "", [
+      [1, "type", "ExtensionDefinition", [], ""],
+      [2, "name", "String", [], ""],
+
+    ]],
+
+    ["Canvas", "Record", [], "", [
+
+    ]],
+
+    ["PlaybookType", "Enumerated", [], "", [
+      [1, "attack", ""],
+      [2, "detection", ""],
+      [3, "engagement", ""],
+      [4, "investigation", ""],
+      [5, "mitigation", ""],
+      [6, "notification", ""],
+      [7, "prevention", ""],
+      [8, "remediation", ""]
+    ]],
+
+    ["PlaybookActivity", "Enumerated", [], "", [
+      [1, "compose-content", ""],
+      [2, "deliver-content", ""],
+      [3, "identify-audience", ""],
+      [4, "identify-channel", ""],
+      [5, "scan-system", ""],
+      [6, "match-indicator", ""],
+      [7, "analyze-collected-data", ""],
+      [8, "identify-indicators", ""],
+      [9, "scan-vulnerabilities", ""],
+      [10, "configure-systems", ""],
+      [11, "restrict-access", ""],
+      [12, "disconnect-system", ""],
+      [13, "eliminate-risk", ""],
+      [14, "revert-system", ""],
+      [15, "restore-data", ""],
+      [16, "restore-capabilities", ""],
+      [17, "map-network", ""],
+      [18, "identify-steps", ""],
+      [19, "step-sequence", ""],
+      [20, "prepare-engagement", ""],
+      [21, "execute-operation", ""],
+      [22, "analyze-engagement-results", ""]
+    ]],
+
+    ["Identifier", "String", ["%^$"]]
+  ]
+}
