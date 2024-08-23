@@ -2,7 +2,7 @@
   "info": {
     "title": "CACAO",
     "package": "http://oasis-open.org/cacao/v2.1/playbook.jadn",
-    "description": "Syntax of a Collaborative Automated Course of Action Operations (CACAO) Playbook",
+    "description": "Collaborative Automated Course of Action Operations (CACAO) Playbook",
     "exports": ["Playbook"],
     "config": {
       "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"
@@ -17,7 +17,7 @@
       [4, "name", "String", [], ""],
       [5, "description", "String", ["[0"], ""],
       [6, "playbook_types", "PlaybookType", ["[0", "]0"], ""],
-      [7, "playbook_activities", "PlaybookActivity", ["[0", "]0"], ""],
+      [7, "playbook_activities", "PlaybookActivityType", ["[0", "]0"], ""],
       [8, "playbook_processing_summary", "ProcessingSummary", ["[0", "]0"], ""],
       [9, "created_by", "Identifier", [], ""],
       [10, "created", "Timestamp", [], ""],
@@ -35,7 +35,7 @@
       [22, "external_references", "ExternalRef", ["[0", "]0"], ""],
       [23, "markings", "Identifier", ["[0", "]0"], ""],
       [24, "canvas_size", "Canvas", ["[0"], ""],
-      [25, "playbook_variables", "Dictionary", ["[0"], ""],
+      [25, "playbook_variables", "PlaybookVariables", ["[0"], ""],
       [30, "workflow_start", "Identifier", [], ""],
       [31, "workflow_exception", "Identifier", ["[0"], ""],
       [32, "workflow", "Workflow", [], ""],
@@ -50,6 +50,7 @@
 
     ["CacaoType", "Enumerated", [], "", [[1, "playbook", ""]]],
     ["CacaoVersion", "Enumerated", [], "", [[1, "cacao-2.1", ""]]],
+    ["PlaybookVariables", "MapOf", ["+Identifier", "*WorkflowStep"], ""],
     ["Workflow", "MapOf", ["+Identifier", "*WorkflowStep"], ""],
     ["AuthenticationInfos", "MapOf", ["+Identifier", "*AuthenticationInfo"], ""],
     ["Extensions", "MapOf", ["+Identifier", "*Extension"], ""],
@@ -91,6 +92,29 @@
       [1, "step", "Step", [], ""]
     ]],
 
+    ["ParallelActionStep", "Choice", ["CO"], "", [
+      [1, "step", "Step", [], ""]
+    ]],
+
+    ["IfConditionStep", "Choice", ["CO"], "", [
+      [1, "step", "Step", [], ""]
+    ]],
+
+    ["WhileConditionStep", "Choice", ["CO"], "", [
+      [1, "step", "Step", [], ""]
+    ]],
+
+    ["SwitchConditionStep", "Choice", ["CO"], "", [
+      [1, "step", "Step", [], ""]
+    ]],
+
+    ["CommandData", "Record", [], "", [
+      [1, "type", "CommandType", [], ""],
+      [2, "description", "String", ["[0"], ""],
+      [3, "version", "String", ["[0"], ""],
+      [4, "out_args", "String", ["[0", "]0"], ""],
+      [5, "playbook_activity", "PlaybookActivityType", ["[0", "]0"], ""]
+    ]],
 
     ["AgentTargets", "MapOf", ["+Identifier", "*AgentTarget"], ""],
     ["AgentTarget", "Record", [], "", [
@@ -100,6 +124,19 @@
       [4, "location", "CivicLocation", ["[0"], ""],
       [5, "agent_target_coordinates", "Coordinates", ["[0"], ""],
       [6, "agent_target_extensions", "Extensions", ["[0"], ""]
+    ]],
+
+    ["AgentTargetType", "Enumerated", [] ,"", [
+      [1, "group", ""],
+      [2, "individual", ""],
+      [3, "location", ""],
+      [4, "organization", ""],
+      [5, "sector", ""],
+      [11, "http-api", ""],
+      [12, "linux", ""],
+      [13, "net-address", ""],
+      [14, "security-category", ""],
+      [15, "ssh", ""]
     ]],
 
     ["ProcessingSummary", "Record", ["{1"], "", [
@@ -116,28 +153,93 @@
       [11, "extensions", "Boolean", ["[0"], ""]
     ]],
 
+    ["Canvas", "Record", [], "", [
+      [1, "width", "Integer", [], ""],
+      [2, "height", "Integer", [], ""]
+    ]],
+
+    ["CivicLocation", "Record", ["{1"], "", [
+      [1, "name", "String", ["[0"], ""],
+      [2, "description", "String", ["[0"], ""],
+      [3, "building_details", "String", ["[0"], ""],
+      [4, "network_details", "String", ["[0"], ""],
+      [5, "region", "Region", ["[0"], ""],
+      [6, "country", "String", ["{2", "}2", "[0"], ""],
+      [7, "administrative_area", "String", ["[0"], ""],
+      [8, "city", "String", ["[0"], ""],
+      [9, "street_address", "String", ["[0"], ""],
+      [10, "postal_code", "String", ["[0"], ""],
+      [11, "latitude", "Integer", ["{-90", "}90", "[0"], ""],
+      [12, "longitude", "Integer", ["{-180", "}180", "[0"], ""],
+      [13, "precision", "Integer", ["{0", "[0"], ""]
+    ]],
+
     ["Extension", "Record", [], "", [
       [1, "type", "ExtensionDefinition", [], ""],
-      [2, "name", "String", [], ""],
-
+      [2, "name", "String", [], ""]
     ]],
 
-    ["Canvas", "Record", [], "", [
-
+    ["ExternalReference", "Record", [], "", [
+      [1, "name", "String", [], ""],
+      [2, "description", "String", ["[0"], ""],
+      [3, "url", "String", ["[0", "/uri"], ""],
+      [4, "external_id", "String", ["[0"], ""],
+      [5, "reference_id", "String", ["[0"], ""]
     ]],
 
-    ["PlaybookType", "Enumerated", [], "", [
-      [1, "attack", ""],
-      [2, "detection", ""],
-      [3, "engagement", ""],
-      [4, "investigation", ""],
-      [5, "mitigation", ""],
-      [6, "notification", ""],
-      [7, "prevention", ""],
-      [8, "remediation", ""]
+    ["IndustrySector", "Enumerated", [], "", [
+      [1, "aerospace", ""],
+      [2, "aviation", ""],
+      [3, "agriculture", ""],
+      [4, "automotive", ""],
+      [5, "biotechnology", ""],
+      [6, "chemical", ""],
+      [7, "commercial", ""],
+      [8, "consulting", ""],
+      [9, "construction", ""],
+      [10, "cosmetics", ""],
+      [11, "critical-infrastructure", ""],
+      [12, "dams", ""],
+      [13, "defense", ""],
+      [14, "education", ""],
+      [15, "emergency-services", ""],
+      [16, "energy", ""],
+      [17, "non-renewable-energy", ""],
+      [18, "renewable-energy", ""],
+      [19, "media", ""],
+      [20, "financial", ""],
+      [21, "food", ""],
+      [22, "gambling", ""],
+      [23, "government", ""],
+      [24, "local-government", ""],
+      [25, "national-government", ""],
+      [26, "regional-government", ""],
+      [27, "public-services", ""],
+      [28, "healthcare", ""],
+      [29, "information-communications-technology", ""],
+      [30, "electronics-hardware", ""],
+      [31, "telecommunications", ""],
+      [32, "legal-services", ""],
+      [33, "lodging", ""],
+      [34, "manufacturing", ""],
+      [35, "maritime", ""],
+      [36, "metals", ""],
+      [37, "mining", ""],
+      [38, "non-profit", ""],
+      [39, "humanitarian-aid", ""],
+      [40, "human-rights", ""],
+      [41, "nuclear", ""],
+      [42, "petroleum", ""],
+      [43, "pharmaceuticals", ""],
+      [44, "research", ""],
+      [45, "transportation", ""],
+      [46, "logistics-shipping", ""],
+      [47, "utilities", ""],
+      [48, "video-game", ""],
+      [49, "water", ""]
     ]],
 
-    ["PlaybookActivity", "Enumerated", [], "", [
+    ["PlaybookActivityType", "Enumerated", [], "", [
       [1, "compose-content", ""],
       [2, "deliver-content", ""],
       [3, "identify-audience", ""],
@@ -160,6 +262,71 @@
       [20, "prepare-engagement", ""],
       [21, "execute-operation", ""],
       [22, "analyze-engagement-results", ""]
+    ]],
+
+    ["PlaybookType", "Enumerated", [], "", [
+      [1, "attack", ""],
+      [2, "detection", ""],
+      [3, "engagement", ""],
+      [4, "investigation", ""],
+      [5, "mitigation", ""],
+      [6, "notification", ""],
+      [7, "prevention", ""],
+      [8, "remediation", ""]
+    ]],
+
+    ["Region", "Enumerated", [], "", [
+      [1, "africa", ""],
+      [2, "eastern-africa", ""],
+      [3, "middle-africa", ""],
+      [4, "northern-africa", ""],
+      [5, "southern-africa", ""],
+      [6, "western-africa", ""],
+      [7, "americas", ""],
+      [8, "caribbean", ""],
+      [9, "central-america", ""],
+      [10, "latin-america-caribbean", ""],
+      [11, "northern-america", ""],
+      [12, "south-america", ""],
+      [13, "asia", ""],
+      [14, "central-asia", ""],
+      [15, "eastern-asia", ""],
+      [16, "southern-asia", ""],
+      [17, "south-eastern-asia", ""],
+      [18, "western-asia", ""],
+      [19, "europe", ""],
+      [20, "eastern-europe", ""],
+      [21, "northern-europe", ""],
+      [22, "southern-europe", ""],
+      [23, "western-europe", ""],
+      [24, "oceania", ""],
+      [25, "antarctica", ""],
+      [26, "australia-new-zealand", ""],
+      [27, "melanesia", ""],
+      [28, "micronesia", ""],
+      [29, "polynesia", ""]
+    ]],
+
+    ["SignatureAlgorithm", "Enumerated", [], "", [
+      [1, "RS256", ""],
+      [2, "RS384", ""],
+      [3, "RS512", ""],
+      [4, "ES256", ""],
+      [5, "ES384", ""],
+      [6, "ES512", ""],
+      [7, "PS256", ""],
+      [8, "PS384", ""],
+      [9, "PS512", ""],
+      [10, "Ed25519", ""],
+      [11, "Ed448", ""],
+      [12, "XMSS-SHA2_10_256", ""],
+      [13, "XMSS-SHA2_16_256", ""],
+      [14, "XMSS-SHA2_20_256", ""],
+      [15, "LMS_SHA256_M32_H5", ""],
+      [16, "LMS_SHA256_M32_H10", ""],
+      [17, "LMS_SHA256_M32_H15", ""],
+      [18, "LMS_SHA256_M32_H20", ""],
+      [19, "LMS_SHA256_M32_H25", ""]
     ]],
 
     ["Identifier", "String", ["%^$"]]
