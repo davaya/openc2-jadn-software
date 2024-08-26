@@ -35,7 +35,7 @@
       [22, "external_references", "ExternalRef", ["[0", "]0"], ""],
       [23, "markings", "Identifier", ["[0", "]0"], ""],
       [24, "canvas_size", "Canvas", ["[0"], ""],
-      [25, "playbook_variables", "PlaybookVariables", ["[0"], ""],
+      [25, "playbook_variables", "Variables", ["[0"], ""],
       [30, "workflow_start", "Identifier", [], ""],
       [31, "workflow_exception", "Identifier", ["[0"], ""],
       [32, "workflow", "Workflow", [], ""],
@@ -50,7 +50,6 @@
 
     ["CacaoType", "Enumerated", [], "", [[1, "playbook", ""]]],
     ["CacaoVersion", "Enumerated", [], "", [[1, "cacao-2.1", ""]]],
-    ["PlaybookVariables", "MapOf", ["+Identifier", "*WorkflowStep"], ""],
     ["Workflow", "MapOf", ["+Identifier", "*WorkflowStep"], ""],
     ["AuthenticationInfos", "MapOf", ["+Identifier", "*AuthenticationInfo"], ""],
     ["Extensions", "MapOf", ["+Identifier", "*Extension"], ""],
@@ -75,7 +74,7 @@
       [4, "external_references", "ExternalReference", ["[0", "]0"], ""],
       [5, "delay", "Integer", ["[0"], ""],
       [6, "timeout", "Integer", ["[0"], ""],
-      [7, "step_variables", "StepVariables", ["[0"], ""],
+      [7, "step_variables", "Variables", ["[0"], ""],
       [8, "owner", "Identifier", ["[0"], ""],
       [9, "step_coordinates", "Coordinates", ["[0"], ""],
       [10, "on_completion", "Identifier", ["[0"], ""],
@@ -126,17 +125,17 @@
       [6, "agent_target_extensions", "Extensions", ["[0"], ""]
     ]],
 
-    ["AgentTargetType", "Enumerated", [] ,"", [
-      [1, "group", ""],
-      [2, "individual", ""],
-      [3, "location", ""],
-      [4, "organization", ""],
-      [5, "sector", ""],
-      [11, "http-api", ""],
-      [12, "linux", ""],
-      [13, "net-address", ""],
-      [14, "security-category", ""],
-      [15, "ssh", ""]
+    ["AgentTargetType", "Choice", [] ,"", [
+      [1, "group", "Group", [], ""],
+      [2, "individual", "Individual", [], ""],
+      [3, "location", "Location", [], ""],
+      [4, "organization", "Organization", [], ""],
+      [5, "sector", "Sector", [], ""],
+      [6, "http-api", "HttpApi", [], ""],
+      [7, "linux", "Linux", [], ""],
+      [8, "net-address", "NetworkAddress", [], ""],
+      [9, "security-category", "SecurityCategory", [], ""],
+      [10, "ssh", "SSH", [], ""]
     ]],
 
     ["ProcessingSummary", "Record", ["{1"], "", [
@@ -185,6 +184,36 @@
       [3, "url", "String", ["[0", "/uri"], ""],
       [4, "external_id", "String", ["[0"], ""],
       [5, "reference_id", "String", ["[0"], ""]
+    ]],
+
+    ["Variables", "MapOf", ["+VariableId", "*Variable"], ""],
+
+    ["VariableId", "String", ["%^__\\w{1,246}__$"], "", []],
+
+    ["Variable", "Record", [], "", [
+      [1, "type", "VariableType", [], ""],
+      [2, "description", "String", ["[0"], ""],
+      [3, "value", "String", ["[0"], ""],
+      [4, "constant", "Boolean", ["[0"], ""],
+      [5, "external", "Boolean", ["[0"], ""]
+    ]],
+
+    ["VariableType", "Enumerated", [], "", [
+      [1, "bool", ""],
+      [2, "dictionary", ""],
+      [3, "float", ""],
+      [4, "hexstring", ""],
+      [5, "integer", ""],
+      [6, "ipv4-addr", ""],
+      [7, "ipv6-addr", ""],
+      [8, "long", ""],
+      [9, "mac-addr", ""],
+      [10, "hash", ""],
+      [11, "md5-hash", ""],
+      [12, "sha256-hash", ""],
+      [13, "string", ""],
+      [14, "uri", ""],
+      [15, "uuid", ""]
     ]],
 
     ["IndustrySector", "Enumerated", [], "", [
