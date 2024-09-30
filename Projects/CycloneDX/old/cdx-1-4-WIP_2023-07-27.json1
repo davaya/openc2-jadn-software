@@ -17,17 +17,14 @@
       ],
       "maxProperties": 150,
       "properties": {
-        "$schema": {
-          "$ref": "#/definitions/CDXSchema",
-          "description": ""
-        },
         "bomFormat": {
           "$ref": "#/definitions/CDX",
-          "description": "Specifies the format of the BOM. This helps to identify the file as CycloneDX since BOMs do not have a filename convention nor does . JSON schema support namespaces. This value MUST be \\\"CycloneDX\\\"."
+          "description": "Specifies the format of the BOM. This helps to identify the file as CycloneDX since BOMs do not have a filename convention nor does . JSON schema support namespaces. This value MUST be \\\"CycloneDX\\\". "
         },
         "specVersion": {
-          "$ref": "#/definitions/Version",
-          "description": "The version of the CycloneDX specification a BOM conforms to (starting at version 1.2)."
+          "type": "string",
+          "description": "The version of the CycloneDX specification a BOM conforms to (starting at version 1.2).",
+          "maxLength": 255
         },
         "serialNumber": {
           "$ref": "#/definitions/SerialNumber",
@@ -38,62 +35,32 @@
           "description": "Whenever an existing BOM is modified, either manually or through automated processes, the version of the BOM SHOULD be incremented by 1. When a system is presented with multiple BOMs with identical serial numbers, the system SHOULD use the most recent version of the BOM. The default version is '1'."
         },
         "metadata": {
-          "$ref": "#/definitions/metadata",
+          "$ref": "#/definitions/Metadata",
           "description": "Provides additional information about a BOM"
         },
         "components": {
-          "type": "array",
-          "description": "A list of software and hardware components.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/component",
-            "description": "A list of software and hardware components."
-          }
+          "$ref": "#/definitions/ComponentSet",
+          "description": "A list of software and hardware components."
         },
         "services": {
-          "type": "array",
-          "description": "A list of services. This may include microservices, function-as-a-service, and other types of network or intra-process services",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/service",
-            "description": "A list of services. This may include microservices, function-as-a-service, and other types of network or intra-process services"
-          }
+          "$ref": "#/definitions/Services",
+          "description": "A list of services. This may include microservices, function-as-a-service, and other types of network or intra-process services"
         },
         "externalReferences": {
-          "type": "array",
-          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/externalReference",
-            "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
-          }
+          "$ref": "#/definitions/ExternalReferences",
+          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
         },
         "dependencies": {
-          "type": "array",
-          "description": "Provides the ability to document dependency relationships.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/dependency",
-            "description": "Provides the ability to document dependency relationships."
-          }
+          "$ref": "#/definitions/Dependencies",
+          "description": "Provides the ability to document dependency relationships."
         },
         "compositions": {
-          "type": "array",
-          "description": "Compositions describe constituent parts (including components, services, and dependency relationships) and their completeness.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/compositions",
-            "description": "Compositions describe constituent parts (including components, services, and dependency relationships) and their completeness."
-          }
+          "$ref": "#/definitions/Compositions",
+          "description": "Compositions describe constituent parts (including components, services, and dependency relationships) and their completeness."
         },
         "vulnerabilities": {
-          "type": "array",
-          "description": "Vulnerabilities identified in components or services.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/vulnerability",
-            "description": "Vulnerabilities identified in components or services."
-          }
+          "$ref": "#/definitions/Vulnerabilities",
+          "description": "Vulnerabilities identified in components or services."
         },
         "signature": {
           "type": "string",
@@ -102,12 +69,44 @@
         }
       }
     },
-    "CDXSchema": {
-      "title": "CDXSchema",
-      "type": "string",
-      "enum": [
-        "http://cyclonedx.org/schema/bom-1.4.schema.json"
-      ]
+    "Vulnerabilities": {
+      "title": "Vulnerabilities",
+      "type": "array",
+      "description": "Vulnerabilities identified in components or services.",
+      "uniqueItems": true,
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/Vulnerability"
+      }
+    },
+    "Dependencies": {
+      "title": "Dependencies",
+      "type": "array",
+      "description": "Provides the ability to document dependency relationships.",
+      "uniqueItems": true,
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/Dependency"
+      }
+    },
+    "ExternalReferences": {
+      "title": "ExternalReferences",
+      "type": "array",
+      "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM.",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/externalReference"
+      }
+    },
+    "Services": {
+      "title": "Services",
+      "type": "array",
+      "description": "A list of services. This may include microservices, function-as-a-service, and other types of network or intra-process services",
+      "uniqueItems": true,
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/Service"
+      }
     },
     "CDX": {
       "title": "CDX",
@@ -116,21 +115,8 @@
         "CycloneDX"
       ]
     },
-    "Version": {
-      "title": "Version",
-      "type": "string",
-      "description": "Should be SemVer?",
-      "maxLength": 255
-    },
-    "SerialNumber": {
-      "title": "SerialNumber",
-      "type": "string",
-      "description": "Every BOM generated SHOULD have a unique serial number, even if the contents of the BOM have not changed over time. If specified, the serial number MUST conform to RFC-4122. Use of serial numbers are RECOMMENDED.",
-      "maxLength": 255,
-      "pattern": "^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-    },
-    "metadata": {
-      "title": "metadata",
+    "Metadata": {
+      "title": "Metadata",
       "type": "object",
       "description": "Provides additional information about a BOM",
       "additionalProperties": false,
@@ -141,26 +127,16 @@
           "description": "The date and time (timestamp) when the BOM was created."
         },
         "tools": {
-          "type": "array",
-          "description": "The tool(s) used in the creation of the BOM.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/tool",
-            "description": "The tool(s) used in the creation of the BOM."
-          }
+          "$ref": "#/definitions/Tools",
+          "description": "The tool(s) used in the creation of the BOM."
         },
         "authors": {
-          "type": "array",
-          "description": "The person(s) who created the BOM. Authors are common in BOMs created through manual processes. BOMs created through automated means may not have authors.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/organizationalContact",
-            "description": "The person(s) who created the BOM. Authors are common in BOMs created through manual processes. BOMs created through automated means may not have authors."
-          }
+          "$ref": "#/definitions/Authors",
+          "description": "The person(s) who created the BOM. Authors are common in BOMs created through manual processes. BOMs created through automated means may not have authors."
         },
         "component": {
-          "$ref": "#/definitions/component",
-          "description": "The component that the BOM describes."
+          "$ref": "#/definitions/Component",
+          "description": ""
         },
         "manufacture": {
           "$ref": "#/definitions/organizationalEntity",
@@ -171,27 +147,31 @@
           "description": "The organization that supplied the component that the BOM describes. The supplier may often be the manufacturer, but may also be a distributor or repackager."
         },
         "licenses": {
-          "type": "array",
-          "description": "BOM license(s).",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/licenseChoice",
-            "description": "BOM license(s)."
-          }
+          "$ref": "#/definitions/licenseChoice",
+          "description": "BOM license(s)."
         },
         "properties": {
-          "type": "array",
-          "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/property",
-            "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL."
-          }
+          "$ref": "#/definitions/Properties",
+          "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL."
         }
       }
     },
-    "tool": {
-      "title": "tool",
+    "Compositions": {
+      "title": "Compositions",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/Composition"
+      }
+    },
+    "refType": {
+      "title": "refType",
+      "type": "string",
+      "description": "Identifier-DataType for interlinked elements",
+      "maxLength": 255
+    },
+    "Tool": {
+      "title": "Tool",
       "type": "object",
       "description": "Information about the automated or manual tool used",
       "additionalProperties": false,
@@ -213,45 +193,73 @@
           "maxLength": 255
         },
         "hashes": {
-          "type": "array",
-          "description": "The hashes of the tool (if applicable)",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/hash",
-            "description": "The hashes of the tool (if applicable)"
-          }
+          "$ref": "#/definitions/HashArray",
+          "description": "The hashes of the tool (if applicable)"
         },
         "externalReferences": {
-          "type": "array",
-          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/externalReference",
-            "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
-          }
+          "$ref": "#/definitions/ExternalReferences",
+          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
         }
       }
     },
-    "component": {
-      "title": "component",
+    "Tools": {
+      "title": "Tools",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/Tool"
+      }
+    },
+    "Author": {
+      "title": "Author",
+      "type": "string",
+      "maxLength": 255
+    },
+    "Authors": {
+      "title": "Authors",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/organizationalContact"
+      }
+    },
+    "Component": {
+      "title": "Component",
       "type": "object",
       "description": "The component that the BOM describes.",
       "additionalProperties": false,
       "required": [
         "type",
+        "mime-type",
+        "bom-ref",
+        "supplier",
+        "author",
+        "publisher",
+        "group",
         "name",
-        "scope"
+        "version",
+        "description",
+        "scope",
+        "hashes",
+        "licenses",
+        "copyright",
+        "cpe",
+        "purl",
+        "swid",
+        "modified",
+        "pedigree",
+        "externalReferences",
+        "components",
+        "evidence",
+        "releasetNotes",
+        "properties",
+        "signature"
       ],
       "maxProperties": 150,
       "properties": {
         "type": {
-          "$ref": "#/definitions/componentType",
+          "$ref": "#/definitions/ComponentType",
           "description": "Specifies the type of component. For software components, classify as application if no more specific appropriate classification is available or cannot be determined for the component. Types include: application, framework, library, container, operating-system, device, firmware, file."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the component. This will often be a shortened, single name of the component. Examples: commons-lang3 and jquery",
-          "maxLength": 255
         },
         "mime-type": {
           "$ref": "#/definitions/Mime-Type",
@@ -280,6 +288,11 @@
           "description": "The grouping name or identifier. This will often be a shortened, single name of the company or project that produced the component, or the source package or domain name. Whitespace and special characters should be avoided. Examples include: apache, org.apache.commons, and apache.org.",
           "maxLength": 255
         },
+        "name": {
+          "type": "string",
+          "description": "The name of the component. This will often be a shortened, single name of the component. Examples: commons-lang3 and jquery",
+          "maxLength": 255
+        },
         "version": {
           "type": "string",
           "description": "The component version. The version should ideally comply with semantic versioning but is not enforced.",
@@ -291,21 +304,16 @@
           "maxLength": 255
         },
         "scope": {
-          "$ref": "#/definitions/componentScope",
-          "description": ""
+          "$ref": "#/definitions/ComponentScope",
+          "description": "Specifies the scope of the component. If scope is not specified, 'required' scope SHOULD be assumed by the consumer of the BOM.  NOTE: should deal with default value of \"required\"."
         },
         "hashes": {
-          "$ref": "#/definitions/hash",
+          "$ref": "#/definitions/HashArray",
           "description": ""
         },
         "licenses": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/licenseChoice",
-            "description": ""
-          }
+          "$ref": "#/definitions/LicenseChoises",
+          "description": ""
         },
         "copyright": {
           "type": "string",
@@ -331,26 +339,16 @@
           "description": "[Deprecated] - DO NOT USE. This will be removed in a future version. Use the pedigree element instead to supply information on exactly how the component was modified. A boolean value indicating if the component has been modified from the original. A value of true indicates the component is a derivative of the original. A value of false indicates the component has not been modified from the original."
         },
         "pedigree": {
-          "$ref": "#/definitions/pedigree",
+          "$ref": "#/definitions/Pedigree",
           "description": "Component pedigree is a way to document complex supply chain scenarios where components are created, distributed, modified, redistributed, combined with other components, etc. Pedigree supports viewing this complex chain from the beginning, the end, or anywhere in the middle. It also provides a way to document variants where the exact relation may not be known."
         },
         "externalReferences": {
-          "type": "array",
-          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/externalReference",
-            "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
-          }
+          "$ref": "#/definitions/ExternalReferences",
+          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
         },
         "components": {
-          "type": "array",
-          "description": "A list of software and hardware components included in the parent component. This is not a dependency tree. It provides a way to specify a hierarchical representation of component assemblies, similar to system &#8594; subsystem &#8594; parts assembly in physical supply chains.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/component",
-            "description": "A list of software and hardware components included in the parent component. This is not a dependency tree. It provides a way to specify a hierarchical representation of component assemblies, similar to system &#8594; subsystem &#8594; parts assembly in physical supply chains."
-          }
+          "$ref": "#/definitions/ComponentSet",
+          "description": "A list of software and hardware components included in the parent component. This is not a dependency tree. It provides a way to specify a hierarchical representation of component assemblies, similar to system &#8594; subsystem &#8594; parts assembly in physical supply chains."
         },
         "evidence": {
           "$ref": "#/definitions/componentEvidence",
@@ -361,31 +359,25 @@
           "description": "Specifies optional release notes."
         },
         "properties": {
-          "type": "array",
-          "description": "Provides the ability to document properties in a name-value store.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/property",
-            "description": "Provides the ability to document properties in a name-value store."
-          }
+          "$ref": "#/definitions/Properties",
+          "description": "Provides the ability to document properties in a name-value store. "
         },
         "signature": {
-          "$ref": "#/definitions/signature",
-          "description": "Enveloped signature in [JSON Signature Format (JSF)](https://cyberphone.github.io/doc/security/jsf.html)."
+          "type": "string",
+          "description": "Enveloped signature in [JSON Signature Format (JSF)](https://cyberphone.github.io/doc/security/jsf.html).",
+          "maxLength": 255
         }
       }
-    },
-    "refType": {
-      "title": "refType",
-      "type": "string",
-      "description": "Identifier-DataType for interlinked elements",
-      "maxLength": 255
     },
     "organizationalEntity": {
       "title": "organizationalEntity",
       "type": "object",
       "additionalProperties": false,
-      "minProperties": 1,
+      "required": [
+        "name",
+        "url",
+        "contact"
+      ],
       "maxProperties": 150,
       "properties": {
         "name": {
@@ -394,24 +386,69 @@
           "maxLength": 255
         },
         "url": {
-          "type": "array",
-          "description": "The URL of the organization; multiple URLs are allowed",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/URL",
-            "description": "The URL of the organization; multiple URLs are allowed"
-          }
+          "$ref": "#/definitions/URLs",
+          "description": "The URL of the organization; multiple URLs are allowed"
         },
         "contact": {
-          "type": "array",
-          "description": "A contact at the organization. Multiple contacts are allowed.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/organizationalContact",
-            "description": "A contact at the organization. Multiple contacts are allowed."
-          }
+          "$ref": "#/definitions/Contacts",
+          "description": "A contact at the organization. Multiple contacts are allowed."
         }
       }
+    },
+    "property": {
+      "title": "property",
+      "type": "object",
+      "description": "Lightweight name-value pair",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "maxProperties": 150,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the property. Duplicate names are allowed, each potentially having a different value.",
+          "maxLength": 255
+        },
+        "value": {
+          "type": "string",
+          "description": "The value of the property",
+          "maxLength": 255
+        }
+      }
+    },
+    "Properties": {
+      "title": "Properties",
+      "type": "array",
+      "description": "Array of name-value pairs.",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/property"
+      }
+    },
+    "URL": {
+      "title": "URL",
+      "type": "string",
+      "description": "A utility type for URLs",
+      "format": "iri-reference",
+      "maxLength": 255
+    },
+    "URLs": {
+      "title": "URLs",
+      "type": "array",
+      "description": "Array of URLs",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/URL"
+      }
+    },
+    "EmailAddr": {
+      "title": "EmailAddr",
+      "type": "string",
+      "description": "An email address",
+      "format": "idn-email",
+      "maxLength": 255
     },
     "organizationalContact": {
       "title": "organizationalContact",
@@ -440,42 +477,14 @@
         }
       }
     },
-    "property": {
-      "title": "property",
-      "type": "object",
-      "description": "Lightweight name-value pair",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "value"
-      ],
-      "maxProperties": 150,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "The name of the property. Duplicate names are allowed, each potentially having a different value.",
-          "maxLength": 255
-        },
-        "value": {
-          "type": "string",
-          "description": "The value of the property",
-          "maxLength": 255
-        }
+    "Contacts": {
+      "title": "Contacts",
+      "type": "array",
+      "description": "Array of contacts for organizationalEntity",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/organizationalContact"
       }
-    },
-    "URL": {
-      "title": "URL",
-      "type": "string",
-      "description": "A utility type for URLs",
-      "format": "iri-reference",
-      "maxLength": 255
-    },
-    "EmailAddr": {
-      "title": "EmailAddr",
-      "type": "string",
-      "description": "An email address",
-      "format": "idn-email",
-      "maxLength": 255
     },
     "range": {
       "title": "range",
@@ -628,7 +637,7 @@
           "maxLength": 255
         },
         "encoding": {
-          "$ref": "#/definitions/contentEncoding",
+          "$ref": "#/definitions/ContentEncoding",
           "description": "Specifies the optional encoding the text is represented in.   NOTE: has embedded enum with one option (0 : base64)"
         },
         "content": {
@@ -658,6 +667,13 @@
           "description": "Specifies the URL to the diff"
         }
       }
+    },
+    "SerialNumber": {
+      "title": "SerialNumber",
+      "type": "string",
+      "description": "Every BOM generated SHOULD have a unique serial number, even if the contents of the BOM have not changed over time. If specified, the serial number MUST conform to RFC-4122. Use of serial numbers are RECOMMENDED.",
+      "maxLength": 255,
+      "pattern": "^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
     "localeType": {
       "title": "localeType",
@@ -690,7 +706,7 @@
     "releaseType": {
       "title": "releaseType",
       "type": "string",
-      "description": "The software versioning type. It is RECOMMENDED that the release type use one of 'major', 'minor', 'patch', 'pre-release', or 'internal'. Representing all possible software release types is not practical, so standardizing on the recommended values, whenever possible, is strongly encouraged.\\n\\n* __major__ = A major release may contain significant changes or may introduce breaking changes.\\n* __minor__ = A minor release, also known as an update, may contain a smaller number of changes than major releases.\\n* __patch__ = Patch releases are typically unplanned and may resolve defects or important security issues.\\n* __pre-release__ = A pre-release may include alpha, beta, or release candidates and typically have limited support. They provide the ability to preview a release prior to its general availability.\\n* __internal__ = Internal releases are not for public consumption and are intended to be used exclusively by the project or manufacturer that produced it.",
+      "description": "\tThe software versioning type. It is RECOMMENDED that the release type use one of 'major', 'minor', 'patch', 'pre-release', or 'internal'. Representing all possible software release types is not practical, so standardizing on the recommended values, whenever possible, is strongly encouraged.\\n\\n* __major__ = A major release may contain significant changes or may introduce breaking changes.\\n* __minor__ = A minor release, also known as an update, may contain a smaller number of changes than major releases.\\n* __patch__ = Patch releases are typically unplanned and may resolve defects or important security issues.\\n* __pre-release__ = A pre-release may include alpha, beta, or release candidates and typically have limited support. They provide the ability to preview a release prior to its general availability.\\n* __internal__ = Internal releases are not for public consumption and are intended to be used exclusively by the project or manufacturer that produced it.",
       "maxLength": 255
     },
     "aggregateType": {
@@ -806,6 +822,35 @@
         }
       }
     },
+    "impactAnalysisState": {
+      "title": "impactAnalysisState",
+      "type": "string",
+      "description": "Declares the current state of an occurrence of a vulnerability, after automated or manual analysis. \\n\\n* __resolved__ = the vulnerability has been remediated. \\n* __resolved\\\\_with\\\\_pedigree__ = the vulnerability has been remediated and evidence of the changes are provided in the affected components pedigree containing verifiable commit history and/or diff(s). \\n* __exploitable__ = the vulnerability may be directly or indirectly exploitable. \\n* __in\\\\_triage__ = the vulnerability is being investigated. \\n* __false\\\\_positive__ = the vulnerability is not specific to the component or service and was falsely identified or associated. \\n* __not\\\\_affected__ = the component or service is not affected by the vulnerability. Justification should be specified for all not_affected cases.",
+      "enum": [
+        "resolved",
+        "resolve_with_pedigree",
+        "exploitable",
+        "in_triage",
+        "false_positive",
+        "not_affected"
+      ]
+    },
+    "impactAnalysisJustification": {
+      "title": "impactAnalysisJustification",
+      "type": "string",
+      "description": "The rationale of why the impact analysis state was asserted. \\n\\n* __code\\\\_not\\\\_present__ = the code has been removed or tree-shaked. \\n* __code\\\\_not\\\\_reachable__ = the vulnerable code is not invoked at runtime. \\n* __requires\\\\_configuration__ = exploitability requires a configurable option to be set/unset. \\n* __requires\\\\_dependency__ = exploitability requires a dependency that is not present. \\n* __requires\\\\_environment__ = exploitability requires a certain environment which is not present. \\n* __protected\\\\_by\\\\_compiler__ = exploitability requires a compiler flag to be set/unset. \\n* __protected\\\\_at\\\\_runtime__ = exploits are prevented at runtime. \\n* __protected\\\\_at\\\\_perimeter__ = attacks are blocked at physical, logical, or network perimeter. \\n* __protected\\\\_by\\\\_mitigating\\\\_control__ = preventative measures have been implemented that reduce the likelihood and/or impact of the vulnerability.",
+      "enum": [
+        "code_not_present",
+        "code_not_reachable",
+        "requires_configuration",
+        "requires_dependency",
+        "requires_environment",
+        "protected_by_compiler",
+        "protected_at_runtime",
+        "protected_at_perimeter",
+        "protected_by_mitigating_control"
+      ]
+    },
     "commit": {
       "title": "commit",
       "type": "object",
@@ -865,13 +910,22 @@
         }
       }
     },
+    "RefArray": {
+      "title": "RefArray",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/refType"
+      }
+    },
     "dependency": {
       "title": "dependency",
       "type": "object",
       "description": "Defines the direct dependencies of a component. Components that do not have their own dependencies MUST be declared as empty elements within the graph. Components that are not represented in the dependency graph MAY have unknown dependencies. It is RECOMMENDED that implementations assume this to be opaque and not an indicator of a component being dependency-free.",
       "additionalProperties": false,
       "required": [
-        "ref"
+        "ref",
+        "dependsOn"
       ],
       "maxProperties": 150,
       "properties": {
@@ -880,52 +934,8 @@
           "description": "References a component by the components bom-ref attribute"
         },
         "dependsOn": {
-          "type": "array",
-          "description": "The bom-ref identifiers of the components that are dependencies of this dependency object",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/refType",
-            "description": "The bom-ref identifiers of the components that are dependencies of this dependency object"
-          }
-        }
-      }
-    },
-    "compositions": {
-      "title": "compositions",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "aggregate",
-        "signature"
-      ],
-      "maxProperties": 150,
-      "properties": {
-        "aggregate": {
-          "$ref": "#/definitions/aggregateType",
-          "description": "Specifies an aggregate type that describe how complete a relationship is."
-        },
-        "assemblies": {
-          "type": "array",
-          "description": "The bom-ref identifiers of the components or services being described. Assemblies refer to nested relationships whereby a constituent part may include other constituent parts. References do not cascade to child parts. References are explicit for the specified constituent part only.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/refType",
-            "description": "The bom-ref identifiers of the components or services being described. Assemblies refer to nested relationships whereby a constituent part may include other constituent parts. References do not cascade to child parts. References are explicit for the specified constituent part only."
-          }
-        },
-        "dependencies": {
-          "type": "array",
-          "description": "The bom-ref identifiers of the components or services being described. Dependencies refer to a relationship whereby an independent constituent part requires another independent constituent part. References do not cascade to transitive dependencies. References are explicit for the specified dependency only",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/refType",
-            "description": "The bom-ref identifiers of the components or services being described. Dependencies refer to a relationship whereby an independent constituent part requires another independent constituent part. References do not cascade to transitive dependencies. References are explicit for the specified dependency only"
-          }
-        },
-        "signature": {
-          "type": "string",
-          "description": "Enveloped signature in [JSON Signature Format (JSF)](https://cyberphone.github.io/doc/security/jsf.html).",
-          "maxLength": 255
+          "$ref": "#/definitions/RefArray",
+          "description": "The bom-ref identifiers of the components that are dependencies of this dependency object"
         }
       }
     },
@@ -945,8 +955,8 @@
         }
       }
     },
-    "refItem": {
-      "title": "refItem",
+    "RefItem": {
+      "title": "RefItem",
       "type": "object",
       "description": "Container for items in the ArrayOf() for references type",
       "additionalProperties": false,
@@ -965,6 +975,15 @@
           "$ref": "#/definitions/vulnerabilitySource",
           "description": ""
         }
+      }
+    },
+    "references": {
+      "title": "references",
+      "type": "array",
+      "description": "Zero or more pointers to vulnerabilities that are the equivalent of the vulnerability specified. Often times, the same vulnerability may exist in multiple sources of vulnerability intelligence, but have different identifiers. References provide a way to correlate vulnerabilities across multiple sources of vulnerability intelligence.",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/RefItem"
       }
     },
     "swid": {
@@ -1026,8 +1045,8 @@
         "LicenseType3"
       ]
     },
-    "licenseSelector": {
-      "title": "licenseSelector",
+    "LicenseSelector": {
+      "title": "LicenseSelector",
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
@@ -1044,8 +1063,8 @@
         }
       }
     },
-    "license": {
-      "title": "license",
+    "License": {
+      "title": "License",
       "type": "object",
       "description": "License object",
       "additionalProperties": false,
@@ -1057,7 +1076,7 @@
       "maxProperties": 150,
       "properties": {
         "selector": {
-          "$ref": "#/definitions/licenseSelector",
+          "$ref": "#/definitions/LicenseSelector",
           "description": "Either/or of a valid SPDX license or an arbitrary license name in a string"
         },
         "text": {
@@ -1078,7 +1097,7 @@
       "maxProperties": 1,
       "properties": {
         "license": {
-          "$ref": "#/definitions/license",
+          "$ref": "#/definitions/License",
           "description": ""
         },
         "expression": {
@@ -1087,62 +1106,8 @@
         }
       }
     },
-    "issue": {
-      "title": "issue",
-      "type": "object",
-      "description": "An individual issue that has been resolved",
-      "additionalProperties": false,
-      "required": [
-        "type"
-      ],
-      "maxProperties": 150,
-      "properties": {
-        "type": {
-          "$ref": "#/definitions/issueType",
-          "description": "Specifies the types of a issue"
-        },
-        "id": {
-          "type": "string",
-          "description": "The identifier of the issue assigned by the source of the issue",
-          "maxLength": 255
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the issue",
-          "maxLength": 255
-        },
-        "description": {
-          "type": "string",
-          "description": "a description of the issue",
-          "maxLength": 255
-        },
-        "source": {
-          "$ref": "#/definitions/issueSource",
-          "description": "The source of the issue where it is documented"
-        },
-        "references": {
-          "type": "array",
-          "description": "A collection of URL's for reference. Multiple URLs are allowed.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/URL",
-            "description": "A collection of URL's for reference. Multiple URLs are allowed."
-          }
-        }
-      }
-    },
-    "issueType": {
-      "title": "issueType",
-      "type": "string",
-      "description": "Specifies the type of issue",
-      "enum": [
-        "defect",
-        "enhancement",
-        "security"
-      ]
-    },
-    "issueSource": {
-      "title": "issueSource",
+    "IssueSource": {
+      "title": "IssueSource",
       "type": "object",
       "description": "The source of the issue where it is documented",
       "additionalProperties": false,
@@ -1163,47 +1128,82 @@
         }
       }
     },
-    "externalReference": {
-      "title": "externalReference",
+    "IssueType": {
+      "title": "IssueType",
+      "type": "string",
+      "description": "Specifies the type of issue",
+      "enum": [
+        "defect",
+        "enhancement",
+        "security"
+      ]
+    },
+    "LinkArray": {
+      "title": "LinkArray",
+      "type": "array",
+      "description": "an array of URLs",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/URL"
+      }
+    },
+    "issue": {
+      "title": "issue",
       "type": "object",
-      "description": "Specifies an individual external reference",
+      "description": "An individual issue that has been resolved",
       "additionalProperties": false,
       "required": [
-        "url",
-        "type"
+        "type",
+        "id",
+        "name",
+        "description",
+        "source",
+        "references"
       ],
       "maxProperties": 150,
       "properties": {
-        "url": {
-          "$ref": "#/definitions/URL",
-          "description": "The URL to the external reference"
-        },
         "type": {
-          "$ref": "#/definitions/externalReferenceType",
-          "description": "Specifies the type of external reference. There are built-in types to describe common references. If a type does not exist for the reference being referred to, use the \\\"other\\\" type."
+          "$ref": "#/definitions/IssueType",
+          "description": "Specifies the types of a issue"
         },
-        "comment": {
+        "id": {
           "type": "string",
-          "description": "An optional comment describing the external reference",
+          "description": "The identifier of the issue assigned by the source of the issue",
           "maxLength": 255
         },
-        "hashes": {
-          "type": "array",
-          "description": "The hashes of the external reference (if applicable).",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/hash",
-            "description": "The hashes of the external reference (if applicable)."
-          }
+        "name": {
+          "type": "string",
+          "description": "The name of the issue",
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string",
+          "description": "a description of the issue",
+          "maxLength": 255
+        },
+        "source": {
+          "$ref": "#/definitions/IssueSource",
+          "description": "The source of the issue where it is documented"
+        },
+        "references": {
+          "$ref": "#/definitions/LinkArray",
+          "description": "A collection of URL's for reference. Multiple URLs are allowed."
         }
       }
     },
-    "externalReferenceType": {
-      "title": "externalReferenceType",
+    "HashArray": {
+      "title": "HashArray",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/hash"
+      }
+    },
+    "ExternalRefType": {
+      "title": "ExternalRefType",
       "type": "string",
       "description": "Specifies the type of external reference. There are built-in types to describe common references. If a type does not exist for the reference being referred to, use the \\\"other\\\" type.",
       "enum": [
-        "other",
         "vcs",
         "issue-tracker",
         "website",
@@ -1218,11 +1218,44 @@
         "license",
         "build-meta",
         "build-system",
-        "release-notes"
+        "release-notes",
+        "other"
       ]
     },
-    "patchType": {
-      "title": "patchType",
+    "externalReference": {
+      "title": "externalReference",
+      "type": "object",
+      "description": "Specifies an individual external reference",
+      "additionalProperties": false,
+      "required": [
+        "url",
+        "comment",
+        "type",
+        "hashes"
+      ],
+      "maxProperties": 150,
+      "properties": {
+        "url": {
+          "$ref": "#/definitions/URL",
+          "description": "The URL to the external reference"
+        },
+        "comment": {
+          "type": "string",
+          "description": "An optional comment describing the external reference",
+          "maxLength": 255
+        },
+        "type": {
+          "$ref": "#/definitions/ExternalRefType",
+          "description": "Specifies the type of external reference. There are built-in types to describe common references. If a type does not exist for the reference being referred to, use the \\\"other\\\" type."
+        },
+        "hashes": {
+          "$ref": "#/definitions/HashArray",
+          "description": "The hashes of the external reference (if applicable)."
+        }
+      }
+    },
+    "PatchType": {
+      "title": "PatchType",
       "type": "string",
       "description": "Specifies the purpose for the patch including the resolution of defects, security issues, or new behavior or functionality",
       "enum": [
@@ -1232,6 +1265,15 @@
         "cherry-pick"
       ]
     },
+    "IssueArray": {
+      "title": "IssueArray",
+      "type": "array",
+      "description": "A collection of issues the patch resolves",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/issue"
+      }
+    },
     "patch": {
       "title": "patch",
       "type": "object",
@@ -1239,12 +1281,13 @@
       "additionalProperties": false,
       "required": [
         "type",
-        "diff"
+        "diff",
+        "resolves"
       ],
       "maxProperties": 150,
       "properties": {
         "type": {
-          "$ref": "#/definitions/patchType",
+          "$ref": "#/definitions/PatchType",
           "description": "Specifies the purpose for the patch including the resolution of defects, security issues, or new behavior or functionalit"
         },
         "diff": {
@@ -1252,130 +1295,66 @@
           "description": "The patch file (or diff) that show changes. Refer to [https://en.wikipedia.org/wiki/Diff](https://en.wikipedia.org/wiki/Diff)"
         },
         "resolves": {
-          "type": "array",
-          "description": "A collection of issues the patch resolves.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/issue",
-            "description": "A collection of issues the patch resolves."
-          }
+          "$ref": "#/definitions/IssueArray",
+          "description": "A collection of issues the patch resolves."
         }
       }
     },
-    "vulnerability": {
-      "title": "vulnerability",
+    "compositions": {
+      "title": "compositions",
       "type": "object",
       "additionalProperties": false,
-      "minProperties": 1,
+      "required": [
+        "aggregate",
+        "assemblies",
+        "dependencies",
+        "signature"
+      ],
       "maxProperties": 150,
       "properties": {
-        "bom-ref": {
-          "$ref": "#/definitions/refType",
-          "description": ""
+        "aggregate": {
+          "$ref": "#/definitions/aggregateType",
+          "description": "Specifies an aggregate type that describe how complete a relationship is."
         },
-        "id": {
+        "assemblies": {
+          "$ref": "#/definitions/RefArray",
+          "description": "The bom-ref identifiers of the components or services being described. Assemblies refer to nested relationships whereby a constituent part may include other constituent parts. References do not cascade to child parts. References are explicit for the specified constituent part only."
+        },
+        "dependencies": {
+          "$ref": "#/definitions/RefArray",
+          "description": "The bom-ref identifiers of the components or services being described. Dependencies refer to a relationship whereby an independent constituent part requires another independent constituent part. References do not cascade to transitive dependencies. References are explicit for the specified dependency only"
+        },
+        "signature": {
           "type": "string",
+          "description": "Enveloped signature in [JSON Signature Format (JSF)](https://cyberphone.github.io/doc/security/jsf.html).",
           "maxLength": 255
-        },
-        "source": {
-          "$ref": "#/definitions/vulnerabilitySource",
-          "description": ""
-        },
-        "references": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/refItem",
-            "description": ""
-          }
-        },
-        "ratings": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/rating",
-            "description": ""
-          }
-        },
-        "cwes": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/cwe",
-            "description": ""
-          }
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "detail": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "recommendation": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "advisories": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/advisory",
-            "description": ""
-          }
-        },
-        "created": {
-          "$ref": "#/definitions/TimeStamp",
-          "description": ""
-        },
-        "published": {
-          "$ref": "#/definitions/TimeStamp",
-          "description": ""
-        },
-        "updated": {
-          "$ref": "#/definitions/TimeStamp",
-          "description": ""
-        },
-        "credits": {
-          "$ref": "#/definitions/credits",
-          "description": ""
-        },
-        "tools": {
-          "type": "array",
-          "description": "The tool(s) used to identify, confirm, or score the vulnerability.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/tool",
-            "description": "The tool(s) used to identify, confirm, or score the vulnerability."
-          }
-        },
-        "analysis": {
-          "$ref": "#/definitions/analysis",
-          "description": ""
-        },
-        "affects": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/affected",
-            "description": ""
-          }
-        },
-        "properties": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/property",
-            "description": ""
-          }
         }
+      }
+    },
+    "Aliases": {
+      "title": "Aliases",
+      "type": "array",
+      "description": "One or more alternate names the release may be referred to. This may include unofficial terms used by development and marketing teams (e.g. code names).",
+      "maxItems": 150,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Tags": {
+      "title": "Tags",
+      "type": "array",
+      "description": "One or more tags that may aid in search or retrieval of the release note.",
+      "maxItems": 150,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Notes": {
+      "title": "Notes",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/note"
       }
     },
     "releaseNotes": {
@@ -1388,7 +1367,12 @@
         "featuredImage",
         "socialImage",
         "description",
-        "timestamp"
+        "timestamp",
+        "aliases",
+        "tags",
+        "resolves",
+        "notes",
+        "properties"
       ],
       "maxProperties": 150,
       "properties": {
@@ -1419,51 +1403,24 @@
           "description": "The date and time (timestamp) when the release note was created."
         },
         "aliases": {
-          "type": "array",
-          "description": "One or more alternate names the release may be referred to. This may include unofficial terms used by development and marketing teams (e.g. code names).",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "description": "One or more alternate names the release may be referred to. This may include unofficial terms used by development and marketing teams (e.g. code names).",
-            "maxLength": 255
-          }
+          "$ref": "#/definitions/Aliases",
+          "description": "One or more alternate names the release may be referred to. This may include unofficial terms used by development and marketing teams (e.g. code names)."
         },
         "tags": {
-          "type": "array",
-          "description": "One or more tags that may aid in search or retrieval of the release note.",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "description": "One or more tags that may aid in search or retrieval of the release note.",
-            "maxLength": 255
-          }
+          "$ref": "#/definitions/Tags",
+          "description": "One or more tags that may aid in search or retrieval of the release note."
         },
         "resolves": {
-          "type": "array",
-          "description": "A collection of issues that have been resolved.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/issue",
-            "description": "A collection of issues that have been resolved."
-          }
+          "$ref": "#/definitions/IssueArray",
+          "description": "A collection of issues that have been resolved."
         },
         "notes": {
-          "type": "array",
-          "description": "Zero or more release notes containing the locale and content. Multiple note objects may be specified to support release notes in a wide variety of languages.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/note",
-            "description": "Zero or more release notes containing the locale and content. Multiple note objects may be specified to support release notes in a wide variety of languages."
-          }
+          "$ref": "#/definitions/Notes",
+          "description": "Zero or more release notes containing the locale and content. Multiple note objects may be specified to support release notes in a wide variety of languages."
         },
         "properties": {
-          "type": "array",
-          "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/property",
-            "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL."
-          }
+          "$ref": "#/definitions/Properties",
+          "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL."
         }
       }
     },
@@ -1472,26 +1429,36 @@
       "type": "object",
       "description": "Provides the ability to document evidence collected through various forms of extraction or analysis.",
       "additionalProperties": false,
+      "required": [
+        "licenses",
+        "copyright"
+      ],
       "maxProperties": 150,
       "properties": {
         "licenses": {
-          "type": "array",
-          "description": "list of applicable licenses",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/licenseChoice",
-            "description": "list of applicable licenses"
-          }
+          "$ref": "#/definitions/LicenseChoises",
+          "description": "list of applicable licenses"
         },
         "copyright": {
-          "type": "array",
-          "description": "list of applicable copyrights",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/copyright",
-            "description": "list of applicable copyrights"
-          }
+          "$ref": "#/definitions/Copyrights",
+          "description": "list of applicable copyrights"
         }
+      }
+    },
+    "LicenseChoises": {
+      "title": "LicenseChoises",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/licenseChoice"
+      }
+    },
+    "Copyrights": {
+      "title": "Copyrights",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/copyright"
       }
     },
     "service": {
@@ -1500,15 +1467,25 @@
       "description": "Service Object",
       "additionalProperties": false,
       "required": [
-        "name"
+        "bom-ref",
+        "provider",
+        "group",
+        "name",
+        "version",
+        "description",
+        "authenticated",
+        "x-trust-boundary",
+        "data",
+        "licenses",
+        "externalReferences",
+        "services",
+        "releaseNotes",
+        "properties",
+        "signature",
+        "endpoints"
       ],
       "maxProperties": 150,
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Service Name: The name of the service. This will often be a shortened, single name of the service.",
-          "maxLength": 255
-        },
         "bom-ref": {
           "$ref": "#/definitions/refType",
           "description": "An optional identifier which can be used to reference the service elsewhere in the BOM. Every bom-ref MUST be unique within the BOM."
@@ -1520,6 +1497,11 @@
         "group": {
           "type": "string",
           "description": "Service Group: The grouping name, namespace, or identifier. This will often be a shortened, single name of the company or project that produced the service or domain name. Whitespace and special characters should be avoided.",
+          "maxLength": 255
+        },
+        "name": {
+          "type": "string",
+          "description": "Service Name: The name of the service. This will often be a shortened, single name of the service.",
           "maxLength": 255
         },
         "version": {
@@ -1541,53 +1523,28 @@
           "description": "A boolean value indicating if use of the service crosses a trust zone or boundary. A value of true indicates that by using the service, a trust boundary is crossed. A value of false indicates that by using the service, a trust boundary is not crossed."
         },
         "data": {
-          "type": "array",
-          "description": "Specifies the data classification",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/dataClassification",
-            "description": "Specifies the data classification"
-          }
+          "$ref": "#/definitions/DataClassArray",
+          "description": "Specifies the data classification"
         },
         "licenses": {
-          "type": "array",
-          "description": "Component licenses",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/licenseChoice",
-            "description": "Component licenses"
-          }
+          "$ref": "#/definitions/LicenseChoises",
+          "description": "Component licenses"
         },
         "externalReferences": {
-          "type": "array",
-          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/externalReference",
-            "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
-          }
+          "$ref": "#/definitions/ExternalReferences",
+          "description": "External references provide a way to document systems, sites, and information that may be relevant but which are not included with the BOM."
         },
         "services": {
-          "type": "array",
-          "description": "A list of services included or deployed behind the parent service. This is not a dependency tree. It provides a way to specify a hierarchical representation of service assemblies.  NOTE: recursive, needs key / pointer.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/service",
-            "description": "A list of services included or deployed behind the parent service. This is not a dependency tree. It provides a way to specify a hierarchical representation of service assemblies.  NOTE: recursive, needs key / pointer."
-          }
+          "$ref": "#/definitions/Services",
+          "description": "A list of services included or deployed behind the parent service. This is not a dependency tree. It provides a way to specify a hierarchical representation of service assemblies.  NOTE: recursive, needs key / pointer."
         },
         "releaseNotes": {
           "$ref": "#/definitions/releaseNotes",
           "description": "Specifies optional release notes"
         },
         "properties": {
-          "type": "array",
-          "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/property",
-            "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL."
-          }
+          "$ref": "#/definitions/Properties",
+          "description": "Provides the ability to document properties in a name-value store. This provides flexibility to include data not officially supported in the standard without having to use additional namespaces or create extensions. Unlike key-value stores, properties support duplicate names, each potentially having different values. Property names of interest to the general public are encouraged to be registered in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy). Formal registration is OPTIONAL."
         },
         "signature": {
           "type": "string",
@@ -1595,18 +1552,21 @@
           "maxLength": 255
         },
         "endpoints": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/URL",
-            "description": ""
-          }
+          "$ref": "#/definitions/URLs",
+          "description": ""
         }
       }
     },
-    "versionExpression": {
-      "title": "versionExpression",
+    "DataClassArray": {
+      "title": "DataClassArray",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/dataClassification"
+      }
+    },
+    "VersionExpression": {
+      "title": "VersionExpression",
       "type": "object",
       "description": "options to express applicable versions",
       "additionalProperties": false,
@@ -1618,13 +1578,13 @@
           "description": "A single version of a component or service"
         },
         "range": {
-          "$ref": "#/definitions/range",
+          "$ref": "#/definitions/version",
           "description": "A version range specified in Package URL Version Range syntax (vers) which is defined at https://github.com/package-url/purl-spec/VERSION-RANGE-SPEC.rst   (NOTE: I think this might be an error in the CDX schema, and should be of type range rather than version."
         }
       }
     },
-    "affectedVersion": {
-      "title": "affectedVersion",
+    "AffectedVrsn": {
+      "title": "AffectedVrsn",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1634,7 +1594,7 @@
       "maxProperties": 150,
       "properties": {
         "expression": {
-          "$ref": "#/definitions/versionExpression",
+          "$ref": "#/definitions/VersionExpression",
           "description": "choose format for expressing version"
         },
         "status": {
@@ -1643,41 +1603,84 @@
         }
       }
     },
-    "credits": {
-      "title": "credits",
+    "Ratings": {
+      "title": "Ratings",
+      "type": "array",
+      "description": "a collection of ratings",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/rating"
+      }
+    },
+    "CWEs": {
+      "title": "CWEs",
+      "type": "array",
+      "description": "a collection of CWEs",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/cwe"
+      }
+    },
+    "Advisories": {
+      "title": "Advisories",
+      "type": "array",
+      "description": "a collection of Advisories",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/advisory"
+      }
+    },
+    "Orgs": {
+      "title": "Orgs",
+      "type": "array",
+      "description": "a collection of organizations",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/organizationalEntity"
+      }
+    },
+    "Credits": {
+      "title": "Credits",
       "type": "object",
       "description": "a collection of credits for a vulnerability",
       "additionalProperties": false,
+      "required": [
+        "organizations",
+        "individuals"
+      ],
       "maxProperties": 150,
       "properties": {
         "organizations": {
-          "type": "array",
-          "description": "The organizations credited with vulnerability discovery.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/organizationalEntity",
-            "description": "The organizations credited with vulnerability discovery."
-          }
+          "$ref": "#/definitions/Orgs",
+          "description": "The organizations credited with vulnerability discovery."
         },
         "individuals": {
-          "type": "array",
-          "description": "The individuals, not associated with organizations, that are credited with vulnerability discovery.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/organizationalContact",
-            "description": "The individuals, not associated with organizations, that are credited with vulnerability discovery."
-          }
+          "$ref": "#/definitions/Contacts",
+          "description": "The individuals, not associated with organizations, that are credited with vulnerability discovery."
         }
       }
     },
-    "analysis": {
-      "title": "analysis",
+    "Reponse": {
+      "title": "Reponse",
+      "type": "string",
+      "description": "possible repsonses to a vulnerability",
+      "enum": [
+        "can_not_fix",
+        "will_not_fix",
+        "update",
+        "rollback",
+        "workaround_available"
+      ]
+    },
+    "Analysis": {
+      "title": "Analysis",
       "type": "object",
       "description": "An assessment of the impact and exploitability of the vulnerability.",
       "additionalProperties": false,
       "required": [
         "state",
         "justification",
+        "response",
         "detail"
       ],
       "maxProperties": 150,
@@ -1691,13 +1694,8 @@
           "description": ""
         },
         "response": {
-          "type": "array",
-          "description": "",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/response",
-            "description": ""
-          }
+          "$ref": "#/definitions/Responses",
+          "description": ""
         },
         "detail": {
           "type": "string",
@@ -1706,53 +1704,29 @@
         }
       }
     },
-    "response": {
-      "title": "response",
-      "type": "string",
-      "description": "possible responses to a vulnerability",
-      "enum": [
-        "can_not_fix",
-        "will_not_fix",
-        "update",
-        "rollback",
-        "workaround_available"
-      ]
+    "Responses": {
+      "title": "Responses",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/Response"
+      }
     },
-    "impactAnalysisState": {
-      "title": "impactAnalysisState",
-      "type": "string",
-      "description": "Declares the current state of an occurrence of a vulnerability, after automated or manual analysis. \\n\\n* __resolved__ = the vulnerability has been remediated. \\n* __resolved\\\\_with\\\\_pedigree__ = the vulnerability has been remediated and evidence of the changes are provided in the affected components pedigree containing verifiable commit history and/or diff(s). \\n* __exploitable__ = the vulnerability may be directly or indirectly exploitable. \\n* __in\\\\_triage__ = the vulnerability is being investigated. \\n* __false\\\\_positive__ = the vulnerability is not specific to the component or service and was falsely identified or associated. \\n* __not\\\\_affected__ = the component or service is not affected by the vulnerability. Justification should be specified for all not_affected cases.",
-      "enum": [
-        "resolved",
-        "resolve_with_pedigree",
-        "exploitable",
-        "in_triage",
-        "false_positive",
-        "not_affected"
-      ]
+    "AffectedVersions": {
+      "title": "AffectedVersions",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/AffectedVrsn"
+      }
     },
-    "impactAnalysisJustification": {
-      "title": "impactAnalysisJustification",
-      "type": "string",
-      "description": "The rationale of why the impact analysis state was asserted. \\n\\n* __code\\\\_not\\\\_present__ = the code has been removed or tree-shaked. \\n* __code\\\\_not\\\\_reachable__ = the vulnerable code is not invoked at runtime. \\n* __requires\\\\_configuration__ = exploitability requires a configurable option to be set/unset. \\n* __requires\\\\_dependency__ = exploitability requires a dependency that is not present. \\n* __requires\\\\_environment__ = exploitability requires a certain environment which is not present. \\n* __protected\\\\_by\\\\_compiler__ = exploitability requires a compiler flag to be set/unset. \\n* __protected\\\\_at\\\\_runtime__ = exploits are prevented at runtime. \\n* __protected\\\\_at\\\\_perimeter__ = attacks are blocked at physical, logical, or network perimeter. \\n* __protected\\\\_by\\\\_mitigating\\\\_control__ = preventative measures have been implemented that reduce the likelihood and/or impact of the vulnerability.",
-      "enum": [
-        "code_not_present",
-        "code_not_reachable",
-        "requires_configuration",
-        "requires_dependency",
-        "requires_environment",
-        "protected_by_compiler",
-        "protected_at_runtime",
-        "protected_at_perimeter",
-        "protected_by_mitigating_control"
-      ]
-    },
-    "affected": {
-      "title": "affected",
+    "Affected": {
+      "title": "Affected",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ref"
+        "ref",
+        "versions"
       ],
       "maxProperties": 150,
       "properties": {
@@ -1761,20 +1735,15 @@
           "description": "References a component or service by the object's bom-ref"
         },
         "versions": {
-          "type": "array",
-          "description": "Zero or more individual versions or range of versions.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/affectedVersion",
-            "description": "Zero or more individual versions or range of versions."
-          }
+          "$ref": "#/definitions/AffectedVersions",
+          "description": "Zero or more individual versions or range of versions."
         }
       }
     },
-    "componentType": {
-      "title": "componentType",
+    "ComponentType": {
+      "title": "ComponentType",
       "type": "string",
-      "description": "Specifies the type of component. For software components, classify as application if no more specific appropriate classification is available or cannot be determined for the component.",
+      "description": "Specifies the type of component. For software components, classify as application if no more specific appropriate classification is available or cannot be determined for the component. ",
       "enum": [
         "application",
         "framework",
@@ -1793,8 +1762,8 @@
       "maxLength": 255,
       "pattern": "^[-+a-z0-9.]+/[-+a-z0-9.]+$"
     },
-    "componentScope": {
-      "title": "componentScope",
+    "ComponentScope": {
+      "title": "ComponentScope",
       "type": "string",
       "description": "Specifies the scope of the component. If scope is not specified, 'required' scope SHOULD be assumed by the consumer of the BOM.",
       "enum": [
@@ -1803,58 +1772,56 @@
         "excluded"
       ]
     },
-    "pedigree": {
-      "title": "pedigree",
+    "ComponentSet": {
+      "title": "ComponentSet",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/component"
+      }
+    },
+    "CommitSet": {
+      "title": "CommitSet",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/commit"
+      }
+    },
+    "PatchSet": {
+      "title": "PatchSet",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/patch"
+      }
+    },
+    "Pedigree": {
+      "title": "Pedigree",
       "type": "object",
       "description": "Component pedigree is a way to document complex supply chain scenarios where components are created, distributed, modified, redistributed, combined with other components, etc. Pedigree supports viewing this complex chain from the beginning, the end, or anywhere in the middle. It also provides a way to document variants where the exact relation may not be known.",
       "additionalProperties": false,
-      "minProperties": 1,
       "maxProperties": 150,
       "properties": {
         "ancestors": {
-          "type": "array",
-          "description": "Describes zero or more components in which a component is derived from. This is commonly used to describe forks from existing projects where the forked version contains a ancestor node containing the original component it was forked from. For example, Component A is the original component. Component B is the component being used and documented in the BOM. However, Component B contains a pedigree node with a single ancestor documenting Component A - the original component from which Component B is derived from.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/component",
-            "description": "Describes zero or more components in which a component is derived from. This is commonly used to describe forks from existing projects where the forked version contains a ancestor node containing the original component it was forked from. For example, Component A is the original component. Component B is the component being used and documented in the BOM. However, Component B contains a pedigree node with a single ancestor documenting Component A - the original component from which Component B is derived from."
-          }
+          "$ref": "#/definitions/ComponentSet",
+          "description": "Describes zero or more components in which a component is derived from. This is commonly used to describe forks from existing projects where the forked version contains a ancestor node containing the original component it was forked from. For example, Component A is the original component. Component B is the component being used and documented in the BOM. However, Component B contains a pedigree node with a single ancestor documenting Component A - the original component from which Component B is derived from."
         },
         "descendants": {
-          "type": "array",
-          "description": "Descendants are the exact opposite of ancestors. This provides a way to document all forks (and their forks) of an original or root component.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/component",
-            "description": "Descendants are the exact opposite of ancestors. This provides a way to document all forks (and their forks) of an original or root component."
-          }
+          "$ref": "#/definitions/ComponentSet",
+          "description": "Descendants are the exact opposite of ancestors. This provides a way to document all forks (and their forks) of an original or root component."
         },
         "variants": {
-          "type": "array",
-          "description": "Variants describe relations where the relationship between the components are not known. For example, if Component A contains nearly identical code to Component B. They are both related, but it is unclear if one is derived from the other, or if they share a common ancestor.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/component",
-            "description": "Variants describe relations where the relationship between the components are not known. For example, if Component A contains nearly identical code to Component B. They are both related, but it is unclear if one is derived from the other, or if they share a common ancestor."
-          }
+          "$ref": "#/definitions/ComponentSet",
+          "description": "Variants describe relations where the relationship between the components are not known. For example, if Component A contains nearly identical code to Component B. They are both related, but it is unclear if one is derived from the other, or if they share a common ancestor."
         },
         "commits": {
-          "type": "array",
-          "description": "A list of zero or more commits which provide a trail describing how the component deviates from an ancestor, descendant, or variant.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/commit",
-            "description": "A list of zero or more commits which provide a trail describing how the component deviates from an ancestor, descendant, or variant."
-          }
+          "$ref": "#/definitions/CommitSet",
+          "description": "A list of zero or more commits which provide a trail describing how the component deviates from an ancestor, descendant, or variant."
         },
         "patches": {
-          "type": "array",
-          "description": "A list of zero or more patches describing how the component deviates from an ancestor, descendant, or variant. Patches may be complimentary to commits or may be used in place of commits.",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/patch",
-            "description": "A list of zero or more patches describing how the component deviates from an ancestor, descendant, or variant. Patches may be complimentary to commits or may be used in place of commits."
-          }
+          "$ref": "#/definitions/PatchSet",
+          "description": "A list of zero or more patches describing how the component deviates from an ancestor, descendant, or variant. Patches may be complimentary to commits or may be used in place of commits."
         },
         "notes": {
           "type": "string",
@@ -1863,12 +1830,133 @@
         }
       }
     },
-    "contentEncoding": {
-      "title": "contentEncoding",
+    "ContentEncoding": {
+      "title": "ContentEncoding",
       "type": "string",
+      "description": "enum for \"encoding\" in attachment type",
       "enum": [
         "base64"
       ]
+    },
+    "Response": {
+      "title": "Response",
+      "type": "string",
+      "description": "possible responses to a vulnerability",
+      "enum": [
+        "can_not_fix",
+        "will_not_fix",
+        "update",
+        "rollback",
+        "workaround_available"
+      ]
+    },
+    "vulnerability": {
+      "title": "vulnerability",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bom-ref",
+        "id",
+        "source",
+        "references",
+        "ratings",
+        "cwes",
+        "description",
+        "detail",
+        "recommendation",
+        "advisories",
+        "created",
+        "published",
+        "updated",
+        "credits",
+        "tools",
+        "analysis",
+        "affects",
+        "properties"
+      ],
+      "maxProperties": 150,
+      "properties": {
+        "bom-ref": {
+          "$ref": "#/definitions/refType",
+          "description": ""
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "source": {
+          "$ref": "#/definitions/vulnerabilitySource",
+          "description": ""
+        },
+        "references": {
+          "$ref": "#/definitions/references",
+          "description": ""
+        },
+        "ratings": {
+          "$ref": "#/definitions/Ratings",
+          "description": ""
+        },
+        "cwes": {
+          "$ref": "#/definitions/CWEs",
+          "description": ""
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "detail": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "recommendation": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "advisories": {
+          "$ref": "#/definitions/Advisories",
+          "description": ""
+        },
+        "created": {
+          "$ref": "#/definitions/TimeStamp",
+          "description": ""
+        },
+        "published": {
+          "$ref": "#/definitions/TimeStamp",
+          "description": ""
+        },
+        "updated": {
+          "$ref": "#/definitions/TimeStamp",
+          "description": ""
+        },
+        "credits": {
+          "$ref": "#/definitions/Credits",
+          "description": ""
+        },
+        "tools": {
+          "$ref": "#/definitions/Tools",
+          "description": ""
+        },
+        "analysis": {
+          "$ref": "#/definitions/Analysis",
+          "description": ""
+        },
+        "affects": {
+          "$ref": "#/definitions/Affecteds",
+          "description": ""
+        },
+        "properties": {
+          "$ref": "#/definitions/Properties",
+          "description": ""
+        }
+      }
+    },
+    "Affecteds": {
+      "title": "Affecteds",
+      "type": "array",
+      "maxItems": 150,
+      "items": {
+        "$ref": "#/definitions/Affected"
+      }
     }
   }
 }

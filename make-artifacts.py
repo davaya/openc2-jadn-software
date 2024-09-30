@@ -14,7 +14,11 @@ def translate(filename: str, schema_dir: str, output_dir: str) -> None:
     if not os.path.isfile(p := os.path.join(schema_dir, filename)):
         return
     with open(p, encoding='utf8') as fp:
-        schema = jadn.load_any(fp)
+        try:
+            schema = jadn.load_any(fp)
+        except KeyError as e:
+            print(e)
+            return
     print(f'{filename}:\n' + '\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
 
     fn, ext = os.path.splitext(filename)
@@ -41,7 +45,6 @@ def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
             translate(f, schema_dir, output_dir)
         except (ValueError, IndexError) as e:
             print(f'### {f}: {e}')
-            raise
 
 
 if __name__ == '__main__':

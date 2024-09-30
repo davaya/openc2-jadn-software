@@ -2,7 +2,10 @@
 Translate JADN to Protobuf 3
 """
 import json
-from lark import Lark
+import logging
+
+from lark import Lark, Token, Tree, Transformer, logger
+from lark.visitors import CollapseAmbiguities
 
 from datetime import datetime
 from typing import NoReturn, Tuple, Union
@@ -96,7 +99,7 @@ def proto_dump(schema: dict, fname: Union[bytes, str, int], source='', style=Non
 
 # Convert PROTO to JADN
 def proto_loads(text: str) -> dict:
-    proto_parser = Lark(r"""
+    grammar = r"""
     LETTER: "A".."Z" | "a".."z"
     DECIMAL_DIGIT: "0".."9"
     OCTAL_DIGIT: "0".."7"
@@ -115,79 +118,189 @@ def proto_loads(text: str) -> dict:
     enum_type: [ "." ] (ident ".")* enum_name
     
     int_lit: decimal_lit | octal_lit | hex_lit
-    decimal_lit: ["-"] ("1".."9") (decimal_digit)*
-    octal_lit: ["-"] "0" (octal_digit)*
-    hex_lit: ["-"] "0" ( "x" | "X" ) hex_digit (hex_digit)*
+    decimal_lit: ["-"] ("1".."9") (DECIMAL_DIGIT)*
+    octal_lit: ["-"] "0" (OCTAL_DIGIT)*
+    hex_lit: ["-"] "0" ( "x" | "X" ) HEX_DIGIT (HEX_DIGIT)*
     
     float_lit: ["-"] ( decimals "." [ decimals ] [ exponent ] | decimals exponent | "."decimals [ exponent ] ) | "inf" | "nan"
-    decimals: ["-"] decimal_digit (decimal_digit)*
+    decimals: ["-"] DECIMAL_DIGIT (DECIMAL_DIGIT)*
     exponent: ( "e" | "E" ) [ "+" | "-" ] decimals
     
-    str_lit: str_lit_single { str_lit_single }
-    str_lit_single: ( "'" (char_value)* "'" ) | ( '"' (char_value)* '"' )
-    char_value: hex_escape | oct_escape | char_escape | unicode_escape | unicodeLong_escape | /[^\0\n\\]/
-    hex_escape: '\' ( "x" | "X" ) hex_digit [ hex_digit ]
-    oct_escape: '\' octal_digit [ octal_digit [ octal_digit ] ]
-    char_escape: '\' ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | '\' | "'" | '"' )
-    unicode_escape: '\' "u" hex_digit hex_digit hex_digit hex_digit
-    unicodeLong_escape: '\' "U" ( "000" hex_digit hex_digit hex_digit hex_digit hex_digit |
-                              "0010" hex_digit hex_digit hex_digit hex_digit
+    BOOL_LIT: "true" | "false"
+
+    STR_LIT: STR_LIT_SINGLE ( STR_LIT_SINGLE )*
+    STR_LIT_SINGLE: ( "'" (CHAR_VALUE)* "'" ) | ( "\"" (CHAR_VALUE)* "\"" )
+    CHAR_VALUE: HEX_ESCAPE | OCT_ESCAPE | CHAR_ESCAPE | UNICODE_ESCAPE | UNICODE_LONG_ESCAPE | /[^\0\n\\]/
+    HEX_ESCAPE: "\\" ( "x" | "X" ) HEX_DIGIT [ HEX_DIGIT ]
+    OCT_ESCAPE: "\\" OCTAL_DIGIT [ OCTAL_DIGIT [ OCTAL_DIGIT ] ]
+    CHAR_ESCAPE: "\\" ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | "\\" | "'" | "\"" )
+    UNICODE_ESCAPE: "\\" "u" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    UNICODE_LONG_ESCAPE: "\\" "U" ( "000" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+                                 | "0010" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
     
     empty_statement: ";"
-    constant: full_ident | ( [ "-" | "+" ] int_lit ) | ( [ "-" | "+" ] float_lit ) |
-                str_lit | bool_lit | Message_value
+    constant: full_ident | ( [ "-" | "+" ] int_lit ) | ( [ "-" | "+" ] float_lit )
+        | STR_LIT | BOOL_LIT
 
-    syntax: "syntax" "=" ("'" "proto3" "'" | '"' "proto3" '"') ";"
-    import: "import" [ "weak" | "public" ] str_lit ";"
+    syntax: "syntax" "=" ("'" "proto3" "'" | "\"" "proto3" "\"") ";"
+    import: "import" [ "weak" | "public" ] STR_LIT ";"
     package: "package" full_ident ";"
     
     option: "option" option_name  "=" constant ";"
-    option_name: ( ident | bracedFull_ident ) { "." ( ident | bracedFull_ident ) }
-    bracedFull_ident: "(" ["."] full_ident ")"
-    option_namePart: { ident | "(" ["."] full_ident ")" }
+    option_name: ( ident | braced_full_ident ) ( "." ( ident | braced_full_ident ) )*
+    braced_full_ident: "(" ["."] full_ident ")"
+    option_name_part: ( ident | "(" ["."] full_ident ")" )*
     
     type: "double" | "float" | "int32" | "int64" | "uint32" | "uint64"
       | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64"
       | "bool" | "string" | "bytes" | message_type | enum_type
-    fieldNumber: int_lit;
+    field_number: int_lit ";"
 
-    field: [ "repeated" ] type field_name "=" fieldNumber [ "[" field_options "]" ] ";"
-    field_options: field_option { ","  field_option }
+    field: [ "repeated" ] type field_name "=" field_number [ "[" field_options "]" ] ";"
+    field_options: field_option ( ","  field_option )*
     field_option: option_name "=" constant
 
-    oneof: "oneof" oneof_name "{" { option | oneof_field } "}"
-    oneof_field: type field_name "=" fieldNumber [ "[" field_options "]" ] ";"
+    oneof: "oneof" oneof_name "{" ( option | oneof_field )* "}"
+    oneof_field: type field_name "=" field_number [ "[" field_options "]" ] ";"
 
-    map_field: "map" "<" key_type "," type ">" map_name "=" fieldNumber [ "[" field_options "]" ] ";"
-    key_type: "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64" |
-          "fixed32" | "fixed64" | "sfixed32" | "sfixed64" | "bool" | "string"
+    map_field: "map" "<" key_type "," type ">" map_name "=" field_number [ "[" field_options "]" ] ";"
+    key_type: "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64" | "bool" | "string"
 
     reserved: "reserved" ( ranges | str_field_names ) ";"
-    ranges: range { "," range }
+    ranges: range ( "," range )*
     range:  int_lit [ "to" ( int_lit | "max" ) ]
-    str_field_names: str_field_name { "," str_field_name }
-    str_field_name: "'" field_name "'" | '"' field_name '"'
+    str_field_names: str_field_name ( "," str_field_name )*
+    str_field_name: "'" field_name "'" | "\"" field_name "\""
 
-    enum: "enum" enum_name enumBody
-    enumBody: "{" { option | enum_field | empty_statement | reserved } "}"
-    enum_field: ident "=" [ "-" ] int_lit [ "[" enum_value_option { ","  enum_value_option } "]" ]";"
+    enum: "enum" enum_name enum_body
+    enum_body: "{" ( option | enum_field | empty_statement | reserved )* "}"
+    enum_field: ident "=" [ "-" ] int_lit [ "[" enum_value_option ( ","  enum_value_option )* "]" ]";"
     enum_value_option: option_name "=" constant
 
-    message: "message" message_name messageBody
-    messageBody: "{" { field | enum | message | option | oneof | map_field |
-    reserved | empty_statement } "}"
+    message: "message" message_name message_body
+    message_body: "{" ( field | enum | message | option | oneof | map_field
+     | reserved | empty_statement )* "}"
 
-    service: "service" service_name "{" { option | rpc | empty_statement } "}"
-    rpc: "rpc" rpc_name "(" [ "stream" ] message_type ")" "returns" "(" [ "stream" ]
-    message_type ")" (( "{" {option | empty_statement } "}" ) | ";")
+    service: "service" service_name "{" ( option | rpc | empty_statement )* "}"
+    rpc: "rpc" rpc_name "(" [ "stream" ] message_type ")" "returns" "(" [ "stream" ] message_type ")" (( "{" ( option | empty_statement )* "}" ) | ";")
 
-    proto: [syntax] { import | package | option | topLevelDef | empty_statement }
-    topLevelDef: message | enum | service
+    proto: [syntax] ( import | package | option | top_level_def | empty_statement )*
+    top_level_def: message | enum | service
 
-    """, start='proto')
+    COMMENT: /\/\/.*/
+    
+    %import common.WS
+    %ignore WS
+    %ignore COMMENT
+    """
 
+    grammar = r"""
+    LETTER: "A".."Z" | "a".."z"
+    DECIMAL_DIGIT: "0".."9"
+    OCTAL_DIGIT: "0".."7"
+    HEX_DIGIT: "0".."9" | "A".."F" | "a".."f"
+
+    ident: LETTER (LETTER | DECIMAL_DIGIT | "_")*
+    full_ident: ident ("." ident)*
+    field_name: ident
+    oneof_name: ident
+    map_name: ident
+    service_name: ident
+    rpc_name: ident
+    me_type: [ "." ] (ident ".")* ident
+
+    int_lit: decimal_lit | octal_lit | hex_lit
+    decimal_lit: ["-"] ("1".."9") (DECIMAL_DIGIT)*
+    octal_lit: ["-"] "0" (OCTAL_DIGIT)*
+    hex_lit: ["-"] "0" ( "x" | "X" ) HEX_DIGIT (HEX_DIGIT)*
+
+    float_lit: ["-"] ( decimals "." [ decimals ] [ exponent ] | decimals exponent | "."decimals [ exponent ] ) | "inf" | "nan"
+    decimals: ["-"] DECIMAL_DIGIT (DECIMAL_DIGIT)*
+    exponent: ( "e" | "E" ) [ "+" | "-" ] decimals
+
+    BOOL_LIT: "true" | "false"
+
+    STR_LIT: STR_LIT_SINGLE ( STR_LIT_SINGLE )*
+    STR_LIT_SINGLE: ( "'" (CHAR_VALUE)* "'" ) | ( "\"" (CHAR_VALUE)* "\"" )
+    CHAR_VALUE: HEX_ESCAPE | OCT_ESCAPE | CHAR_ESCAPE | UNICODE_ESCAPE | UNICODE_LONG_ESCAPE | /[^\0\n\\]/
+    HEX_ESCAPE: "\\" ( "x" | "X" ) HEX_DIGIT [ HEX_DIGIT ]
+    OCT_ESCAPE: "\\" OCTAL_DIGIT [ OCTAL_DIGIT [ OCTAL_DIGIT ] ]
+    CHAR_ESCAPE: "\\" ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | "\\" | "'" | "\"" )
+    UNICODE_ESCAPE: "\\" "u" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    UNICODE_LONG_ESCAPE: "\\" "U" ( "000" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+                                 | "0010" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
+
+    constant: full_ident | ( [ "-" | "+" ] int_lit ) | ( [ "-" | "+" ] float_lit )
+        | STR_LIT | BOOL_LIT
+
+    syntax: "syntax" "=" ("'" "proto3" "'" | "\"" "proto3" "\"") ";"
+    import: "import" [ "weak" | "public" ] STR_LIT ";"
+    package: "package" full_ident ";"
+
+    option: "option" option_name  "=" constant ";"
+    option_name: ( ident | braced_full_ident ) ( "." ( ident | braced_full_ident ) )*
+    braced_full_ident: "(" ["."] full_ident ")"
+#    option_name_part: ( ident | "(" ["."] full_ident ")" )*
+
+    type: "double" | "float" | "int32" | "int64" | "uint32" | "uint64"
+      | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64"
+      | "bool" | "string" | "bytes" | me_type
+    field_number: int_lit ";"
+
+    field: [ "repeated" ] type field_name "=" field_number [ "[" field_options "]" ] ";"
+    field_options: field_option ( ","  field_option )*
+    field_option: option_name "=" constant
+
+    oneof: "oneof" oneof_name "{" ( option | oneof_field )* "}"
+    oneof_field: type field_name "=" field_number [ "[" field_options "]" ] ";"
+
+    map_field: "map" "<" key_type "," type ">" map_name "=" field_number [ "[" field_options "]" ] ";"
+    key_type: "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64" | "bool" | "string"
+
+    reserved: "reserved" ( ranges | str_field_names ) ";"
+    ranges: range ( "," range )*
+    range:  int_lit [ "to" ( int_lit | "max" ) ]
+    str_field_names: str_field_name ( "," str_field_name )*
+    str_field_name: "'" field_name "'" | "\"" field_name "\""
+
+    enum: "enum" ident enum_body
+    enum_body: "{" ( option | enum_field | reserved )* "}"
+    enum_field: ident "=" [ "-" ] int_lit [ "[" enum_value_option ( ","  enum_value_option )* "]" ]";"
+    enum_value_option: option_name "=" constant
+
+    message: "message" ident message_body
+    message_body: "{" ( field | enum | message | option | oneof | map_field
+     | reserved )* "}"
+
+    service: "service" service_name "{" ( option | rpc )* "}"
+    rpc: "rpc" rpc_name "(" [ "stream" ] me_type ")" "returns" "(" [ "stream" ] me_type ")" (( "{" ( option )* "}" ) | ";")
+
+    proto: [syntax] (package | import | top_level_def)*
+    top_level_def: message | enum | service
+
+    COMMENT: /\/\/.*/
+
+    %import common.WS
+    %ignore WS
+    %ignore COMMENT
+    """
+
+    logger.setLevel(logging.DEBUG)
+
+    def lex(t: Token) -> Token:
+        print(t.type)
+
+    """
+    callbacks = {'STR_LIT': lex}
+    proto_parser = Lark(grammar, start='proto', lexer='contextual',
+                        parser='lalr', lexer_callbacks=callbacks)
+    """
+    proto_parser = Lark(grammar, start='proto', ambiguity='explicit', postlex=lex)
     tree = proto_parser.parse(text)
-    print(tree.pretty())
+    for x in CollapseAmbiguities().transform(tree):
+        print(x.pretty())
+
+    # print(tree.pretty())
 
     info = {}
     types = []
