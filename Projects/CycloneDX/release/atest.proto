@@ -1,0 +1,13 @@
+syntax = "proto3";
+package cyclonedx.v1_6;
+import "google/protobuf/timestamp.proto";
+
+// Specifies attributes of the text
+message AttachedText {
+  // Specifies the format and nature of the data being attached
+  optional string content_type = 1;
+  // Specifies the optional encoding the text is represented in
+  repeated string encoding = 2;
+  // SimpleContent value of element. Proactive controls
+  string value = 3;
+}

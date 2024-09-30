@@ -1,0 +1,10 @@
+
+LETTER: "A".."Z" | "a".."z"
+name: LETTER+
+option: "option" name ";"
+field: ["optional"] name ";"
+line: option | field
+start: line+
+
+%import common.WS
+%ignore WS

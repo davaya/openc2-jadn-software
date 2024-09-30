@@ -1,0 +1,6 @@
+
+  frederick;
+  optionalblocks;
+  option sprinkles;
+  option alfred;
+  optional fred;
