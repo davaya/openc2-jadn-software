@@ -1,0 +1,33 @@
+LETTER: "A".."Z" | "a".."z"
+DECIMAL_DIGIT: "0".."9"
+
+IDENT: LETTER ( LETTER | DECIMAL_DIGIT | "_" )+
+FULL_IDENT: IDENT ("." IDENT)*
+
+BOOL_LIT: "true" | "false"
+
+STR_LIT: STR_LIT_SINGLE ( STR_LIT_SINGLE )*
+STR_LIT_SINGLE: "\"" CHAR_VALUE+ "\""
+CHAR_VALUE: /[^\0\n\\]/
+
+syntax: "syntax" "=" STR_LIT_SINGLE ";"
+import: "import" STR_LIT_SINGLE ";"
+option: "option" IDENT "=" ";"
+package: "package" FULL_IDENT ";"
+EMPTY_STATEMENT: ";"
+
+FIELD: ["optional"] WS IDENT ";"
+
+MESSAGE: "message" IDENT MESSAGE_BODY
+MESSAGE_BODY: "{" ( FIELD )* "}"
+
+// message_body: "{" ( field | enum | message | option | oneof | map_field | reserved )* "}"
+
+TOP_LEVEL_DEF: MESSAGE
+start: syntax ( import | package | option | TOP_LEVEL_DEF )
+
+COMMENT: /\/\/.*/
+
+%import common.WS
+%ignore WS
+%ignore COMMENT
