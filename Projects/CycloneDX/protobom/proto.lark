@@ -4,6 +4,7 @@ HEX_DIGIT: "0".."9" | "A".."F" | "a".."f"
 
 IDENT: LETTER ( LETTER | DECIMAL_DIGIT | "_" )+
 FULL_IDENT: IDENT ("." IDENT)*
+MESSAGE_TYPE: ["."] (IDENT ".")* IDENT
 
 BOOL_LIT: "true" | "false"
 
@@ -26,12 +27,12 @@ OPTION_NAME: IDENT | "(" ["."] FULL_IDENT ")"
 
 TYPE: "double" | "float" | "int32" | "int64" | "uint32" | "uint64"
     | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64"
-    | "bool" | "string" | "bytes"
+    | "bool" | "string" | "bytes" | MESSAGE_TYPE
 
 EMPTY_STATEMENT: ";"
 CONSTANT: FULL_IDENT | ( [ "-" | "+" ] INT_LIT ) | ( [ "-" | "+" ] FLOAT_LIT )
         | STR_LIT | BOOL_LIT
-field: ["repeated" | "optional"] FULL_IDENT IDENT "=" DECIMAL_LIT ";"
+field: ["repeated" | "optional"] FULL_IDENT IDENT "=" DECIMAL_LIT  [ "[" field_options "]" ] ";"
 
 field_options: field_option ( ","  field_option )*
 field_option: OPTION_NAME "=" CONSTANT
