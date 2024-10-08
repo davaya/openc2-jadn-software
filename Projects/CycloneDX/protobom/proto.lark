@@ -1,10 +1,18 @@
 LETTER: "A".."Z" | "a".."z"
+CAPITAL_LETTER: "A".."Z"
 DECIMAL_DIGIT: "0".."9"
 HEX_DIGIT: "0".."9" | "A".."F" | "a".."f"
 
 IDENT: LETTER ( LETTER | DECIMAL_DIGIT | "_" )+
 FULL_IDENT: IDENT ("." IDENT)*
-MESSAGE_TYPE: ["."] (IDENT ".")* IDENT
+MESSAGE_NAME: IDENT
+ENUM_NAME: IDENT
+FIELD_NAME: IDENT
+ONEOF_NAME: IDENT
+MAP_NAME: IDENT
+MESSAGE_TYPE: ["."] (IDENT ".")* MESSAGE_NAME
+ENUM_TYPE: ["."] (IDENT ".")* ENUM_NAME
+GROUP_NAME: CAPITAL_LETTER ( LETTER | DECIMAL_DIGIT | "_")*
 
 BOOL_LIT: "true" | "false"
 
@@ -22,25 +30,25 @@ CHAR_VALUE: /[^\0\n\\]/
 syntax: "syntax" "=" STR_LIT_SINGLE ";"
 import: "import" STR_LIT_SINGLE ";"
 package: "package" FULL_IDENT ";"
-option: "option" OPTION_NAME "=" STR_LIT_SINGLE";"
+option: "option" OPTION_NAME "=" CONSTANT";"
 OPTION_NAME: IDENT | "(" ["."] FULL_IDENT ")"
 
 TYPE: "double" | "float" | "int32" | "int64" | "uint32" | "uint64"
     | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64"
-    | "bool" | "string" | "bytes" | MESSAGE_TYPE
+    | "bool" | "string" | "bytes" | MESSAGE_TYPE | ENUM_TYPE
+FIELD_NUMBER: INT_LIT
 
 EMPTY_STATEMENT: ";"
-CONSTANT: FULL_IDENT | ( [ "-" | "+" ] INT_LIT ) | ( [ "-" | "+" ] FLOAT_LIT )
-        | STR_LIT | BOOL_LIT
-field: ["repeated" | "optional"] FULL_IDENT IDENT "=" DECIMAL_LIT  [ "[" field_options "]" ] ";"
+CONSTANT: FULL_IDENT | ( [ "-" | "+" ] INT_LIT ) | ( [ "-" | "+" ] FLOAT_LIT ) | STR_LIT | BOOL_LIT
 
+field: ["repeated" | "optional"] TYPE FIELD_NAME "=" FIELD_NUMBER  [ "[" field_options "]" ] ";"
 field_options: field_option ( ","  field_option )*
 field_option: OPTION_NAME "=" CONSTANT
 
-oneof: "oneof" IDENT "{" ( option | oneof_field )+ "}"
-oneof_field: TYPE IDENT "=" INT_LIT [ "[" field_options "]" ] ";"
+oneof: "oneof" ONEOF_NAME "{" ( option | oneof_field | COMMENT )+ "}"
+oneof_field: TYPE FIELD_NAME "=" FIELD_NUMBER [ "[" field_options "]" ] ";"
 
-map_field: "map" "<" KEY_TYPE "," TYPE ">" IDENT "=" INT_LIT [ "[" field_options "]" ] ";"
+map_field: "map" "<" KEY_TYPE "," TYPE ">" MAP_NAME "=" FIELD_NUMBER [ "[" field_options "]" ] ";"
 KEY_TYPE: "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64"
         | "fixed32" | "fixed64" | "sfixed32" | "sfixed64" | "bool" | "string"
 
@@ -51,18 +59,17 @@ range:  INT_LIT [ "to" ( INT_LIT | "max" ) ]
 reserved: "reserved" ( ranges ) ";"
 
 enum: "enum" IDENT enum_body
-enum_body: "{" ( option | enum_field | EMPTY_STATEMENT | reserved )+ "}"
+enum_body: "{" ( option | enum_field | EMPTY_STATEMENT | reserved | COMMENT )+ "}"
 enum_field: IDENT "=" ["-"] INT_LIT [ "[" enum_value_option ( ","  enum_value_option )* "]" ]";"
 enum_value_option: OPTION_NAME "=" CONSTANT
 
 message: "message" IDENT message_body
-message_body: "{" ( field | enum | message | option | oneof | map_field | reserved )* "}"
+message_body: "{" ( field | enum | message | option | oneof | map_field | reserved | COMMENT )+ "}"
 
 top_level_def: message | enum
-start: syntax ( import | package | option | top_level_def )+
+start: syntax ( import | package | option | top_level_def | COMMENT )+
 
 COMMENT: /\/\/.*/
 
 %import common.WS
 %ignore WS
-%ignore COMMENT
