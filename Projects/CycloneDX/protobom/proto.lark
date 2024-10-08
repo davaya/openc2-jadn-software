@@ -1,10 +1,18 @@
 LETTER: "A".."Z" | "a".."z"
 DECIMAL_DIGIT: "0".."9"
+HEX_DIGIT: "0".."9" | "A".."F" | "a".."f"
 
 IDENT: LETTER ( LETTER | DECIMAL_DIGIT | "_" )+
 FULL_IDENT: IDENT ("." IDENT)*
 
 BOOL_LIT: "true" | "false"
+
+INT_LIT: "0" | DECIMAL_LIT | HEX_LIT
+DECIMAL_LIT: ["-"] ( "1".."9" ) DECIMAL_DIGIT*
+HEX_LIT: ["-"] "0" ( "x" | "X" ) HEX_DIGIT+
+FLOAT_LIT: ["-"] ( DECIMALS "." [ DECIMALS ] [ EXPONENT ] | DECIMALS EXPONENT | "."DECIMALS [ EXPONENT ] ) | "inf" | "nan"
+DECIMALS: ["-"] DECIMAL_DIGIT DECIMAL_DIGIT*
+EXPONENT: ( "e" | "E" ) [ "+" | "-" ] DECIMALS
 
 STR_LIT: STR_LIT_SINGLE ( STR_LIT_SINGLE )*
 STR_LIT_SINGLE: "\"" CHAR_VALUE+ "\""
@@ -12,19 +20,45 @@ CHAR_VALUE: /[^\0\n\\]/
 
 syntax: "syntax" "=" STR_LIT_SINGLE ";"
 import: "import" STR_LIT_SINGLE ";"
-option: "option" IDENT "=" ";"
 package: "package" FULL_IDENT ";"
+option: "option" OPTION_NAME "=" STR_LIT_SINGLE";"
+OPTION_NAME: IDENT | "(" ["."] FULL_IDENT ")"
+
+TYPE: "double" | "float" | "int32" | "int64" | "uint32" | "uint64"
+    | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64"
+    | "bool" | "string" | "bytes"
+
 EMPTY_STATEMENT: ";"
+CONSTANT: FULL_IDENT | ( [ "-" | "+" ] INT_LIT ) | ( [ "-" | "+" ] FLOAT_LIT )
+        | STR_LIT | BOOL_LIT
+field: ["repeated" | "optional"] FULL_IDENT IDENT "=" DECIMAL_LIT ";"
 
-FIELD: ["optional"] WS IDENT ";"
+field_options: field_option ( ","  field_option )*
+field_option: OPTION_NAME "=" CONSTANT
 
-MESSAGE: "message" IDENT MESSAGE_BODY
-MESSAGE_BODY: "{" ( FIELD )* "}"
+oneof: "oneof" IDENT "{" ( option | oneof_field )+ "}"
+oneof_field: TYPE IDENT "=" INT_LIT [ "[" field_options "]" ] ";"
 
-// message_body: "{" ( field | enum | message | option | oneof | map_field | reserved )* "}"
+map_field: "map" "<" KEY_TYPE "," TYPE ">" IDENT "=" INT_LIT [ "[" field_options "]" ] ";"
+KEY_TYPE: "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64"
+        | "fixed32" | "fixed64" | "sfixed32" | "sfixed64" | "bool" | "string"
 
-TOP_LEVEL_DEF: MESSAGE
-start: syntax ( import | package | option | TOP_LEVEL_DEF )
+extensions: "extensions" ranges ";"
+ranges: range ( "," range )*
+range:  INT_LIT [ "to" ( INT_LIT | "max" ) ]
+
+reserved: "reserved" ( ranges ) ";"
+
+enum: "enum" IDENT enum_body
+enum_body: "{" ( option | enum_field | EMPTY_STATEMENT | reserved )+ "}"
+enum_field: IDENT "=" ["-"] INT_LIT [ "[" enum_value_option ( ","  enum_value_option )* "]" ]";"
+enum_value_option: OPTION_NAME "=" CONSTANT
+
+message: "message" IDENT message_body
+message_body: "{" ( field | enum | message | option | oneof | map_field | reserved )* "}"
+
+top_level_def: message | enum
+start: syntax ( import | package | option | top_level_def )+
 
 COMMENT: /\/\/.*/
 
