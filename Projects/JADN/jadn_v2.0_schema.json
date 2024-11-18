@@ -6,7 +6,7 @@
   "required": ["types"],
   "additionalProperties": false,
   "properties": {
-    "info": {
+    "meta": {
       "type": "object",
       "required": ["package"],
       "additionalProperties": false,
