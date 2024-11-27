@@ -1,0 +1,72 @@
+  title: "OASIS CIQ Schema"
+  version: 1.0
+  description: "A detailed representation of the OASIS CIQ standard in JADN"
+
+Address = Record
+   1 StreetAddress     String                             // Street address of the customer
+   2 Locality          String                             // City or locality of the customer
+   3 Region            String                             // State or region of the customer
+   4 PostalCode        String                             // Postal code of the customer
+   5 Country           String                             // Country of the customer
+   6 AddressType       Enumeration
+          enum: [Residential, Business, POBox, Other]     // Type of address
+   7 AddressLine1      String                             // Additional address line 1
+   8 AddressLine2      String                             // Additional address line 2
+   9 AddressLine3      String                             // Additional address line 3
+   10 POBox            String                             // Post Office Box number
+   11 AddressValidity  Boolean                            // Whether the address is valid or not
+
+PersonName = Record
+   1 GivenName         String                             // First name of the person
+   2 MiddleName        String                             // Middle name of the person
+   3 FamilyName        String                             // Last name of the person
+   4 NamePrefix        String                             // Prefix of the name (e.g., Mr., Ms., Dr.)
+   5 NameSuffix        String                             // Suffix of the name (e.g., Jr., Sr., III)
+   6 FullName          String                             // Full name of the person
+   7 NameType          Enumeration
+          enum: [Legal, Alias, Preferred, Other]          // Type of the name
+
+ContactInfo = Record
+   1 EmailAddress      String                             // Email address of the person
+   2 PhoneNumber       String                             // Phone number of the person
+   3 FaxNumber         String                             // Fax number of the person
+   4 MobileNumber      String                             // Mobile phone number of the person
+   5 ContactType       Enumeration
+          enum: [Home, Work, Mobile, Fax, Other]          // Type of contact information
+   6 PreferredContactMethod   Enumeration
+          enum: [Email, Phone, SMS, Fax, Other]           // Preferred method of contact
+
+Organisation = Record
+   1 OrganisationName  String                             // Name of the organisation
+   2 Department        String                             // Department within the organisation
+   3 OrganisationUnit  String                             // Organisational unit
+   4 OrganisationIdentifier String                        // Unique identifier for the organisation
+   5 OrganisationType  Enumeration
+          enum: [Corporation, NonProfit, Government, Other] // Type of organisation
+   6 OrganisationAddress Address                          // Address of the organisation
+   7 OrganisationContact ContactInfo                      // Contact information for the organisation
+
+CustomerInformation = Record
+   1 PersonName        PersonName                         // Person's name information
+   2 Address           Address                            // Address information
+   3 ContactInfo       ContactInfo                        // Contact information
+   4 Organisation      Organisation                       // Organisation information
+   5 CustomerID        String                             // Unique identifier for the customer
+   6 CustomerType      Enumeration
+          enum: [Individual, Business, Government]        // Type of customer
+   7 DateOfBirth       String
+          format: date                                    // Date of birth of the customer
+   8 Gender            Enumeration
+          enum: [Male, Female, Other]                     // Gender of the customer
+   9 Nationality       String                             // Nationality of the customer
+   10 MaritalStatus    Enumeration
+          enum: [Single, Married, Divorced, Widowed, Other] // Marital status of the customer
+   11 Occupation       String                             // Occupation of the customer
+   12 AnnualIncome     Number                             // Annual income of the customer
+   13 PreferredLanguage String                            // Preferred language of the customer
+   14 CustomerSince    String
+          format: date                                    // Date since the customer has been with the organisation
+   15 CustomerStatus   Enumeration
+          enum: [Active, Inactive, Suspended, Closed]     // Status of the customer
+   16 LoyaltyLevel     Enumeration
+          enum: [Bronze, Silver, Gold, Platinum]          // Loyalty level of the customer

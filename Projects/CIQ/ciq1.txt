@@ -1,0 +1,225 @@
+info:
+  title: OASIS CIQ Schema
+  version: 1.0
+  description: A detailed representation of the OASIS CIQ standard in JADN
+
+types:
+  - Address:
+      type: Record
+      fields:
+        - id: 1
+          name: StreetAddress
+          type: String
+          description: Street address of the customer
+        - id: 2
+          name: Locality
+          type: String
+          description: City or locality of the customer
+        - id: 3
+          name: Region
+          type: String
+          description: State or region of the customer
+        - id: 4
+          name: PostalCode
+          type: String
+          description: Postal code of the customer
+        - id: 5
+          name: Country
+          type: String
+          description: Country of the customer
+        - id: 6
+          name: AddressType
+          type: Enumeration
+          enum: [Residential, Business, POBox, Other]
+          description: Type of address
+        - id: 7
+          name: AddressLine1
+          type: String
+          description: Additional address line 1
+        - id: 8
+          name: AddressLine2
+          type: String
+          description: Additional address line 2
+        - id: 9
+          name: AddressLine3
+          type: String
+          description: Additional address line 3
+        - id: 10
+          name: POBox
+          type: String
+          description: Post Office Box number
+        - id: 11
+          name: AddressValidity
+          type: Boolean
+          description: Whether the address is valid or not
+
+  - PersonName:
+      type: Record
+      fields:
+        - id: 1
+          name: GivenName
+          type: String
+          description: First name of the person
+        - id: 2
+          name: MiddleName
+          type: String
+          description: Middle name of the person
+        - id: 3
+          name: FamilyName
+          type: String
+          description: Last name of the person
+        - id: 4
+          name: NamePrefix
+          type: String
+          description: Prefix of the name (e.g., Mr., Ms., Dr.)
+        - id: 5
+          name: NameSuffix
+          type: String
+          description: Suffix of the name (e.g., Jr., Sr., III)
+        - id: 6
+          name: FullName
+          type: String
+          description: Full name of the person
+        - id: 7
+          name: NameType
+          type: Enumeration
+          enum: [Legal, Alias, Preferred, Other]
+          description: Type of the name
+
+  - ContactInfo:
+      type: Record
+      fields:
+        - id: 1
+          name: EmailAddress
+          type: String
+          description: Email address of the person
+        - id: 2
+          name: PhoneNumber
+          type: String
+          description: Phone number of the person
+        - id: 3
+          name: FaxNumber
+          type: String
+          description: Fax number of the person
+        - id: 4
+          name: MobileNumber
+          type: String
+          description: Mobile phone number of the person
+        - id: 5
+          name: ContactType
+          type: Enumeration
+          enum: [Home, Work, Mobile, Fax, Other]
+          description: Type of contact information
+        - id: 6
+          name: PreferredContactMethod
+          type: Enumeration
+          enum: [Email, Phone, SMS, Fax, Other]
+          description: Preferred method of contact
+
+  - Organisation:
+      type: Record
+      fields:
+        - id: 1
+          name: OrganisationName
+          type: String
+          description: Name of the organisation
+        - id: 2
+          name: Department
+          type: String
+          description: Department within the organisation
+        - id: 3
+          name: OrganisationUnit
+          type: String
+          description: Organisational unit
+        - id: 4
+          name: OrganisationIdentifier
+          type: String
+          description: Unique identifier for the organisation
+        - id: 5
+          name: OrganisationType
+          type: Enumeration
+          enum: [Corporation, NonProfit, Government, Other]
+          description: Type of organisation
+        - id: 6
+          name: OrganisationAddress
+          type: Address
+          description: Address of the organisation
+        - id: 7
+          name: OrganisationContact
+          type: ContactInfo
+          description: Contact information for the organisation
+
+  - CustomerInformation:
+      type: Record
+      fields:
+        - id: 1
+          name: PersonName
+          type: PersonName
+          description: Person's name information
+        - id: 2
+          name: Address
+          type: Address
+          description: Address information
+        - id: 3
+          name: ContactInfo
+          type: ContactInfo
+          description: Contact information
+        - id: 4
+          name: Organisation
+          type: Organisation
+          description: Organisation information
+        - id: 5
+          name: CustomerID
+          type: String
+          description: Unique identifier for the customer
+        - id: 6
+          name: CustomerType
+          type: Enumeration
+          enum: [Individual, Business, Government]
+          description: Type of customer
+        - id: 7
+          name: DateOfBirth
+          type: String
+          format: date
+          description: Date of birth of the customer
+        - id: 8
+          name: Gender
+          type: Enumeration
+          enum: [Male, Female, Other]
+          description: Gender of the customer
+        - id: 9
+          name: Nationality
+          type: String
+          description: Nationality of the customer
+        - id: 10
+          name: MaritalStatus
+          type: Enumeration
+          enum: [Single, Married, Divorced, Widowed, Other]
+          description: Marital status of the customer
+        - id: 11
+          name: Occupation
+          type: String
+          description: Occupation of the customer
+        - id: 12
+          name: AnnualIncome
+          type: Number
+          description: Annual income of the customer
+        - id: 13
+          name: PreferredLanguage
+          type: String
+          description: Preferred language of the customer
+        - id: 14
+          name: CustomerSince
+          type: String
+          format: date
+          description: Date since the customer has been with the organisation
+        - id: 15
+          name: CustomerStatus
+          type: Enumeration
+          enum: [Active, Inactive, Suspended, Closed]
+          description: Status of the customer
+        - id: 16
+          name: LoyaltyLevel
+          type: Enumeration
+          enum: [Bronze, Silver, Gold, Platinum]
+          description: Loyalty level of the customer
