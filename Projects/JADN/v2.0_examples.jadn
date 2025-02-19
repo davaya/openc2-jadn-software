@@ -33,11 +33,11 @@
     ]],
 
     ["Person", "Record", [], "", [
-      [1, "id", "Integer", ["K"], "key"],
+      [1, "id", "Integer", ["K"]],
       [2, "name", "String"],
-      [3, "mother", "Person", ["L"], "link"],
-      [4, "father", "Person", ["L"], "link"],
-      [5, "siblings", "Person", ["[0", "]-1", "L"], "link"],
+      [3, "mother", "Person", ["L"]],
+      [4, "father", "Person", ["L"]],
+      [5, "siblings", "Person", ["[0", "]-1", "L"]],
       [6, "employer", "Organization", ["[0", "L"]]
     ]],
 
@@ -47,7 +47,7 @@
       [3, "ceo", "Person", ["L"]]
     ]],
 
-    ["LineItem", "Array", [], "", [
+    ["LineItem", "Record", [], "", [
       [1, "item_id", "ItemId", ["K"], "Composite unique identifier for a line item within an order"],
       [2, "quantity", "Integer", [], "Other information about the ordered item"]
     ]],
@@ -122,14 +122,16 @@
 
     ["Amount", "Integer", ["/d2"], "Integer 152 represents an application value of 1.52, changing currency unit from US dollars to cents"],
 
-    ["ObjectId", "Array", ["/tagged-uuid"], "", [
+    ["ObjectId", "Array", ["/tag-uuid"], "", [
       [1, "prefix", "String", [], "Type Prefix"],
       [2, "uuid", "UUID", [], "Unique Identifier"]
     ]],
 
-    ["Timestamp", "Integer", ["/date-time"], "1727877600 seconds         = 2024-10-02T15:00:00Z"],
+    ["Timestamp", "String", ["/date-time"], "FIX Int: 1727877600 seconds         = 2024-10-02T15:00:00Z"],
 
-    ["Timestamp-ms", "Integer", ["/date-time", "/d3"], "1727877600000 milliseconds = 2024-10-02T15:00:00.000Z"],
+    ["Timestamp-ms", "String", ["/date-time", "/d3"], "FIX Int: 1727877600000 milliseconds = 2024-10-02T15:00:00.000Z"],
+
+    ["Timestamp2", "String", ["/date-time"]],
 
     ["Coordinate2", "Record", [], "A GPS coordinate", [
       [1, "latitude", "Coordinate2.latitude", [], "A Number between -90 and 90 degrees"],
@@ -147,14 +149,14 @@
 
     ["Roster2", "Record", [], "", [
       [1, "org_name", "String"],
-      [2, "members", "Roster2.members", ["[0"], "Optional: minOccurs=0, no maxOccurs"]
+      [2, "members", "Roster2.members", ["[0"], "Optional: minOccurs=0, maxOccurs (1)"]
     ]],
 
     ["Roster2.members", "ArrayOf", ["*Member", "{1"], "Tool-generated array: minLength=1, no maxLength"],
 
     ["Roster3", "Record", [], "", [
       [1, "org_name", "String"],
-      [2, "members", "Members", [], "members field is required: default minOccurs = 1, maxOccurs = 1"]
+      [2, "members", "Members", [], "members field is required: default minOccurs (1), maxOccurs (1)"]
     ]],
 
     ["Members", "ArrayOf", ["*Member"], "Explicitly-defined array: no minLength, no maxLength"],
@@ -214,11 +216,6 @@
       [3, "metadata/timestamp"],
       [4, "metadata/tools/#/vendor"],
       [5, "metadata/tools/#/name"]
-    ]],
-
-    ["IP-Addr", "Choice", [], "", [
-      [1, "v4", "IPv4-Addr"],
-      [2, "v6", "IPv6-Addr"]
     ]],
 
 
