@@ -1,6 +1,6 @@
 package: "https://data-and-trust-alliance-data-provenance-standards/metadata/v1.0"
 roots: ["DPS-Metadata"]
-namespaces: ["geo", "https://iso3166/202403/"]
+namespaces: [["geo", "https://iso3166/202403/"]]
 
 DPS-Metadata = Record
   1 source Source
@@ -22,15 +22,19 @@ Provenance = Record
   5 previous Timestamp  // Date of previously-issued version of the dataset
   6 generation Generation // Range of dates for data generation
   7 method Method [1..*]  // Method
-  8 format Format [0..*]  // Data format
+  8 format MediaType [0..*]  // Data format
 
 Use = Record
   1 conf Confidentiality // Confidentiality Classification
-  2 consent Consent [1..*] // Consent documentation location
-  3 pet Privacy-Enhancing-Technologies [1..*] // Privacy enhancing technologies
+  2 consent URL [1..*] // Consent documentation location
+  3 pet Privacy-Tool [1..*] // Privacy enhancing technologies
   4 processing Processing-Geography optional // Data processing geography
   5 storage Storage-Geography optional // Data storage geography
   6 license License // License to use
+
+Generation = Record
+  1 oldest Timestamp    // Oldest component of data contained in the dataset
+  2 youngest Timestamp  // Youngest component of data contained in the dataset
 
 UID = Choice(anyOf)
   1 Binary /uuid    // uuid::
@@ -39,6 +43,64 @@ Org-Name-Addr = Record
   1 name String     // organization name
   2 address String [0..*]   // address line
 
+Privacy-Tool = Record
+  1 tool_id Tool-ID // tool name and version
+  2 technology Privacy-Technology
+  3 params MapOf(String, String)    // key-value pair
+
 Timestamp = Integer /date_time /d3    // Milliseconds since the epoch
 URL = String /uri   // URI designated as a resource locator
 Country-Name
+
+Method = Enumerated
+  0 Other
+  1 Web scraping/Crawling
+  2 Feeds
+  3 Syndication
+  4 Data mining
+  5 Machine generated/MLOps
+  6 Social media
+  7 User generated content
+  8 Primary user source
+  9 Data augmentation
+  10 Transfer learning
+  11 Simulations
+
+MediaType = Enumerated
+  0 Other
+  1 application/json
+  2 application/jsonld
+  3 application/zip
+  4 application/msword
+  5 application/vnd.ms-excel
+  6 image/bmp
+  7 image/jpeg
+  8 image/x-png
+  9 image/png
+  10 image/gif
+  11 text/csv
+  12 text/plain
+
+Confidentiality = Enumerated
+  0 Other
+  1 Personal information (PI)/Demographic
+  2 Payment Card Industry (PCI)
+  3 Personal Financial Information (PFI)
+  4 Personal Health Information (PHI)
+  5 Sensitive Personal Information (SPI)
+
+Privacy-Technology = Enumerated
+  1 Data Anonymization
+  2 Data Encryption
+  3 Data Masking
+  4 Data Minimization
+  5 Data Redaction
+  6 Differential Privacy
+  7 Federated Learning
+  8 Homomorphic Encryption
+  9 K-anonymity
+  10 L-diversity
+  11 Pseudonymization
+  12 Secure Multi-party Computation (SMC)
+  13 T-closeness
+  14 Tokenization
