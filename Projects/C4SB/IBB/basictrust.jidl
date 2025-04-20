@@ -1,0 +1,23 @@
+     package: "http://ibb.org/foo/bar/cp/basic-trust/v1/"
+       roots: ["BasicTrust"]
+
+BasicTrust = Record
+   1 prov             DT-Trust-Vector            // Provider
+   2 req              DT-Trust-Vector            // Requestor
+
+DT-Trust-Vector = Record
+   1 security         TrustLevel                 // Protected from unintended or unauthorized access, change or destruction
+   2 privacy          TrustLevel                 // Control what information may be collected, processed, and disclosed
+   3 safety           TrustLevel                 // Operate without unacceptable risk of physical injury or property damage
+   4 reliability      TrustLevel                 // Perform required functions under stated conditions for specified time
+   5 resilience       TrustLevel                 // Avoid, absorb and manage dynamic adversarial conditions
+   6 attestation      URL optional               // URL to attestation of trust scores
+
+TrustLevel = Enumerated#                         // Need shortnames?
+   1                                             // Harmful:: Connectivity probably makes your life worse
+   2                                             // Verify:: Need manual processes in place to verify before trusting
+   3                                             // Interoperable:: Automate processes to achieve static outcomes, assets are interoperable
+   4                                             // Communicating:: Automate processes to achieve static outcomes, assets are interoperable and communicate
+   5                                             // Dynamic:: Automate and dynamically adapt processes to achieve optimized dynamic outcomes.
+
+URL = String /uri

@@ -1,0 +1,68 @@
+       title: "CityGML Conceptual Model"
+     package: "http://ogc.org/models/citygml/v3.0/core"
+ description: "Core Module in the CityGML Conceptual Model"
+     license: "CC-BY-4.0"
+  namespaces: [["gf", "http://iso.org/general_feature_model"]]
+       roots: ["CityModel"]
+
+CityModel = Record      // Root class of every CityGML conceptual model.
+  1 common1 ModelAttribute1    // Placeholder for info common to every model
+
+CityModelMember = Choice    // Union of all possible classes that can be included in a city model.
+  1 appearance AbstractAppearance // Rules for rendering the associated objects
+  2 city_object AbstractCityObject  // Physical objects with a location and geometry
+  3 feature AbstractFeature // Others
+  4 version AbstractVersion // Version information
+  5 version_transition AbstractVersionTransition // Version transition information
+
+AbstractFeature = Record abstract extends(gf:AnyFeature)
+  1 common1 FeatureAttribute1    // Placeholder for identifying attributes common across the model
+
+AbstractFeatureWithLifespan = Record abstract extends(AbstractFeature)   // Includes temporal properties
+  1 featureId FeatureId
+  2 identifier Identifier
+  3 name String
+  4 description String
+  5 creationDate Date
+  6 terminationDate Date
+  7 validFrom Date
+  8 validTo Date
+  9 adeOfAbstractFeatureWithLifespan Boolean  // ??
+
+AbstractAppearance = Record abstract     // Root class for all classes related to rendering, including textures and materials
+  1 appearance1 AppearanceAttribute1  // Placeholder for attributes common to all rendering types
+
+AbstractVersion = ArrayOf(ObjectVersions)  // Defined state of a city model consisting of dedicated versions of all city object instances
+
+AbstractVersionTransition = Record    // Describes change of state of city model from one version to another
+
+AbstractCityObject = Record abstract   // The superclass of all thematic classes
+  1 object1 CityObjectAttribute1    // Placeholder for attributes common to all city objects
+
+AbstractSpace = Record extends(AbstractCityObject)   // Classes which have a volumetric extent in the real world
+  1 space1 SpaceAttribute   // Placeholder for properties that define a volumetric extent
+
+AbstractPhysicalSpace = Record abstract    // The superclass of all types of physical spaces
+  1 space1 PhysicalSpaceAttribute   // Placeholder for attributes of all physical spaces
+
+AbstractOccupiedSpace = Record abstract    // Classes which describe spaces that are filled with matter
+  1 space1 OccupiedSpaceAttribute   // Placeholder for attributes of occupied spaces
+
+AbstractUnoccupiedSpace = Record abstract  // Classes which describe spaces that are free of matter
+  1 space1 UnoccupiedSpaceAttribute     // Placeholder for attributes of unoccupied spaces
+
+AbstractLogicalSpace = Record abstract     // Classes which are not bounded by physical surfaces
+  1 space1 LogicalSpaceAttribute    // Placeholder for attributes of logical spaces
+
+AbstractSpaceBoundary = Record abstract extends(AbstractCityObject)    // Classes which bound a space
+  1 space1 BoundaryAttribute    // Placeholder for attributes of space boundaries
+
+AbstractThematicSurface = Record abstract extends(AbstractSpaceBoundary)      // The superclass for all thematic surfaces
+  1 space1 ThematicSurfaceAttribute     // Placeholder for attributes of thematic surfaces
+
+ImplicitGeometry = Choice extends(AbstractFeature)   // A geometry representation where the shape is stored once
+  1 tree1 Tree1     // An example shared shape of a specific type
+  2 trafficLight1 TrafficLight1     // Another example shared shape
+
+AbstractGenericAttribute = Record abstract      // The abstract superclass for all types of generic attributes
+  1 attribute1  Attribute1      // Placeholder for attributes of all generic attributes

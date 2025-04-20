@@ -1,6 +1,6 @@
        title: "NIEM Augmentation Example"
      package: "http://niem-open.org/docs/aug"
-     exports: ["Objects"]
+       roots: ["Objects"]
 
 DataProp = String{pattern="^A-Z(a-z)*$"}          // A single capitalized word
 

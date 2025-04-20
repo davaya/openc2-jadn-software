@@ -1,0 +1,32 @@
+     package: "http://ibb.org/foo/bar/cp/core/v1/"
+  namespaces: [["bt", "http://ibb.org/foo/bar/cp/basic-trust/v1/"]]
+       roots: ["ConnectionProfile"]
+
+ConnectionProfile = Record
+   1 header           CP-Header
+   2 profile          bt:BasicTrust
+
+CP-Header = Record
+   1 name             ProfileID
+   2 version          Integer                    // Included in message?
+   3 title            String
+   4 description      String
+   5 company          String
+   6 website          URL
+   7 server           NodeID
+   8 client           NodeID
+   9 created          Timestamp
+  10 modified         Timestamp
+  11 used             Timestamp
+  12 status           ProfileStatus
+
+ProfileID = String
+
+NodeID = String
+
+Timestamp = Integer /date-time
+
+URL = String /uri
+
+ProfileStatus = Enumerated
+   1 Active

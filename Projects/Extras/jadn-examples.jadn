@@ -1,29 +1,188 @@
 {
- "info": {
-  "package": "http://example.com/uni",
-  "exports": ["University"]
- },
+  "meta": {
+    "package": "http://example.com/spec_examples"
+  },
 
- "types": [
-  ["University", "Record", [], "", [
-    [1, "name", "String", [], ""],
-    [2, "classes", "Class", ["]0"], ""],
-    [3, "people", "Person", ["]0"], ""]
-  ]],
+  "types": [
+    ["Username", "String", ["%^[a-z][a-z0-9]{3,11}$"]],
 
-  ["Class", "Record", [], "", [
-    [1, "name", "String", [], ""],
-    [2, "room", "String", [], ""],
-    [3, "teachers", "Person", ["L", "]0"], ""],
-    [4, "students", "Person", ["L", "]0"], ""]
-  ]],
+    ["Users", "ArrayOf", ["*Username"]],
 
-  ["Person", "Record", [], "", [
-    [1, "name", "String", [], ""],
-    [2, "univ_id", "UnivId", ["K"], ""],
-    [3, "email", "String", ["/email"], ""]
-  ]],
+    ["Color", "Enumerated", [], "", [
+      [1, "red"],
+      [2, "green"],
+      [3, "blue"]
+    ]],
 
-  ["UnivId", "String", ["%^U-\\d{6}$"], "", []]
- ]
+    ["Coordinate", "Record", [], "A GPS coordinate", [
+      [1, "latitude", "Latitude", [], "A Number between -90 and 90 degrees"],
+      [2, "longitude", "Longitude", [], "A Number between -180 and 180 degrees"]
+    ]],
+
+    ["Person", "Record", [], "", [
+      [1, "name", "String", [], ""],
+      [2, "id", "Integer", [], ""],
+      [3, "email", "String", ["[0"], ""]
+    ]],
+
+    ["Product", "Choice", [], "Discriminated union", [
+      [1, "furniture", "Furniture", [], ""],
+      [2, "appliance", "Appliance", [], ""],
+      [3, "software", "Software", [], ""]
+    ]],
+
+    ["Dept", "Enumerated", [], "Explicit Tag values derived from the Choice", [
+      [1, "furniture", ""],
+      [2, "appliance", ""],
+      [3, "software", ""]
+    ]],
+
+    ["Software", "String", ["/uri"], "", []],
+
+    ["Stock1", "Record", [], "Discriminated union with intrinsic tag", [
+      [1, "quantity", "Integer", [], ""],
+      [2, "product", "Product", [], "Value = Map with one key/value"]
+    ]],
+
+    ["Stock2", "Record", [], "Container with explicitly-tagged discriminated union", [
+      [1, "dept", "Dept", [], "Tag = one key from Choice"],
+      [2, "quantity", "Integer", [], ""],
+      [3, "product", "Product", ["&1"], "Choice specifying an explicit tag field"]
+    ]],
+
+    ["Hashes", "Map", ["{1"], "Multiple discriminated unions with intrinsic tags is a Map", [
+      [1, "md5", "Binary", ["/x", "{16", "}16", "[0"], ""],
+      [2, "sha1", "Binary", ["/x", "{20", "}20", "[0"], ""],
+      [3, "sha256", "Binary", ["/x", "{32", "}32", "[0"], ""]
+    ]],
+
+    ["Hashes2", "ArrayOf", ["*HashVal"], "Multiple discriminated unions with explicit tags is an Array", []],
+
+    ["HashVal", "Record", [], "", [
+      [1, "algorithm", "Enumerated", ["#HashAlg"], "Tag - one key from Choice"],
+      [2, "value", "HashAlg", ["&1"], "Value selected from Choice by 'algorithm' field"]
+    ]],
+
+    ["HashAlg", "Choice", [], "", [
+      [1, "md5", "Binary", ["/x", "{16", "}16"], ""],
+      [2, "sha1", "Binary", ["/x", "{20", "}20"], ""],
+      [3, "sha256", "Binary", ["/x", "{32", "}32"], ""]
+    ]],
+
+    ["Member", "Record", [], "", [
+      [1, "name", "String", [], ""],
+      [2, "email", "String", ["/email"], ""]
+    ]],
+
+    ["Member2", "Record", [], "", [
+      [1, "name", "String", [], ""],
+      [2, "email", "Member2.email", [], ""]
+    ]],
+
+    ["Member2.email", "String", ["/email"], "Tool-generated type definition.", []],
+
+    ["Roster", "Record", [], "", [
+      [1, "org_name", "String", [], ""],
+      [2, "members", "Member", ["[0", "]-1"], "Optional and repeated: minOccurs=0, maxOccurs=MAX_DEFAULT"]
+    ]],
+
+    ["Roster2", "Record", [], "", [
+      [1, "org_name", "String", [], ""],
+      [2, "members", "Roster2.members", ["[0"], "Optional: minOccurs=0, maxOccurs=1"]
+    ]],
+
+    ["Roster2.members", "ArrayOf", ["*Member", "{1"], "Tool-generated array: minLength=1, maxLength=0", []],
+
+    ["Roster3", "Record", [], "", [
+      [1, "org_name", "String", [], ""],
+      [2, "members", "Members", [], "members field is required: default minOccurs = 1, maxOccurs = 1"]
+    ]],
+
+    ["Members", "ArrayOf", ["*Member"], "Explicitly-defined array: default minLength = 0, maxLength = 0", []],
+
+    ["Pixel", "Map", [], "", [
+      [1, "red", "Integer", [], ""],
+      [2, "green", "Integer", [], ""],
+      [3, "blue", "Integer", [], ""]
+    ]],
+
+    ["Channel", "Enumerated", ["#Pixel"], "Derived Enumerated type", []],
+
+    ["ChannelMask", "ArrayOf", ["*#Pixel"], "ArrayOf(derived enumeration)", []],
+
+    ["Channel2", "Enumerated", [], "", [
+      [1, "red", ""],
+      [2, "green", ""],
+      [3, "blue", ""]
+    ]],
+
+    ["ChannelMask2", "ArrayOf", ["*Channel"], "", []],
+
+    ["Channel3", "Enumerated", [], "", [
+      [1, "red", ""],
+      [2, "green", ""],
+      [3, "blue", ""]
+    ]],
+
+    ["Pixel3", "MapOf", ["+Channel3", "*Integer"], "", []],
+
+    ["Catalog", "Record", [], "", [
+      [1, "a", "TypeA", [], ""],
+      [2, "b", "TypeB", ["<"], ""]
+    ]],
+
+    ["TypeA", "Record", [], "", [
+      [1, "x", "Number", [], ""],
+      [2, "y", "Number", [], ""]
+    ]],
+
+    ["TypeB", "Record", [], "", [
+      [1, "foo", "String", [], ""],
+      [2, "bar", "Integer", [], ""]
+    ]],
+
+    ["Paths", "Enumerated", [">Catalog"], "", []],
+
+    ["Paths2", "Enumerated", [], "", [
+      [1, "a", "Item 1"],
+      [2, "b/foo", "Item 2"],
+      [3, "b/bar", "Item 3"]
+    ]],
+
+    ["Person2", "Record", [], "", [
+      [1, "id", "Integer", ["K"], "key"],
+      [2, "name", "String", [], ""],
+      [3, "mother", "Person2", ["L"], "link"],
+      [4, "father", "Person2", ["L"], "link"],
+      [5, "siblings", "Person2", ["[0", "]-1", "L"], "link"],
+      [6, "friends", "Person2", ["[0", "]-1", "L"], "link"],
+      [7, "employer", "Organization", ["[0", "L"], ""]
+    ]],
+
+    ["Organization", "Record", [], "", [
+      [1, "ein", "String", ["{10", "}10", "K"], ""],
+      [2, "name", "String", [], ""]
+    ]],
+
+    ["University", "Record", [], "", [
+      [1, "name", "String", [], ""],
+      [2, "classes", "Class", ["]0"], ""],
+      [3, "people", "UniPerson", ["]0"], ""]
+    ]],
+
+    ["Class", "Record", [], "", [
+      [1, "name", "String", [], ""],
+      [2, "room", "String", [], ""],
+      [3, "teachers", "UniPerson", ["L", "]0"], ""],
+      [4, "students", "UniPerson", ["L", "]0"], ""]
+    ]],
+
+    ["UniPerson", "Record", [], "", [
+      [1, "name", "String", [], ""],
+      [2, "univ_id", "UnivId", ["K"], ""],
+      [3, "email", "String", ["/email"], ""]
+    ]],
+
+    ["UnivId", "String", ["%^U-\\d{6}$"], "", []]
+  ]
 }

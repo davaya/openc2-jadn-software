@@ -1,7 +1,7 @@
        title: "Posture Attribute Repository API"
      package: "https://pace.org/par"
  description: "This is a schema for the GraphQL PAR API, not an OpenC2 Actuator Profile"
-     exports: ["Device", "SBOM", "Device-SBOM-Mapping"]
+       roots: ["Device", "SBOM", "Device-SBOM-Mapping"]
      comment: "Translate to equivalent GraphQL SDL (https://www.digitalocean.com/community/tutorials/graphql-graphql-sdl)"
 
 Device = Record{2..*}                             // Must have at least one field in addition to id

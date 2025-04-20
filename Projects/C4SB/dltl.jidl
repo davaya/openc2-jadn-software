@@ -1,0 +1,28 @@
+package: "https://opendigitaltwins-dtdl/v3/"
+roots: ["Item"]
+
+Item = Choice
+  1 interface Interface
+  2 telemetry Telemetry
+  3 property Property
+  4 command Command
+  5 relationship Relationship
+  6 component Component
+  7 data Data
+
+Item2 = Choice(oneOf)
+  1 Interface   // interface::
+  2 Telemetry   // telemetry::
+  3 Property    // property::
+  4 Command     // command::
+  5 Relationship    // relationship::
+  6 Component   // component::
+  7 Data        // data::
+
+Interface = Record
+  1 id DTMI
+  2 comment String{1..512} optional
+  3 content Content [0..100000]
+  4 description LString optional
+  5 displayName LString optional
+

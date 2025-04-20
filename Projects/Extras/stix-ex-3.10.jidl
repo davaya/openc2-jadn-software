@@ -1,6 +1,6 @@
 package: "http://example.cti.org/section-3.10"
 comment: "Illustrate natural language translation of protocol data"
-exports: ["Obj"]
+  roots: ["Obj"]
 
 Obj = Record
   1 type ObjectType

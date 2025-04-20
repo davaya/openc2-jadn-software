@@ -11,12 +11,12 @@ Source = Record
   1 name String  // Dataset title/name
   2 uid UID    // Unique metadata identifier
   3 location URL optional // Metadata location
-  4 issuer Issuer // Data issuer
+  4 issuer Org [1..*]  // Data issuer
   5 description String // Description of the dataset
 
 Provenance = Record
   1 source_metadata URL [1..*]  // Source metadata for dataset
-  2 source Source optional      // Source
+  2 source Org optional      // Source
   3 data_origin  geo:Country-Name [1..*]   // Data origin geography
   4 issued Timestamp  // Dataset issue date
   5 previous Timestamp  // Date of previously-issued version of the dataset
@@ -30,7 +30,29 @@ Use = Record
   3 pet Privacy-Tool [1..*] // Privacy enhancing technologies
   4 processing Processing-Geography optional // Data processing geography
   5 storage Storage-Geography optional // Data storage geography
-  6 license License // License to use
+  6 license ArrayOf(License){0..*} unique // License to use
+  7 intended_use Intended-Use   // Intended data use
+  8 proprietary_data ArrayOf(Proprietary-Data){0..*} unique // Proprietary data presence
+
+Intended-Use = Record
+  1 non_ai Non-AI-Use unique [1..*]     // Non-AI
+  2 ai AI-Use unique [1..*]     // AI
+
+Processing-Geography = Record
+  1 same_as_origin Boolean  // Data processing geography is the same as data origin geography
+  2 countries Geography [0..*]
+
+Storage-Geography = Record
+  1 same_as_processing Boolean  // Data storage geography is the same as data processing geography
+  2 countries Geography [0..*]
+
+Geography = Record
+  1 inex Include-Exclude
+  2 country geo:Country-Name
+
+Include-Exclude = Enumerated
+  1 INCLUDE
+  2 EXCLUDE
 
 Generation = Record
   1 oldest Timestamp    // Oldest component of data contained in the dataset
@@ -39,7 +61,7 @@ Generation = Record
 UID = Choice(anyOf)
   1 Binary /uuid    // uuid::
 
-Org-Name-Addr = Record
+Org = Record
   1 name String     // organization name
   2 address String [0..*]   // address line
 
@@ -48,7 +70,13 @@ Privacy-Tool = Record
   2 technology Privacy-Technology
   3 params MapOf(String, String)    // key-value pair
 
-Timestamp = Integer /date_time /d3    // Milliseconds since the epoch
+Tool-ID = String
+
+Confidentiality = Record
+  1 classification Confidentiality-Classification
+  2 tool_id Tool-ID [0..*]
+
+Timestamp = Integer /datetime /d3    // Milliseconds since the epoch
 URL = String /uri   // URI designated as a resource locator
 Country-Name
 
@@ -81,7 +109,7 @@ MediaType = Enumerated
   11 text/csv
   12 text/plain
 
-Confidentiality = Enumerated
+Confidentiality-Classification = Enumerated
   0 Other
   1 Personal information (PI)/Demographic
   2 Payment Card Industry (PCI)
@@ -104,3 +132,26 @@ Privacy-Technology = Enumerated
   12 Secure Multi-party Computation (SMC)
   13 T-closeness
   14 Tokenization
+
+License = Enumerated
+  1 Non-commercial
+  2 Public license
+  3 Commercial/Negotiated License
+
+Non-AI-Use = Enumerated
+  0 Other
+  1 Staging/testing
+  2 Production
+  3 Quality assurance
+
+AI-Use = Enumerated
+  0 Other
+  1 Pre-Training
+  2 Alignment
+  3 Evaluation
+  4 Synthetic Data Generation
+
+Proprietary-Data = Enumerated
+  1 Copyright
+  2 Patent
+  3 Trademark

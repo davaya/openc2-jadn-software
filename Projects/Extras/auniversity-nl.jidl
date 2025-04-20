@@ -1,5 +1,5 @@
 package:  "http://example.com/uni"
- exports:  ["University"]
+ roots:  ["University"]
 
 University = Record                    // A place of learning
     1  name     String                 // University Name

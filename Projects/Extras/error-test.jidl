@@ -1,3 +1,0 @@
-Investigation-results = Record
-    1 names String
-    2 content Array // Bad type definition, caught in get_refs utils.py:101

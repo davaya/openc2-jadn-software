@@ -3,7 +3,7 @@
      version: "1.0"
  description: "Demonstrate serialization of logical classes"
      license: "CC0-1.0"
-     exports: ["Teams"]
+       roots: ["Teams"]
 
 // Logical model for random data that includes nested structures where all arrays are sets
 Teams = ArrayOf(Team) set

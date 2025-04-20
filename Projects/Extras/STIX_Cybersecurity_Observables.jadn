@@ -1,9 +1,9 @@
 {
-  "info": {
+  "meta": {
     "package": "https://openc2_stix_sco",
     "version": "0-wd01 ",
     "title": "STIX SCO Core jadn",
-    "exports": ["STIX-Cybersecurity-Observables"],
+    "roots": ["STIX-Cybersecurity-Observables"],
     "config": {
       "$MaxBinary": 5555,
       "$MaxString": 5555,

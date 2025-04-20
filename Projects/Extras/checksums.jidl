@@ -1,5 +1,5 @@
      package: "http://acme.com/checksum-test/v1"
-     exports: ["Checksums"]
+     roots: ["Checksums"]
 
 Checksums = Record
    1 checksums1       Checksum1 [1..*]

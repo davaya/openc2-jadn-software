@@ -1,0 +1,33 @@
+{
+  "header": {
+    "name": "padi.trust.basic",
+    "title": "Basic Trust Profile",
+    "description": "Based on DTC Paper",
+    "company": "Padi, Inc.",
+    "website": "https://padi.io",
+    "server": "Trust Provider",
+    "client": "Trust Consumer",
+    "created": "19 April 2023 at 1:11am",
+    "modified": "19 April 2023 at 1:14am",
+    "used": "19 April 2023 at 1:11am",
+    "status": "Active"
+  },
+  "profile": {
+    "prov": {
+      "security": 3,
+      "privacy": 4,
+      "safety": 3,
+      "reliability": 3,
+      "resiliency": 2,
+      "attestation": "https://www.attestor.com/foo/Acme"
+    },
+    "req": {
+      "security": 3,
+      "privacy": 3,
+      "safety": 3,
+      "reliability": 2,
+      "resiliency": 2,
+      "attestation": "https://www.attestor.com/foo/SprocketCo"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 package: "http:docs.oasis-open.org/niemopen/ns/example-crashdriver/v1.0"
 namespaces: {"nc": "http://docs.oasis-open.org/niemopen/ns/core/v5.2", "j": "http://docs.oasis-open.org/niemopen/ns/justice"}
-exports: ["CrashDriverInfo"]
+  roots: ["CrashDriverInfo"]
 
 CrashDriverInfo = Record    // Information about a crash and its driver.
   1 driver Driver
