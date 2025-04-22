@@ -1,7 +1,6 @@
 """
 Translate each schema file in Source directory to multiple formats in Out directory
 """
-import fire
 import jadn
 import os
 from lark import Lark, Transformer
@@ -10,6 +9,9 @@ SCHEMA_DIR = 'Projects'
 OUTPUT_DIR = 'Out'
 GRAMMAR = 'jidl-grammar.lark'
 
+
+class T(Transformer):
+    pass
 
 def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
     print(f'Installed JADN version: {jadn.__version__}\n')
@@ -25,8 +27,9 @@ def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
                 path = os.path.join(dirpath, f)
                 print(f'{path}')
                 with open(path, 'r') as jf:
-                    data = jf.read()
-                c = parser.parse(data)
+                    jidl = jf.read()
+                jt = parser.parse(jidl)
+                print(jt.pretty())
 
 
 if __name__ == '__main__':
