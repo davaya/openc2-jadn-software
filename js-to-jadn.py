@@ -20,7 +20,7 @@ def typedefname(jsdef: str, jss: dict) -> str:
     return jsdef.removeprefix('#/definitions/')     # Exact type name or none
 
 
-def typerefname(jsref: dict, jss: dict) -> str:
+def typerefname(jsref: dict, jss: dict, jssx: dict) -> str:
     """
     Infer a type name from a JSON Schema property reference
     """
@@ -32,7 +32,7 @@ def typerefname(jsref: dict, jss: dict) -> str:
             return td.removeprefix('#/definitions/')
         if ':' in td:
             return maketypename('', td.split(':', maxsplit=1)[1], jss)  # Extract type name from $id
-        if td2 := jss['definitions'].get(td, {}):
+        if td2 := jss.get('definitions', {}).get(td, {}):
             return typerefname(td2, jss)
     return ''
 
@@ -60,35 +60,37 @@ def maketypename(tn: str, name: str, jss) -> str:
     return name + '1' if jadn.definitions.is_builtin(name) else name
 
 
-def scandef(tn: str, tv: dict, nt: list, jss: dict):
+def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
     """
-    Process nested type definitions, add to list nt
+    Process anonymous type definitions, generate pathname, add to list nt
     """
 
-    if not (td := define_jadn_type(tn, tv, jss)):
+    if not (td := define_jadn_type(tn, tv, jss, jssx)):
         return
     nt.append(td)
     if tv.get('type', '') == 'object':
         for k, v in tv.get('properties', {}).items():
             if v.get('$ref', '') or v.get('type', '') in ('string', 'number', 'integer', 'boolean'):     # Not nested
                 pass
+            elif v.get('type', '') == 'object':
+                scandef(maketypename(tn, k, jss), v, nt, jss, jssx)
             elif v.get('type', '') == 'array':
-                scandef(maketypename('', k, jss), v, nt, jss)
-                scandef(singular(maketypename('', k, jss)), v['items'], nt, jss)  # TODO: primitive with options or none
+                scandef(maketypename('', k, jss), v, nt, jss, jssx)
+                scandef(singular(maketypename('', k, jss)), v['items'], nt, jss, jssx)  # TODO: primitive with options or none
             elif v.get('anyOf', '') or v.get('allOf', ''):
-                scandef(maketypename(tn, k, jss), v, nt, jss)
-            elif typerefname(v, jss):
-                print('  nested property type:', f'{td[TypeName]}${k}', v)
+                scandef(maketypename(tn, k, jss), v, nt, jss, jssx)
+            elif typerefname(v, jss, jssx):
+                print('  nested property type:', f'{td[TypeName]}.{k}', v)
 
         if not tn:
             print(f'  nested type: "{tv.get("title", "")}"')
     elif (tc := tv.get('anyOf', '')) or (tc := tv.get('allOf', '')):
         for n, v in enumerate(tc, start=1):
-            scandef(maketypename(tn, n, jss), v, nt, jss)
+            scandef(maketypename(tn, n, jss), v, nt, jss, jssx)
     pass
 
 
-def define_jadn_type(tn: str, tv: dict, jss: dict) -> list:
+def define_jadn_type(tn: str, tv: dict, jss: dict, jssx: dict) -> list:
     topts = []
     tdesc = tv.get('description', '')
     fields = []
@@ -100,10 +102,13 @@ def define_jadn_type(tn: str, tv: dict, jss: dict) -> list:
             fdesc = v.get('description', '')
             if v.get('type', '') == 'array':
                 ftype = maketypename('', k, jss)
-                idesc = jss['definitions'].get(jssx.get(v['items'].get('$ref', ''), ''), {}).get('description', '')
+                idesc = jss.get('definitions', {}).get(jssx.get(v['items'].get('$ref', ''), ''), {}).get('description', '')
                 fdesc = fdesc if fdesc else v['items'].get('description', idesc)
             elif v.get('type', '') == 'object':
                 ftype = maketypename(tn, k, jss)
+            elif ref := v.get('$ref', ''):
+                if ref == '#':  # TODO: replace this monkey hack with proper reference logic
+                    ftype = tn
             elif t := jssx.get(v.get('$ref', ''), ''):
                 rt = jss['definitions'][t].get('$ref', '')
                 ftype = typedefname(rt if rt else t, jss)
@@ -112,10 +117,10 @@ def define_jadn_type(tn: str, tv: dict, jss: dict) -> list:
             elif v.get('anyOf', '') or v.get('allOf', ''):
                 ftype = maketypename(tn, k, jss)
             else:
-                ftype = typerefname(v, jss)
+                ftype = typerefname(v, jss, jssx)
             fdef = [n, k, ftype, fopts, fdesc]
             if not ftype:
-                raise ValueError(f'  empty field type {tn}${k}')
+                raise ValueError(f'  empty field type {tn}.{k}')
             fields.append(fdef)
     elif (td := tv.get('anyOf', '')) or (td := tv.get('allOf', '')):
         coretype = 'Choice'
@@ -134,9 +139,9 @@ def define_jadn_type(tn: str, tv: dict, jss: dict) -> list:
         coretype = 'ArrayOf'
         topts = [f'{{{tv["minItems"]}'] if 'minItems' in tv else []
         topts.append(f'}}{tv["maxItems"]}') if 'maxItems' in tv else []
-        ref = jss['definitions'].get(jssx.get(tv['items'].get('$ref', ''), ''), {})
-        tr = typerefname(ref, jss)
-        tr = tr if tr else typerefname(tv['items'], jss)
+        ref = jss.get('definitions', {}).get(jssx.get(tv['items'].get('$ref', ''), ''), {})
+        tr = typerefname(ref, jss, jssx)
+        tr = tr if tr else typerefname(tv['items'], jss, jssx)
         tr = tr if tr else singular(tn)
         topts.append(f'*{tr}')
     elif jstype in ('string', 'integer', 'number', 'boolean'):
@@ -158,15 +163,16 @@ def js_to_jadn(jss: dict) -> dict:
     assert len(types) == len(set(types)), f'Type name collision'
 
     meta = {'package': jss['$id']}
+    meta.update({'jadn_version': 'http://oasis-open.org/openc2/jadn/v2.0/schema/'})
     meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
     meta.update({'description': jss['description']} if 'description' in jss else {})
     meta.update({'roots': ['$Root']})
-    meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
+    # meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
 
     nt = []  # Walk nested type definition tree to build type list
-    scandef('$Root', jss, nt, jss)
+    scandef('$Root', jss, nt, jss, jssx)
     for tn, tv in jss.get('definitions', {}).items():
-        scandef(tn, tv, nt, jss)
+        scandef(tn, tv, nt, jss, jssx)
 
     ntypes = []  # Prune identical type definitions
     for t in nt:

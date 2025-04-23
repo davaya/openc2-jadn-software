@@ -172,7 +172,7 @@
           "uniqueItems": true
         },
         "sub-provenance": {
-          "$ref": "/provenance"
+          "$ref": "#"
         }
       },
       "required": [
