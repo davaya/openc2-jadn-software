@@ -78,7 +78,8 @@ def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
                 scandef(maketypename(tn, k, jss), v, nt, jss, jssx)
             elif v.get('type', '') == 'array':
                 scandef(maketypename('', k, jss), v, nt, jss, jssx)
-                scandef(singular(maketypename('', k, jss)), v['items'], nt, jss, jssx)  # TODO: primitive with options or none
+                if len(vt := v.get('items', {})) != 1 or vt.get('type', '') not in ('string', 'number', 'integer', 'boolean'):
+                    scandef(singular(maketypename('', k, jss)), v['items'], nt, jss, jssx)
             elif v.get('anyOf', '') or v.get('allOf', ''):
                 scandef(maketypename(tn, k, jss), v, nt, jss, jssx)
             elif typerefname(v, jss, jssx):
@@ -164,7 +165,8 @@ def js_to_jadn(jss: dict) -> dict:
     types = {typedefname(k, jss): v for k, v in defs.items()}  # Index from type name to definition
     assert len(types) == len(set(types)), f'Type name collision'
 
-    meta = {'package': jss['$id']}
+    p = os.path.splitext(pkg := jss.get('$id', ''))
+    meta = {'package': (p[0] + '/' if p[-1] in ('.json', '.xsd', '.html') else pkg)}
     meta.update({'jadn_version': 'http://oasis-open.org/openc2/jadn/v2.0/schema/'})
     meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
     meta.update({'description': jss['description']} if 'description' in jss else {})
