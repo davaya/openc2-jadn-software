@@ -41,6 +41,7 @@ def singular(name: str) -> str:
     """
     Guess a singular type name for the anonymous items in a plural ArrayOf type
     """
+    """
     if name.endswith('ies'):
         return name[:-3] + 'y'
     elif name.endswith('es'):
@@ -48,6 +49,7 @@ def singular(name: str) -> str:
         return name[:n]
     elif name.endswith('s'):
         return name[:-1]
+    """
     return name + '-item'
 
 
@@ -166,11 +168,11 @@ def js_to_jadn(jss: dict) -> dict:
     meta.update({'jadn_version': 'http://oasis-open.org/openc2/jadn/v2.0/schema/'})
     meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
     meta.update({'description': jss['description']} if 'description' in jss else {})
-    meta.update({'roots': ['$Root']})
-    # meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
+    meta.update({'roots': ['Root']})
+    meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
 
     nt = []  # Walk nested type definition tree to build type list
-    scandef('$Root', jss, nt, jss, jssx)
+    scandef('Root', jss, nt, jss, jssx)
     for tn, tv in jss.get('definitions', {}).items():
         scandef(tn, tv, nt, jss, jssx)
 
