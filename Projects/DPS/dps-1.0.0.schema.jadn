@@ -1,6 +1,6 @@
 {
   "meta": {
-    "package": "https://dataandtrustalliance.org/data-provenance-standard-1.0.0.schema.json",
+    "package": "https://dataandtrustalliance.org/data-provenance-standard-1.0.0.schema/",
     "jadn_version": "http://oasis-open.org/openc2/jadn/v2.0/schema/",
     "description": "The Data Provenance Standard is made up of three groups of metadata elements: Source, Provenance, and Use.",
     "roots": ["Root"],
@@ -34,8 +34,6 @@
     ]],
 
     ["Address", "ArrayOf", ["{0", "*String"]],
-
-    ["Address-item", "String"],
 
     ["Root.provenance", "Record", [], "This describes the provenance of the dataset.", [
       [1, "source", "String", ["[0"], "Identifies where the metadata for any source datasets that contribute to the current dataset can be found, establishing lineage and dependencies. This field establishes lineage."],
@@ -78,8 +76,6 @@
 
     ["Format", "ArrayOf", ["{0", "*String"], "Describes the nature of the data within the dataset, such as numerical, textual, or multimedia, helping users understand what kind of information is contained within the file or dataset."],
 
-    ["Format-item", "String"],
-
     ["Root.use", "Record", [], "This group describes legal use and restrictions.", [
       [1, "classification", "Classification", ["[0"], "Indicate if the dataset includes data falling into the confidentiality classification. Each classifier must be evaluated as true/false/unknown."],
       [2, "consents", "Consents", ["[0"], "Specifies where consent documentation or agreements related to the data can be found, ensuring legal compliance and regulatory use. This element must be populated when Privacy Consent is appropriate. When populated it points to either one Privacy Consent Policy that all individuals in the dataset agreed to, or one Privacy Policy for each individual in the dataset with that individual's signature."],
@@ -111,8 +107,6 @@
 
     ["Consents", "ArrayOf", ["{0", "*String"], "Specifies where consent documentation or agreements related to the data can be found, ensuring legal compliance and regulatory use. This element must be populated when Privacy Consent is appropriate. When populated it points to either one Privacy Consent Policy that all individuals in the dataset agreed to, or one Privacy Policy for each individual in the dataset with that individual's signature."],
 
-    ["Consents-item", "String"],
-
     ["Privacy-enhancing", "ArrayOf", ["{0", "*Privacy-enhancing-item"], "Indicates whether techniques were used to protect personally identifiable information (PII) or sensitive personal information (SPI), highlighting the dataset's privacy considerations."],
 
     ["Privacy-enhancing-item", "Record", [], "", [
@@ -130,11 +124,7 @@
 
     ["Parameters", "ArrayOf", ["{0", "*String"]],
 
-    ["Parameters-item", "String"],
-
     ["Result", "ArrayOf", ["{0", "*String"]],
-
-    ["Result-item", "String"],
 
     ["Processing-included", "ArrayOf", ["{0", "*Processing-included-item"], "Defines the geographical boundaries within which the data can be processed, often for legal or regulatory reasons."],
 
@@ -166,8 +156,6 @@
 
     ["License", "ArrayOf", ["{0", "*String"], "Details the location or point of contact for identifying the terms under which the dataset can be used, including any restrictions or obligations, clarifying legal use and distribution rights. License may be an End User License Agreement (EULA), subject to Data Use Agreement (DUA)."],
 
-    ["License-item", "String"],
-
     ["Intended-purpose", "ArrayOf", ["{1", "*Intended-purpose-item"], "Describes the purpose for which the dataset was created, guiding users on its intended use and potential applications against identified use cases. List all that apply from the Data Use codes that apply. Additional codes can be included with descriptions."],
 
     ["Intended-purpose-item", "Record", [], "", [
@@ -178,14 +166,8 @@
 
     ["Copyright", "ArrayOf", ["{0", "*String"], "Indicates whether the dataset contains proprietary information that is covered with a Copyright and the terms of said Copyright."],
 
-    ["Copyright-item", "String"],
-
     ["Patent", "ArrayOf", ["{0", "*String"], "Indicates whether the dataset contains proprietary information that is covered with a Patent and said Patent number."],
 
-    ["Patent-item", "String"],
-
-    ["Trademark", "ArrayOf", ["{0", "*String"], "Indicates whether the dataset contains proprietary information that is covered with a Trademark, and the terms of said Trademark."],
-
-    ["Trademark-item", "String"]
+    ["Trademark", "ArrayOf", ["{0", "*String"], "Indicates whether the dataset contains proprietary information that is covered with a Trademark, and the terms of said Trademark."]
   ]
 }
