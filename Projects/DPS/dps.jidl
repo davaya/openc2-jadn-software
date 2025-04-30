@@ -1,6 +1,6 @@
-package: "https://data-and-trust-alliance-data-provenance-standards/metadata/v1.0"
+package: "https://data-and-trust-alliance-data-provenance-standards/metadata/v1.0/"
 roots: ["DPS-Metadata"]
-namespaces: [["geo", "https://iso3166/202403/"]]
+namespaces: [["geo", "https://iso3166/202403/]]
 
 DPS-Metadata = Record
   1 source Source

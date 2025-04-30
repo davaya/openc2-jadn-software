@@ -1,0 +1,223 @@
+import jadn
+import os
+from jadn.definitions import TypeName, CoreType, TypeOptions, Fields, FieldType
+from lxml import etree
+
+SCHEMA_DIR = os.path.join('Projects', 'DPS')
+SCHEMA_DIR = os.path.join('Data', 'NIEM', 'NIEM5.2')
+OUTPUT_DIR = 'Out'
+
+
+def typedefname(jsdef: str, jss: dict) -> str:
+    """
+    Infer type name from a JSON Schema definition
+    """
+    assert isinstance(jsdef, str), f'Not a type definition name: {jsdef}'
+    if d := jss.get('definitions', jss.get(jsdef, '')):
+        if ':' in jsdef:  # qualified definition name
+            return maketypename('', jsdef.split(':', maxsplit=1)[1], jss)
+        if ref := d.get('$ref', ''):
+            return ref.removeprefix('#/definitions/')
+    return jsdef.removeprefix('#/definitions/')     # Exact type name or none
+
+
+def typerefname(jsref: dict, jss: dict, jssx: dict) -> str:
+    """
+    Infer a type name from a JSON Schema property reference
+    """
+    if (t := jsref.get('type', '')) in ('string', 'integer', 'number', 'boolean'):
+        return t.capitalize()    # Built-in type
+    if ref := jsref.get('$ref', ''):
+        td = jssx.get(ref, ref)
+        if td.startswith('#/definitions/'):  # Exact type name
+            return td.removeprefix('#/definitions/')
+        if ':' in td:
+            return maketypename('', td.split(':', maxsplit=1)[1], jss)  # Extract type name from $id
+        if td2 := jss.get('definitions', {}).get(td, {}):
+            return typerefname(td2, jss)
+    return ''
+
+
+def singular(name: str) -> str:
+    """
+    Guess a singular type name for the anonymous items in a plural ArrayOf type
+    """
+    """
+    if name.endswith('ies'):
+        return name[:-3] + 'y'
+    elif name.endswith('es'):
+        n = -2 if name[-4:-3] == 's' else -1
+        return name[:n]
+    elif name.endswith('s'):
+        return name[:-1]
+    """
+    return name + '-item'
+
+
+def maketypename(tn: str, name: str, jss) -> str:
+    """
+    Convert a type and property name to type name
+    """
+    tn = typedefname(tn, jss)
+    name = f'{tn}.{name}' if tn else name.capitalize()      # $Sys = "."
+    return name + '1' if jadn.definitions.is_builtin(name) else name
+
+
+def scandef(tn: str, tv: dict, nt: list, jss: dict, jssx: dict):
+    """
+    Process anonymous type definitions, generate pathname, add to list nt
+    """
+
+    if not (td := define_jadn_type(tn, tv, jss, jssx)):
+        return
+    nt.append(td)
+    if tv.get('type', '') == 'object':
+        for k, v in tv.get('properties', {}).items():
+            if v.get('$ref', '') or v.get('type', '') in ('string', 'number', 'integer', 'boolean'):     # Not nested
+                pass
+            elif v.get('type', '') == 'object':
+                scandef(maketypename(tn, k, jss), v, nt, jss, jssx)
+            elif v.get('type', '') == 'array':
+                scandef(maketypename('', k, jss), v, nt, jss, jssx)
+                if len(vt := v.get('items', {})) != 1 or vt.get('type', '') not in ('string', 'number', 'integer', 'boolean'):
+                    scandef(singular(maketypename('', k, jss)), v['items'], nt, jss, jssx)
+            elif v.get('anyOf', '') or v.get('allOf', ''):
+                scandef(maketypename(tn, k, jss), v, nt, jss, jssx)
+            elif typerefname(v, jss, jssx):
+                print('  nested property type:', f'{td[TypeName]}.{k}', v)
+
+        if not tn:
+            print(f'  nested type: "{tv.get("title", "")}"')
+    elif (tc := tv.get('anyOf', '')) or (tc := tv.get('allOf', '')):
+        for n, v in enumerate(tc, start=1):
+            scandef(maketypename(tn, n, jss), v, nt, jss, jssx)
+    pass
+
+
+def define_jadn_type(tn: str, tv: dict, jss: dict, jssx: dict) -> list:
+    topts = []
+    tdesc = tv.get('description', '')
+    fields = []
+    if (jstype := tv.get('type', '')) == 'object':
+        coretype = 'Record'
+        req = tv.get('required', [])
+        for n, (k, v) in enumerate(tv.get('properties', {}).items(), start=1):
+            fopts = ['[0'] if k not in req else []
+            fdesc = v.get('description', '')
+            if v.get('type', '') == 'array':
+                ftype = maketypename('', k, jss)
+                idesc = jss.get('definitions', {}).get(jssx.get(v['items'].get('$ref', ''), ''), {}).get('description', '')
+                fdesc = fdesc if fdesc else v['items'].get('description', idesc)
+            elif v.get('type', '') == 'object':
+                ftype = maketypename(tn, k, jss)
+            elif ref := v.get('$ref', ''):
+                if ref == '#':  # TODO: replace this monkey hack with proper reference logic
+                    ftype = tn
+            elif t := jssx.get(v.get('$ref', ''), ''):
+                rt = jss['definitions'][t].get('$ref', '')
+                ftype = typedefname(rt if rt else t, jss)
+                ft = jss['definitions'][t]
+                fdesc = ft.get('description', '')
+            elif v.get('anyOf', '') or v.get('allOf', ''):
+                ftype = maketypename(tn, k, jss)
+            else:
+                ftype = typerefname(v, jss, jssx)
+            fdef = [n, k, ftype, fopts, fdesc]
+            if not ftype:
+                raise ValueError(f'  empty field type {tn}.{k}')
+            fields.append(fdef)
+    elif (td := tv.get('anyOf', '')) or (td := tv.get('allOf', '')):
+        coretype = 'Choice'
+        # topts = ['<', '∪'] if 'allOf' in tv else ['<']    # TODO: update Choice in JADN library
+        # topts = ['∪'] if 'allOf' in tv else []
+        for n, v in enumerate(td, start=1):
+            fd = typerefname(v, jss)
+            ftype = fd if fd else maketypename(tn, n, jss)
+            fdef = [n, f'c{n}', ftype, [], '']
+            fields.append(fdef)
+    elif td := tv.get('enum', ''):
+        coretype = 'Enumerated'
+        for n, v in enumerate(td, start=1):
+            fields.append([n, v, ''])
+    elif jstype == 'array':     # TODO: process individual items
+        coretype = 'ArrayOf'
+        topts = [f'{{{tv["minItems"]}'] if 'minItems' in tv else []
+        topts.append(f'}}{tv["maxItems"]}') if 'maxItems' in tv else []
+        ref = jss.get('definitions', {}).get(jssx.get(tv['items'].get('$ref', ''), ''), {})
+        tr = typerefname(ref, jss, jssx)
+        tr = tr if tr else typerefname(tv['items'], jss, jssx)
+        tr = tr if tr else singular(tn)
+        topts.append(f'*{tr}')
+    elif jstype in ('string', 'integer', 'number', 'boolean'):
+        if p := tv.get('pattern', ''):
+            topts.append(f'%{p}')
+        coretype = jstype.capitalize()
+    else:
+        return []
+
+    return [typedefname(tn, jss), coretype, topts, tdesc, fields]
+
+def xsd_to_jadn(xsd: etree.Element) -> dict:
+    for n, e in enumerate(xsd, start=1):
+        print(f'{n:>4} {e.tag}')
+    meta = {}
+    ntypes = []
+    return {'meta': meta, 'types': ntypes}
+
+class JADNPackage:
+    def __init__(self):
+        self.meta = {}
+        self.types = []
+
+def make_jadn(element: etree.Element) -> JADNPackage:
+    pkg = JADNPackage()
+
+    def walk(element: etree.Element, level: int) -> None:
+        for n, e in enumerate(element, start=1):
+            tag = etree.QName(e.tag).localname
+            attrs = {k: v for k, v in e.items()}
+            print(f'{n:>{2*level}} {len(e)} {tag} {attrs}')
+            walk(e, level+1)
+
+    walk(element, 0)
+    return pkg
+
+
+def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
+    """
+    Create a JADN type from each definition in a JSON Schema
+    """
+    print(f'Installed JADN version: {jadn.__version__}\n')
+    os.makedirs(output_dir, exist_ok=True)
+
+    for dirpath, dirnames, filenames in os.walk(schema_dir):
+        for f in filenames:
+            fn, ext = os.path.splitext(f)
+            if ext in ('.xsd', ):
+                schema_path = os.path.join(dirpath, f)
+                tree = etree.parse(schema_path)
+                jadn_schema = make_jadn(tree.getroot())
+                xsd_schema = etree.XMLSchema(tree)
+                jadn.dump(jadn_schema, os.path.join(OUTPUT_DIR, f'{fn}.jadn'))
+                print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(jadn_schema)).items()]))
+
+
+if __name__ == '__main__':
+    main()
+
+"""
+    from lxml import etree
+
+    schema_file = "path/to/your/schema.xsd"
+    schema_doc = etree.parse(schema_file)
+    schema = etree.XMLSchema(schema_doc)
+    
+    xml_file = "path/to/your/document.xml"
+    xml_doc = etree.parse(xml_file)
+
+    try:
+        schema.assertValid(xml_doc)
+        print("XML is valid according to the schema.")
+    except etree.DocumentInvalid as e:
+        print("XML validation error:", 
+"""
