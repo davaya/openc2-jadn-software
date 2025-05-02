@@ -1,10 +1,13 @@
 import jadn
 import os
+import pprint
 from collections import defaultdict
 from jadn.definitions import TypeName, CoreType, TypeOptions, Fields, FieldType
 from lxml import etree
+from typing import List
 
 SCHEMA_DIR = os.path.join('Data', 'NIEM', 'niem5.2')
+# SCHEMA_DIR = os.path.join('Data', 'NIEM', 'niem6.0-ps02', 'xsd')
 OUTPUT_DIR = 'Out'
 SYS = '.'   # Character used in system-generated TypeNames
 
@@ -186,19 +189,19 @@ class JADNPackage:
 
 def make_jadn(root: etree.Element) -> dict:
     pkg = JADNPackage()
-    ecount = defaultdict(lambda: defaultdict(int))
 
-    def walk(element: etree.Element, level: int) -> None:
-        etag = etree.QName(element.tag)
+    def walk(element: etree.Element, path: List[etree.Element]) -> None:
         for n, e in enumerate(element, start=1):
             tag = etree.QName(e.tag)
             attrs = {k: v for k, v in e.items()}
             val = f'{e.text.strip() if e.text else ""}'
-            ecount[etag.localname][tag.localname] += 1
-            print(f'{n:>{2*level}} {len(e)} {tag} {attrs} {val}')
-            walk(e, level+1)
+            print(f'{n:>{2*len(path)}} {len(e)} {tag} {attrs} {val}')
+            walk(e, path + [e])
 
-    walk(root, 0)
+    path = []
+    walk(root, path)
+    # for k, v in ecount['schema'].items():
+        # print(f'{k}: {v}')
     return {'meta': pkg.meta, 'types': pkg.types}
 
 
