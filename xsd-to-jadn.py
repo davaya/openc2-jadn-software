@@ -1,11 +1,12 @@
 import jadn
 import os
+from collections import defaultdict
 from jadn.definitions import TypeName, CoreType, TypeOptions, Fields, FieldType
 from lxml import etree
 
-SCHEMA_DIR = os.path.join('Projects', 'DPS')
-SCHEMA_DIR = os.path.join('Data', 'NIEM', 'NIEM5.2')
+SCHEMA_DIR = os.path.join('Data', 'NIEM', 'niem5.2')
 OUTPUT_DIR = 'Out'
+SYS = '.'   # Character used in system-generated TypeNames
 
 
 def typedefname(jsdef: str, jss: dict) -> str:
@@ -157,6 +158,19 @@ def define_jadn_type(tn: str, tv: dict, jss: dict, jssx: dict) -> list:
 
     return [typedefname(tn, jss), coretype, topts, tdesc, fields]
 
+
+def make_jadn_type(name: str, path: list[str], element: etree.Element, attr: dict, fields: list, types: list) -> None:
+    """
+    Generate type definitions from child elements
+    """
+    type_name = element.tag.capitalize() + SYS + SYS.join(path)
+    base_type = ''
+    type_options = []
+    type_desc =  ''
+    fields = []
+    types.append((type_name, base_type, type_options, type_desc, fields))
+
+
 def xsd_to_jadn(xsd: etree.Element) -> dict:
     for n, e in enumerate(xsd, start=1):
         print(f'{n:>4} {e.tag}')
@@ -169,18 +183,23 @@ class JADNPackage:
         self.meta = {}
         self.types = []
 
-def make_jadn(element: etree.Element) -> JADNPackage:
+
+def make_jadn(root: etree.Element) -> dict:
     pkg = JADNPackage()
+    ecount = defaultdict(lambda: defaultdict(int))
 
     def walk(element: etree.Element, level: int) -> None:
+        etag = etree.QName(element.tag)
         for n, e in enumerate(element, start=1):
-            tag = etree.QName(e.tag).localname
+            tag = etree.QName(e.tag)
             attrs = {k: v for k, v in e.items()}
-            print(f'{n:>{2*level}} {len(e)} {tag} {attrs}')
+            val = f'{e.text.strip() if e.text else ""}'
+            ecount[etag.localname][tag.localname] += 1
+            print(f'{n:>{2*level}} {len(e)} {tag} {attrs} {val}')
             walk(e, level+1)
 
-    walk(element, 0)
-    return pkg
+    walk(root, 0)
+    return {'meta': pkg.meta, 'types': pkg.types}
 
 
 def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
