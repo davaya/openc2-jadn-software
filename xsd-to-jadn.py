@@ -173,29 +173,38 @@ def make_jadn_type(name: str, path: list[str], element: etree.Element, attr: dic
     types.append((type_name, base_type, type_options, type_desc, fields))
 
 
-def xsd_to_jadn(xsd: etree.Element) -> dict:
-    for n, e in enumerate(xsd, start=1):
-        print(f'{n:>4} {e.tag}')
-    meta = {}
-    ntypes = []
-    return {'meta': meta, 'types': ntypes}
-
 class JADNPackage:
-    def __init__(self, root: etree.Element):
-        self.path = [root]
+    def __init__(self, meta: dict = None):
         self.meta = {}
         self.types = []
 
-        tag = etree.QName(root.tag).localname
-        attrs = {k: v for k, v in root.items()}
-        self.meta['package'] = attrs['targetNamespace']
-        self.meta['version'] = attrs['version']
-        self.meta['roots'] = [tag.capitalize()]
-        self.meta['namespaces'] = [(k, v) for k, v in root.nsmap.items()]
+        if meta:
+            self.meta = meta    # TODO: validate each entry
+
+        def pkg(self):          # Return JADN Schema Package
+            return {'meta': self.meta, 'types': self.types}
+
+
+
+
+
+
+        def get_annotation(pkg):
+            pass
+        def get_attribute(pkg):
+            pass
+        def get_element(pkg):
+            pass
+        dispatch = {
+            'annotation': get_annotation,
+            'attribute': get_attribute,
+            'element': get_element,
+        }
 
         for n, element in enumerate(root, start=1):
             tag = etree.QName(element.tag).localname
             attrs = {k: v for k, v in element.items()}
+            dispatch[tag](self)
 
             if tag == 'annotation':
                 for e in element:
@@ -203,19 +212,6 @@ class JADNPackage:
                     {   'documentation': get_documentation(e),
                         'appinfo': get_appinfo(e)}[etag]
 
-
-            elif tag == 'attribute':
-                pass
-            elif tag == 'element':
-                pass
-            elif tag == 'simpleType':
-                pass
-            elif tag == 'complexType':
-                pass
-            else:
-                print(f'Unexpected element {tag} {attrs}')
-
-            return
 
 def get_documentation(self, e: etree.Element) -> str:
     assert len(e) == 0
@@ -227,14 +223,24 @@ def get_documentation(self, e: etree.Element) -> str:
 def get_appinfo(self, e) -> None:
     return
 
-def pkg(self):
-    return {'meta': self.meta, 'types': self.types}
 
+def xsd_to_jadn(root: etree.Element) -> JADNPackage:
+    pkg = JADNPackage()
+    tag = etree.QName(root.tag).localname
+    attrs = {k: v for k, v in root.items()}
 
+    meta = {}
+    meta['package'] = attrs['targetNamespace']
+    meta['version'] = attrs['version']
+    meta['roots'] = [tag.capitalize()]
+    meta['namespaces'] = [(k, v) for k, v in root.nsmap.items()]
+
+    return pkg.pkg
+
+"""
 def make_jadn(root: etree.Element) -> dict:
 
     def walk(path: List[etree.Element]) -> None:
-        pkg.start_element(path)
         for n, e in enumerate(path[-1], start=1):
             ecount['.'.join([etree.QName(v).localname for v in path])] += 1
             tag = etree.QName(e.tag)
@@ -242,7 +248,6 @@ def make_jadn(root: etree.Element) -> dict:
             val = f'{e.text.strip() if e.text else ""}'
             print(f'{n:>{2*len(path)}} {len(e)} {tag} {attrs} {val}')
             walk(path + [e])
-        pkg.end_element(path)
 
     pkg = JADNPackage()
     ecount = defaultdict(int)
@@ -250,7 +255,7 @@ def make_jadn(root: etree.Element) -> dict:
     for n, (k, v) in enumerate(ecount.items(), start=1):
         print(f'{n:=4} {k} = {v}')
     return pkg.schema()
-
+"""
 
 def main(schema_dir: str, output_dir: str) -> None:
     """
@@ -265,8 +270,7 @@ def main(schema_dir: str, output_dir: str) -> None:
             if ext in ('.xsd', ):
                 schema_path = os.path.join(dirpath, f)
                 tree = etree.parse(schema_path)
-                schema = JADNPackage(tree.getroot())        # TODO: Refactor to block-driven pull parser
-                xsd_schema = etree.XMLSchema(tree)
+                schema = xsd_to_jadn(tree.getroot())
                 jadn.dump(schema.pkg, os.path.join(OUTPUT_DIR, f'{fn}.jadn'))
                 print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema.pkg)).items()]))
 
