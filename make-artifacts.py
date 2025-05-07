@@ -25,8 +25,8 @@ def translate(filename: str, schema_dir: str, output_dir: str) -> None:
     jadn.dump(schema, os.path.join(output_dir, fn + '.jadn'))
     jadn.dump(jadn.transform.unfold_extensions(jadn.transform.strip_comments(schema)),
         os.path.join(output_dir, fn + '-core.jadn'))
-    jadn.convert.diagram_dump(schema, os.path.join(output_dir, fn + '_ia.dot'),
-        style={'format': 'graphviz', 'detail': 'information', 'attributes': True, 'links': True})
+    jadn.convert.diagram_dump(schema, os.path.join(output_dir, fn + '_i.dot'),
+        style={'format': 'graphviz', 'detail': 'information', 'attributes': False, 'links': True})
     jadn.convert.diagram_dump(schema, os.path.join(output_dir, fn + '_i.puml'),
         style={'format': 'plantuml', 'detail': 'information', 'attributes': False, 'links': False})
     jadn.convert.jidl_dump(schema, os.path.join(output_dir, fn + '.jidl'), style={'desc': 48, 'name': 16})
