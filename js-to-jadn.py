@@ -110,7 +110,10 @@ def define_jadn_type(tn: str, tv: dict, jss: dict, jssx: dict) -> list:
             elif v.get('type', '') == 'object':
                 ftype = maketypename(tn, k, jss)
             elif ref := v.get('$ref', ''):
-                if ref == '#':  # TODO: replace this monkey hack with proper reference logic
+                if len(r := ref.split('/')) == 3:
+                    if r[1] in jss:
+                        ftype = r[2]
+                elif ref == '#':  # TODO: replace this monkey hack with proper reference logic
                     ftype = tn
             elif t := jssx.get(v.get('$ref', ''), ''):
                 rt = jss['definitions'][t].get('$ref', '')
@@ -171,7 +174,10 @@ def js_to_jadn(jss: dict) -> dict:
     meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
     meta.update({'description': jss['description']} if 'description' in jss else {})
     meta.update({'roots': ['Root']})
-    meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
+    meta.update({'config': {
+        '$MaxString': 1000,
+        '$TypeName': '^[a-zA-Z][-._A-Za-z0-9]{0,63}$',
+        '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
 
     nt = []  # Walk nested type definition tree to build type list
     scandef('Root', jss, nt, jss, jssx)
