@@ -171,8 +171,9 @@ def js_to_jadn(jss: dict) -> dict:
     p = os.path.splitext(pkg := jss.get('$id', ''))
     meta = {'package': (p[0] + '/' if p[-1] in ('.json', '.xsd', '.html') else pkg)}
     meta.update({'jadn_version': 'http://oasis-open.org/openc2/jadn/v2.0/schema/'})
-    meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
+    meta.update({'title': jss['title']} if 'title' in jss else {})
     meta.update({'description': jss['description']} if 'description' in jss else {})
+    meta.update({'$comment': jss['$comment']} if '$comment' in jss else {})
     meta.update({'roots': ['Root']})
     meta.update({'config': {
         '$MaxString': 1000,
@@ -181,7 +182,9 @@ def js_to_jadn(jss: dict) -> dict:
 
     nt = []  # Walk nested type definition tree to build type list
     scandef('Root', jss, nt, jss, jssx)
-    for tn, tv in jss.get('definitions', {}).items():
+    for tn, tv in jss.get('$defs', {}).items():
+        scandef(tn, tv, nt, jss, jssx)
+    for tn, tv in jss.get('definitions', {}).items():   # TODO: scan $refs to find name of definitions
         scandef(tn, tv, nt, jss, jssx)
 
     ntypes = []  # Prune identical type definitions
