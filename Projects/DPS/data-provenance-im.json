@@ -1,0 +1,669 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.oasis-open.org/dps/meta-1.0/schema/data-provenance/",
+  "title": "Data Provenance Metadata Schema v1.0",
+  "description": "The Data Provenance metadata schema is made up of three groups of metadata elements: Source, Provenance, and Use.",
+  "$ref": "#/definitions/Root",
+  "definitions": {
+    "Root": {
+      "title": "Root",
+      "type": "object",
+      "description": "The Data Provenance metadata schema is made up of three groups of metadata elements: Source, Provenance, and Use.",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "provenance",
+        "use"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/source_t",
+          "description": ""
+        },
+        "provenance": {
+          "$ref": "#/definitions/provenance_t",
+          "description": ""
+        },
+        "use": {
+          "$ref": "#/definitions/use_t",
+          "description": ""
+        }
+      }
+    },
+    "provenance_t": {
+      "title": "provenance t",
+      "type": "object",
+      "description": "This describes the provenance of the dataset.",
+      "additionalProperties": false,
+      "required": [
+        "origin-geography",
+        "date",
+        "generation-method"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Identifies where the metadata for any source datasets that contribute to the current dataset can be found, establishing lineage and dependencies. This field establishes lineage.",
+          "maxLength": 255
+        },
+        "origin": {
+          "$ref": "#/definitions/Origin",
+          "description": "If the data originates from a different organization than the one who issued the dataset, this field identifies the original source's legal name."
+        },
+        "origin-geography": {
+          "$ref": "#/definitions/Origin-geography",
+          "description": "The geographical location where the data was originally collected, which can be important for compliance with regional laws and understanding the data's context."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date when the dataset was compiled or created, providing a temporal context for the data.",
+          "maxLength": 255
+        },
+        "previous-date": {
+          "type": "string",
+          "description": "The release date of the last version of the dataset, if it has been updated or revised, to track changes and updates over time.",
+          "maxLength": 255
+        },
+        "generation-period": {
+          "$ref": "#/definitions/provenance_t.generation-period",
+          "description": "The span of time during which the data within the dataset was collected or generated, offering insight into the dataset's timeliness and relevance."
+        },
+        "generation-method": {
+          "$ref": "#/definitions/Generation-method",
+          "description": "The methodology or procedures used to collect, generate, or compile the data, giving insight into its reliability and validity."
+        },
+        "format": {
+          "$ref": "#/definitions/Format",
+          "description": "Describes the nature of the data within the dataset, such as numerical, textual, or multimedia, helping users understand what kind of information is contained within the file or dataset."
+        },
+        "sub-provenance": {
+          "$ref": "#/definitions/provenance_t",
+          "description": ""
+        }
+      }
+    },
+    "Origin": {
+      "title": "Origin",
+      "type": "array",
+      "description": "If the data originates from a different organization than the one who issued the dataset, this field identifies the original source's legal name.",
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Origin-item"
+      }
+    },
+    "Origin-item": {
+      "title": "Origin item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "address": {
+          "$ref": "#/definitions/Address",
+          "description": ""
+        }
+      }
+    },
+    "Address": {
+      "title": "Address",
+      "type": "array",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Origin-geography": {
+      "title": "Origin geography",
+      "type": "array",
+      "description": "The geographical location where the data was originally collected, which can be important for compliance with regional laws and understanding the data's context.",
+      "minItems": 1,
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Origin-geography-item"
+      }
+    },
+    "Origin-geography-item": {
+      "title": "Origin geography item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "country": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "provenance_t.generation-period": {
+      "title": "provenance t.generation period",
+      "type": "object",
+      "description": "The span of time during which the data within the dataset was collected or generated, offering insight into the dataset's timeliness and relevance.",
+      "additionalProperties": false,
+      "maxProperties": 255,
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "Start date/time",
+          "maxLength": 255
+        },
+        "end": {
+          "type": "string",
+          "description": "End date/time",
+          "maxLength": 255
+        }
+      }
+    },
+    "Generation-method": {
+      "title": "Generation method",
+      "type": "array",
+      "description": "The methodology or procedures used to collect, generate, or compile the data, giving insight into its reliability and validity.",
+      "minItems": 1,
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Generation-method-item"
+      }
+    },
+    "Generation-method-item": {
+      "title": "Generation method item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "code": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "system": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Format": {
+      "title": "Format",
+      "type": "array",
+      "description": "Describes the nature of the data within the dataset, such as numerical, textual, or multimedia, helping users understand what kind of information is contained within the file or dataset.",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_t": {
+      "title": "source t",
+      "type": "object",
+      "description": "This describes a dataset and the source of the dataset.",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "title",
+        "id",
+        "issuer",
+        "description"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Specifies the version of the schema or standards used to define the metadata for this dataset, ensuring consistency and compatibility over time.",
+          "maxLength": 255
+        },
+        "title": {
+          "type": "string",
+          "description": "The official name of the dataset, which should be descriptive and help easily identify the dataset's content and purpose.",
+          "maxLength": 255
+        },
+        "id": {
+          "type": "string",
+          "description": "A distinct identifier (such as a UUID) assigned to the dataset's metadata to uniquely distinguish it from others, ensuring no confusion or overlap.",
+          "maxLength": 255
+        },
+        "location": {
+          "type": "string",
+          "description": "The web address where the dataset's metadata is published and can be accessed, providing a direct link to detailed information about the dataset. Typically will be a unique URL of the current dataset.",
+          "maxLength": 255
+        },
+        "issuer": {
+          "$ref": "#/definitions/Issuer",
+          "description": "The legal entity responsible for creating the dataset, providing accountability and a point of contact for inquiries."
+        },
+        "description": {
+          "type": "string",
+          "description": "Contains a detailed narrative that explains the contents, scope, and purpose of the dataset. It provides essential contextual information that helps users understand what the data represents, how it was collected, and any limitations or recommended uses.",
+          "maxLength": 255
+        }
+      }
+    },
+    "Issuer": {
+      "title": "Issuer",
+      "type": "array",
+      "description": "The legal entity responsible for creating the dataset, providing accountability and a point of contact for inquiries.",
+      "minItems": 1,
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Issuer-item"
+      }
+    },
+    "Issuer-item": {
+      "title": "Issuer item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "address": {
+          "$ref": "#/definitions/Address",
+          "description": ""
+        }
+      }
+    },
+    "use_t": {
+      "title": "use t",
+      "type": "object",
+      "description": "This group describes legal use and restrictions.",
+      "additionalProperties": false,
+      "required": [
+        "intended-purpose"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "classification": {
+          "$ref": "#/definitions/Classification",
+          "description": "Indicate if the dataset includes data falling into the confidentiality classification. Each classifier must be evaluated as true/false/unknown."
+        },
+        "consents": {
+          "$ref": "#/definitions/Consents",
+          "description": "Specifies where consent documentation or agreements related to the data can be found, ensuring legal compliance and regulatory use. This element must be populated when Privacy Consent is appropriate. When populated it points to either one Privacy Consent Policy that all individuals in the dataset agreed to, or one Privacy Policy for each individual in the dataset with that individual's signature."
+        },
+        "privacy-enhancing": {
+          "$ref": "#/definitions/Privacy-enhancing",
+          "description": "Indicates whether techniques were used to protect personally identifiable information (PII) or sensitive personal information (SPI), highlighting the dataset's privacy considerations."
+        },
+        "processing-included": {
+          "$ref": "#/definitions/Processing-included",
+          "description": "Defines the geographical boundaries within which the data can be processed, often for legal or regulatory reasons."
+        },
+        "processing-excluded": {
+          "$ref": "#/definitions/Processing-excluded",
+          "description": "Defines the geographical boundaries within which the data cannot be processed, often for legal or regulatory reasons."
+        },
+        "storage-allowed": {
+          "$ref": "#/definitions/Storage-allowed",
+          "description": "Specifies where the data may be stored, crucial for compliance with data sovereignty laws."
+        },
+        "storage-forbidden": {
+          "$ref": "#/definitions/Storage-forbidden",
+          "description": "Specifies where the data may not be stored, crucial for compliance with data sovereignty laws."
+        },
+        "license": {
+          "$ref": "#/definitions/License",
+          "description": "Details the location or point of contact for identifying the terms under which the dataset can be used, including any restrictions or obligations, clarifying legal use and distribution rights. License may be an End User License Agreement (EULA), subject to Data Use Agreement (DUA)."
+        },
+        "intended-purpose": {
+          "$ref": "#/definitions/Intended-purpose",
+          "description": "Describes the purpose for which the dataset was created, guiding users on its intended use and potential applications against identified use cases. List all that apply from the Data Use codes that apply. Additional codes can be included with descriptions."
+        },
+        "copyright": {
+          "$ref": "#/definitions/Copyright",
+          "description": "Indicates whether the dataset contains proprietary information that is covered with a Copyright and the terms of said Copyright."
+        },
+        "patent": {
+          "$ref": "#/definitions/Patent",
+          "description": "Indicates whether the dataset contains proprietary information that is covered with a Patent and said Patent number."
+        },
+        "trademark": {
+          "$ref": "#/definitions/Trademark",
+          "description": "Indicates whether the dataset contains proprietary information that is covered with a Trademark, and the terms of said Trademark."
+        }
+      }
+    },
+    "Classification": {
+      "title": "Classification",
+      "type": "array",
+      "description": "Indicate if the dataset includes data falling into the confidentiality classification. Each classifier must be evaluated as true/false/unknown.",
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Classification-item"
+      }
+    },
+    "Classification-item": {
+      "title": "Classification item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regulation",
+        "evaluated"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "regulation": {
+          "$ref": "#/definitions/Classification-item.regulation",
+          "description": ""
+        },
+        "evaluated": {
+          "type": "boolean"
+        },
+        "tool": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Classification-item.regulation": {
+      "title": "Classification item.regulation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "code": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "system": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Consents": {
+      "title": "Consents",
+      "type": "array",
+      "description": "Specifies where consent documentation or agreements related to the data can be found, ensuring legal compliance and regulatory use. This element must be populated when Privacy Consent is appropriate. When populated it points to either one Privacy Consent Policy that all individuals in the dataset agreed to, or one Privacy Policy for each individual in the dataset with that individual's signature.",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Privacy-enhancing": {
+      "title": "Privacy enhancing",
+      "type": "array",
+      "description": "Indicates whether techniques were used to protect personally identifiable information (PII) or sensitive personal information (SPI), highlighting the dataset's privacy considerations.",
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Privacy-enhancing-item"
+      }
+    },
+    "Privacy-enhancing-item": {
+      "title": "Privacy enhancing item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool-used"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "tool-category": {
+          "$ref": "#/definitions/Privacy-enhancing-item.tool-category",
+          "description": ""
+        },
+        "tool-used": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "parameters": {
+          "$ref": "#/definitions/Parameters",
+          "description": ""
+        },
+        "result": {
+          "$ref": "#/definitions/Result",
+          "description": ""
+        }
+      }
+    },
+    "Privacy-enhancing-item.tool-category": {
+      "title": "Privacy enhancing item.tool category",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "code": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "system": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Parameters": {
+      "title": "Parameters",
+      "type": "array",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Result": {
+      "title": "Result",
+      "type": "array",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Processing-included": {
+      "title": "Processing included",
+      "type": "array",
+      "description": "Defines the geographical boundaries within which the data can be processed, often for legal or regulatory reasons.",
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Processing-included-item"
+      }
+    },
+    "Processing-included-item": {
+      "title": "Processing included item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "country": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Processing-excluded": {
+      "title": "Processing excluded",
+      "type": "array",
+      "description": "Defines the geographical boundaries within which the data cannot be processed, often for legal or regulatory reasons.",
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Processing-excluded-item"
+      }
+    },
+    "Processing-excluded-item": {
+      "title": "Processing excluded item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "country": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Storage-allowed": {
+      "title": "Storage allowed",
+      "type": "array",
+      "description": "Specifies where the data may be stored, crucial for compliance with data sovereignty laws.",
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Storage-allowed-item"
+      }
+    },
+    "Storage-allowed-item": {
+      "title": "Storage allowed item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "country": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Storage-forbidden": {
+      "title": "Storage forbidden",
+      "type": "array",
+      "description": "Specifies where the data may not be stored, crucial for compliance with data sovereignty laws.",
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Storage-forbidden-item"
+      }
+    },
+    "Storage-forbidden-item": {
+      "title": "Storage forbidden item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "country": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "License": {
+      "title": "License",
+      "type": "array",
+      "description": "Details the location or point of contact for identifying the terms under which the dataset can be used, including any restrictions or obligations, clarifying legal use and distribution rights. License may be an End User License Agreement (EULA), subject to Data Use Agreement (DUA).",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Intended-purpose": {
+      "title": "Intended purpose",
+      "type": "array",
+      "description": "Describes the purpose for which the dataset was created, guiding users on its intended use and potential applications against identified use cases. List all that apply from the Data Use codes that apply. Additional codes can be included with descriptions.",
+      "minItems": 1,
+      "maxItems": 255,
+      "items": {
+        "$ref": "#/definitions/Intended-purpose-item"
+      }
+    },
+    "Intended-purpose-item": {
+      "title": "Intended purpose item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "description"
+      ],
+      "maxProperties": 255,
+      "properties": {
+        "code": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "system": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "Copyright": {
+      "title": "Copyright",
+      "type": "array",
+      "description": "Indicates whether the dataset contains proprietary information that is covered with a Copyright and the terms of said Copyright.",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Patent": {
+      "title": "Patent",
+      "type": "array",
+      "description": "Indicates whether the dataset contains proprietary information that is covered with a Patent and said Patent number.",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Trademark": {
+      "title": "Trademark",
+      "type": "array",
+      "description": "Indicates whether the dataset contains proprietary information that is covered with a Trademark, and the terms of said Trademark.",
+      "maxItems": 255,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
