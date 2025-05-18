@@ -1,28 +1,28 @@
      package: "https://docs.oasis-open.org/dps/v1.0/schema/"
      version: "csd01"
- description: "Information Schema for Data Provenance Standard Metadata"
+ jadn_version: "http://oasis-open.org/openc2/jadn/v2.0/schema/"
   namespaces: [["geo", "https://iso3166/202403/"]]
        roots: ["DPS-Metadata"]
+ description: "Information Schema for Data Provenance Standard Metadata"
       config: {"$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"}
-jadn_version: "http://oasis-open.org/openc2/jadn/v2.0/schema/"
 
-DPS = Record
-   1 version          URL                        // Standard version used to define the metadata for this dataset
-   2 metadata         DataProvenance             // The metadata about a dataset
+DPS-Metadata = Record
+   1 version          URL                       // Specifies the version of the schema or standards used to define the metadata for this dataset, ensuring consistency and compatibility over time.
+   2 metadata         Metadata                  // The metadata about a dataset.
 
-DataProvenance = Record                          // The Data Provenance Standard Metadata
-   1 source           Source                     // Describes a dataset and the source of the dataset
-   2 provenance       Provenance                 // Provenance of the dataset
-   3 use              Use                        // Legal use and restrictions
+Metadata = Record                               // The Data Provenance Standard Metadata
+   1 source           Source                    // Describes a dataset and the source of the dataset.
+   2 provenance       Provenance                // Provenance of the dataset.
+   3 use              Use                       // Legal use and restrictions.
 
 Source = Record
-   1 title            String                     // The official name of the dataset
+   1 title            String                     // The official name of the dataset, which should be descriptive and help easily identify the dataset's content and purpose.
    2 id               UID                        // Unique metadata identifier
    3 location         URL optional               // Metadata location
-   4 issuer           Organization [1..*]        // Data issuer  (many?)
+   4 issuer           Org [1..*]                 // Data issuer  (many?)
    5 description      String                     // Description of the dataset
 
-Organization = Record
+Org = Record
    1 name             String                     // organization name
    2 address          Address                    // address
 
@@ -30,7 +30,7 @@ Address = ArrayOf(String)                        // Just lines for now, enable s
 
 Provenance = Record
    1 source           URL [1..*]                 // Source metadata for dataset
-   2 origin           Organization optional      // Source
+   2 origin           Org optional               // Source
    3 origin-geography geo:Country-Name [1..*]    // Data origin geography
    4 date             Timestamp                  // Dataset issue date
    5 previous-date    Timestamp                  // Date of previously-issued version of the dataset
@@ -46,7 +46,7 @@ Generation = Record
 Use = Record
    1 classification   Confidentiality            // Confidentiality Classification
    2 consent          URL [1..*]                 // Consent documentation location
-   3 privacy-enhancing Privacy-Tool [1..*]       // Privacy enhancing technologies
+   3 privacy-enhancing Privacy-Tool [1..*]        // Privacy enhancing technologies
    4 processing       Processing-Geography optional // Data processing geography
    5 storage          Storage-Geography optional // Data storage geography
    6 license          ArrayOf(License) unique    // License to use

@@ -1,9 +1,9 @@
+import argparse
 import jadn
 import json
 import os
 from jadn.definitions import TypeName, CoreType, TypeOptions, Fields, FieldType
 
-SCHEMA_DIR = os.path.join('Projects', 'DPS')
 OUTPUT_DIR = 'Out'
 
 
@@ -162,7 +162,7 @@ def define_jadn_type(tn: str, tv: dict, jss: dict, jssx: dict) -> list:
 
 def js_to_jadn(jss: dict) -> dict:
 
-    assert jss['type'] == 'object', f'Unsupported JSON Schema format'
+    # assert jss['type'] == 'object', f'Unsupported JSON Schema format'
     defs = jss.get('definitions', jss.get('$defs', {}))
     jssx = {v.get('$id', k): k for k, v in defs.items()}  # Index from $id to definition
     types = {typedefname(k, jss): v for k, v in defs.items()}  # Index from type name to definition
@@ -182,9 +182,7 @@ def js_to_jadn(jss: dict) -> dict:
 
     nt = []  # Walk nested type definition tree to build type list
     scandef('Root', jss, nt, jss, jssx)
-    for tn, tv in jss.get('$defs', {}).items():
-        scandef(tn, tv, nt, jss, jssx)
-    for tn, tv in jss.get('definitions', {}).items():   # TODO: scan $refs to find name of definitions
+    for tn, tv in defs.items():
         scandef(tn, tv, nt, jss, jssx)
 
     ntypes = []  # Prune identical type definitions
@@ -195,7 +193,7 @@ def js_to_jadn(jss: dict) -> dict:
     return {'meta': meta, 'types': ntypes}
 
 
-def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
+def main(schema_dir: str, output_dir: str) -> None:
     """
     Create a JADN type from each definition in a JSON Schema
     """
@@ -216,4 +214,9 @@ def main(schema_dir: str = SCHEMA_DIR, output_dir: str = OUTPUT_DIR) -> None:
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('schema_dir')
+    parser.add_argument('output_dir', nargs='?', default=OUTPUT_DIR)
+    args = parser.parse_args()
+    print(args)
+    main(args.schema_dir, args.output_dir)
