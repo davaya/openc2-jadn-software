@@ -5,11 +5,11 @@ import re
 import typing
 
 from collections import defaultdict
-from jadn.definitions import (TypeName, BaseType, TypeOptions, TypeDesc, Fields, ItemID, ItemValue, ItemDesc,
+from jadn.definitions import (TypeName, CoreType, TypeOptions, TypeDesc, Fields, ItemID, ItemValue, ItemDesc,
                               FieldID, FieldName, FieldType, FieldOptions, FieldDesc, OPTION_ID)
 from typing import Union
 
-NIEM_XSD_DIR = 'NIEM5.2'
+NIEM_XSD_DIR = 'niem6.0-ps02/xsd/'
 OUT_DIR = '../../Out'
 SYS = '.'       # Separator character used in generated type names
 
@@ -138,8 +138,9 @@ if __name__ == '__main__':
     for f in os.listdir(NIEM_XSD_DIR):
         fn, fe = os.path.splitext(fname := os.path.join(NIEM_XSD_DIR, f))
         print(f'\n=== {fname}')
-        tree = etree.parse(fname)
-        root = tree.getroot()
-        print(root.tag, len(root))
-        root_ns = etree.QName(root.tag).namespace
-        pkg = make_jadn(root)
+        if fe == '.xsd':
+            tree = etree.parse(fname)
+            root = tree.getroot()
+            print(root.tag, len(root))
+            root_ns = etree.QName(root.tag).namespace
+            pkg = make_jadn(root)
