@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Schema>
+  <Metadata
+    title="JADN Metaschema"
+    package="http://oasis-open.org/openc2/jadn/v2.0/schema"
+    description="Syntax of a JSON Abstract Data Notation (JADN) package."
+    version="ps02"
+    license="CC-BY-4.0"
+    jadn_version="http://oasis-open.org/openc2/jadn/v2.0/schema">
+    <Roots>
+      <TypeName>Schema</TypeName>
+      <TypeName>Foo</TypeName>
+    </Roots>
+    <Namespaces>
+      <PrefixNs prefix="">http://oasis-open.org/openc2/jadn/v2.0/schema</PrefixNs>
+    </Namespaces>
+    <Config>
+      <FieldName>^[$A-Za-z][_A-Za-z0-9]{0,63}$</FieldName>
+    </Config>
+  </Metadata>
+  <Types>
+    <Type name="Schema" type="Array">Definition of a JADN package
+      <Field id="1" name="meta" type="Metadata" minOccurs="0">Information about this package</Field>
+      <Field id="2" name="types" type="Type" minOccurs="1" maxOccurs="-1" unique="true">Types defined in this package</Field>
+    </Type>
+    <Type name="Metadata" type="Map">Information about this package
+      <Field id="1" name="package" type="Namespace">Unique name/version of this package</Field>
+      <Field id="2" name="version" type="String" minLength="1" minOccurs="0">Incrementing version within package</Field>
+      <Field id="3" name="title" type="String" minLength="1" minOccurs="0">Title</Field>
+      <Field id="4" name="description" type="String" minLength="1" minOccurs="0">Incrementing version within package</Field>
+      <Field id="5" name="comment" type="String" minLength="1" minOccurs="0">Comment</Field>
+      <Field id="6" name="copyright" type="String" minLength="1" minOccurs="0">Copyright notice</Field>
+      <Field id="7" name="license" type="String" minLength="1" minOccurs="0">SPDX licenseId of this package</Field>
+      <Field id="8" name="namespaces" type="PrefixNs" minOccurs="0" maxOccurs="-1" unique="true">Referenced packages</Field>
+      <Field id="9" name="roots" type="TypeName" minOccurs="0" maxOccurs="-1" unique="true">Roots of the type tree(s) in this package</Field>
+      <Field id="10" name="config" type="Config" minOccurs="0">Configuration variables</Field>
+      <Field id="11" name="jadn_version" type="Namespace" minOccurs="0">JADN Metaschema Package</Field>
+    </Type>
+    <Type name="PrefixNs" type="Array">Prefix corresponding to a namespace IRI
+      <Field id="1" name="prefix" type="NSID">Namespace prefix string</Field>
+      <Field id="2" name="namespace" type="Namespace">Namespace IRI</Field>
+    </Type>
+  </Types>
+</Schema>
