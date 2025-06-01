@@ -40,7 +40,7 @@ class JADN:
         Return a schema instance as a string containing JADN data in JSON format
         """
         scc = {'meta': self.schema['meta'], 'types': copy.deepcopy(self.schema['types'])}
-        return _pprint(_strip_trailing_defaults(scc), strip=strip)
+        return _pprint(_dump(self, scc), strip=strip)
 
     def dump(self, fp: TextIO, strip: bool = True) -> None:
         """
@@ -57,30 +57,30 @@ class JADN:
         fp.write(self.dumps(strip=strip))
 
 #========================================================
-# Private support methods and functions
+# Private support methods
 #========================================================
 
 def _load(self, json: dict) -> dict:
     """
-    Convert a dict from JSON data to JADN instance.  For each type definition,
+    Convert a schema from loaded JSON data to logical JADN schema.  For each type definition,
     fill in missing defaults and convert options from string list to dict.
 
     :param json: {meta, types} in serialized format
     :return: {meta, types} in logical format
     """
-    d = [None, None, [], '', []]    # [TypeName, CoreType, TypeOptions, TypeDesc, Fields]
-    f = [None, None, None, [], '']  # [FieldId, FieldName, FieldType, FieldOptions, FieldDesc]
+    tdef = [None, None, [], '', []]    # [TypeName, CoreType, TypeOptions, TypeDesc, Fields]
+    fdef = [None, None, None, [], '']  # [FieldId, FieldName, FieldType, FieldOptions, FieldDesc]
     for td in json['types']:
-        td += d[len(td):len(d)]
-        td[TypeOptions] = _opts_load(self, td[TypeOptions])
+        td += tdef[len(td):len(tdef)]
+        td[TypeOptions] = _load_tagstrings(self, td[TypeOptions])
         for fd in td[Fields]:
             if td[CoreType] in {'Array', 'Map', 'Record', 'Choice'}:
-                fd += f[len(fd):len(f)]
-                fd[FieldOptions] = _opts_load(self, fd[FieldOptions])
+                fd += fdef[len(fd):len(fdef)]
+                fd[FieldOptions] = _load_tagstrings(self, fd[FieldOptions])
     return json
 
 
-def _opts_load(self, tstrings: list[str]) -> dict[str, str]:
+def _load_tagstrings(self, tstrings: list[str]) -> dict[str, str]:
     """
     Convert JSON-serialized TypeOptions and FieldOptions to dicts
     """
@@ -89,13 +89,25 @@ def _opts_load(self, tstrings: list[str]) -> dict[str, str]:
     return dict(opt(s) for s in tstrings)
 
 
-def _schema_opts_dump(self) -> None:
-    pass
-
-
-def _opts_dump(self, opts: dict[str, str]) -> list[str]:
+def _dump(self, json: dict) -> dict:
     """
-    Convert TypeOptions and FieldOptions to JSON-serialized strings
+    Convert a schema from logical JADN schema to JSON data to be serialized.
+    For each type definition, remove trailing defaults and convert options from dict to string list.
+
+    :param json: {meta, types} in logical format
+    :return: {meta, types} in serialized format
+    """
+    for td in json['types']:
+        td[TypeOptions] = _dump_tagstrings(self, td[TypeOptions])
+        if td[CoreType] in {'Array', 'Map', 'Record', 'Choice'}:
+            for fd in td[Fields]:
+                fd[FieldOptions] = _dump_tagstrings(self, fd[FieldOptions])
+    return _strip_trailing_defaults(json)
+
+
+def _dump_tagstrings(self, opts: dict[str, str]) -> list[str]:
+    """
+    Convert TypeOptions and FieldOptions dicts to JSON-serialized strings
     """
     def strs(k: str, v: str) -> str:
         return chr(self.OPTX[k]) + v if k in self.OPTX else k
@@ -158,18 +170,23 @@ def _pprint(val: Any, level: int = 0, indent: int = 2, strip: bool = False) -> s
 
 if __name__ == '__main__':
     """
-    j = JADN()
-    print(len(j.OPTS), j.OPTS)
-    print(len(j.OPTX), j.OPTX)
+    Diagnostics
+    """
+
+    j = JADN()      # Initialize OPTX (reverse option index)
+    print('OPTS:', len(j.OPTS), j.OPTS)
+    print('OPTX:', len(j.OPTX), j.OPTX)
 
     opts_s = ['[0', ']-1', 'q', '/ipv4', '/d3']
-    opts_d = j._opts_load(opts_s)
-    print(opts_d)
-    opts_s2 = j._opts_dump(opts_d)
-    print(opts_s2)
+    print(f'\nStored opts: {opts_s}')
+    opts_d = _load_tagstrings(JADN, opts_s)
+    print(f'Loaded opts: {opts_d}')
+    opts_s2 = _dump_tagstrings(JADN, opts_d)
+    print(f'Dumped opts: {opts_s2}')
     assert opts_s2 == opts_s
-    """
 
     jd = JADN()
     with open('Projects/JADN/jadn_v2.0_schema.jadn') as fp:
         jd.load(fp)
+    print(f'\nLogical: {jd.schema}')        # Internal (logical) schema value
+    print(f'JSON Format:\n{jd.dumps()}')    # External (lexical) schema value
