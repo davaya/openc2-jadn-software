@@ -184,11 +184,6 @@ class JADNPackage:
         def pkg(self):          # Return JADN Schema Package
             return {'meta': self.meta, 'types': self.types}
 
-
-
-
-
-
         def get_annotation(pkg):
             pass
         def get_attribute(pkg):

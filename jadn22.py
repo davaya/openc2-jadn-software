@@ -19,7 +19,7 @@ class JADN:
         """
         Load a schema instance from a string in JSON format
         """
-        self.schema = _load(self, json.loads(jadn_str))
+        self.schema = _check(_load(self, json.loads(jadn_str)))
         self.source = None
 
     def load(self, fp: TextIO) -> None:
@@ -115,6 +115,9 @@ def _dump_tagstrings(self, opts: dict[str, str]) -> list[str]:
 
 
 def _check(schema: dict) -> dict:
+    """
+    Validate logical schema
+    """
     return schema
 
 
