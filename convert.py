@@ -8,44 +8,45 @@ from definitions import FieldID, FieldName, FieldType, FieldOptions, FieldDesc
 from lxml import etree as ET
 
 OUTPUT_DIR = 'Out'
+S = '  '    # Prettyprint Indent level
 
 
 def xasd_dumps(schema: dict):
     xasd = '<?xml version="1.0" encoding="UTF-8"?>\n<Schema>\n'
     if meta := schema.get('meta'):
-        xasd += '  <Metadata\n'
-        xasd += '\n'.join([f'{4*" "}{k}="{v}"' for k, v in meta.items() if isinstance(v, str)]) + '>\n'
+        xasd += f'{S}<Metadata\n'
+        xasd += '\n'.join([f'{2*S}{k}="{v}"' for k, v in meta.items() if isinstance(v, str)]) + '>\n'
         for k, v in meta.items():
             if k == 'roots':
-                xasd += f'{4 * " "}<{k.capitalize()}>\n'
+                xasd += f'{2*S}<{k.capitalize()}>\n'
                 for v in meta[k]:
-                    xasd += f'{6 * " "}<TypeName>{v}</TypeName>\n'
-                xasd += f'{4 * " "}</{k.capitalize()}>\n'
+                    xasd += f'{3*S}<TypeName>{v}</TypeName>\n'
+                xasd += f'{2*S}</{k.capitalize()}>\n'
             elif k == 'namespaces':
-                xasd += f'{4 * " "}<{k.capitalize()}>\n'
+                xasd += f'{2*S}<{k.capitalize()}>\n'
                 for v in meta[k]:
-                    xasd += f'{6 * " "}<PrefixNs prefix="{v[0]}">{v[1]}</PrefixNs>\n'
-                xasd += f'{4 * " "}</{k.capitalize()}>\n'
+                    xasd += f'{3*S}<PrefixNs prefix="{v[0]}">{v[1]}</PrefixNs>\n'
+                xasd += f'{2*S}</{k.capitalize()}>\n'
             elif k == 'config':
-                xasd += f'{4 * " "}<{k.capitalize()}>\n'
+                xasd += f'{2*S}<{k.capitalize()}>\n'
                 for k2, v in meta[k].items():
-                    xasd += f'{6 * " "}<{k2.strip("$")}>{v}</{k2.strip("$")}>\n'
-                xasd += f'{4 * " "}</{k.capitalize()}>\n'
+                    xasd += f'{3*S}<{k2.strip("$")}>{v}</{k2.strip("$")}>\n'
+                xasd += f'{2*S}</{k.capitalize()}>\n'
     xasd += '  </Metadata>\n'
     xasd += '  <Types>\n'
     for td in schema['types']:
         to = [f' {k}="{v}"' for k, v in topts_s2d(td[TypeOptions], td[CoreType]).items()]
-        (ln, end) = ('\n', '    ') if td[Fields] else ('', '')
-        xasd += f'{4*" "}<Type name="{td[TypeName]}" type="{td[CoreType]}"{"".join(to)}>{td[TypeDesc]}{ln}'
+        (ln, end) = ('\n', f'{2*S}') if td[Fields] else ('', '')
+        xasd += f'{2*S}<Type name="{td[TypeName]}" type="{td[CoreType]}"{"".join(to)}>{td[TypeDesc]}{ln}'
         for f in td[Fields]:
             if td[CoreType] == 'Enumerated':
-                xasd += f'{6*" "}<Item id="{f[ItemID]}" value="{f[ItemValue]}">{f[ItemDesc]}</Item>\n'
+                xasd += f'{3*S}<Item id="{f[ItemID]}" value="{f[ItemValue]}">{f[ItemDesc]}</Item>\n'
             else:
                 fo, to = ftopts_s2d(f[FieldOptions], f[FieldType])
                 fopts = "".join([f' {k}="{v}"' for k, v in (to | fo).items()])
-                xasd += f'{6*" "}<Field id="{f[FieldID]}" name="{f[FieldName]}" type="{f[FieldType]}"{fopts}>{f[FieldDesc]}</Field>\n'
+                xasd += f'{3*S}<Field id="{f[FieldID]}" name="{f[FieldName]}" type="{f[FieldType]}"{fopts}>{f[FieldDesc]}</Field>\n'
         xasd += f'{end}</Type>\n'
-    xasd += '  </Types>\n'
+    xasd += f'{S}</Types>\n'
     xasd += '</Schema>\n'
     return xasd
 

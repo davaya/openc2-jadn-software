@@ -1,0 +1,6 @@
+Coordinate = Record
+    1 latitude     Latitude
+    2 longitude    Longitude
+
+Latitude = Number=[-90.0, 90.0]
+Longitude = Number=[-180.0, 180.0]

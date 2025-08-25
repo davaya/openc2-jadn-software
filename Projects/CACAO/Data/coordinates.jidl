@@ -1,0 +1,13 @@
+       title: "coordinates"
+     package: "https://raw.githubusercontent.com/oasis-tcs/cacao/master/Extensions/layout/schemas/coordinates/"
+ description: "The Coordinates data type indicates the position (in pixels) of the midpoint of a visualized CACAO object relative to the upper left (origin - O) corner of a canvas, along with its connections (paths) to other objects."
+       roots: ["Root"]
+      config: {"$MaxString": 1000, "$TypeName": "^[a-zA-Z][-._A-Za-z0-9]{0,63}$", "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"}
+jadn_version: "http://oasis-open.org/openc2/jadn/v2.0/schema/"
+
+Root = Record                                    // The Coordinates data type indicates the position (in pixels) of the midpoint of a visualized CACAO object relative to the upper left (origin - O) corner of a canvas, along with its connections (paths) to other objects.
+   1 x                Integer                    // A number (𝕎 - whole number) representing the X coordinate of the midpoint of the object visualized relative to the canvas's upper-left (origin - O) corner. This number refers to pixels.
+   2 y                Integer                    // A number (𝕎 - whole number) representing the Y coordinate of the midpoint of the object visualized relative to the canvas's upper-left (origin - O) corner. This number refers to pixels.
+   3 outgoing_connections Outgoing_connections optional // The outgoing connections (paths) of the object visualized.
+
+Outgoing_connections = ArrayOf(Outgoing_connections-item) // The outgoing connections (paths) of the object visualized.

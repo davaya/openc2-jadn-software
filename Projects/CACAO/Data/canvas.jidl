@@ -1,0 +1,10 @@
+       title: "canvas"
+     package: "https://raw.githubusercontent.com/oasis-tcs/cacao/master/Extensions/layout/schemas/canvas/"
+ description: "The Canvas data type indicates the overall size (in pixels) of the canvas that subsequent playbook elements will be displayed. This data type object MUST be populated using the playbook_extensions property as described in Section 3.1 of the CACAO specification [CACAO-Security-Playbooks-v2.0])."
+       roots: ["Root"]
+      config: {"$MaxString": 1000, "$TypeName": "^[a-zA-Z][-._A-Za-z0-9]{0,63}$", "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"}
+jadn_version: "http://oasis-open.org/openc2/jadn/v2.0/schema/"
+
+Root = Record                                    // The Canvas data type indicates the overall size (in pixels) of the canvas that subsequent playbook elements will be displayed. This data type object MUST be populated using the playbook_extensions property as described in Section 3.1 of the CACAO specification [CACAO-Security-Playbooks-v2.0]).
+   1 width            Integer                    // A number (𝕎 - whole number) representing the width of the canvas. This number refers to pixels.
+   2 height           Integer                    // A number (𝕎 - whole number) representing the height of the canvas. This number refers to pixels.

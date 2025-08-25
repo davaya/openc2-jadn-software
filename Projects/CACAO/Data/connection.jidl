@@ -1,0 +1,34 @@
+       title: "connection"
+     package: "https://raw.githubusercontent.com/oasis-tcs/cacao/master/Extensions/layout/schemas/connection/"
+ description: "A Connection data type defines the position of an outgoing relation/path of a visualized CACAO object. It comprises a list of points (in pixels) that altogether represent a line. A CACAO object may have multiple outgoing connections, each one of them represented by a connection data type. A connection should have, at a minimum, two x and y values to represent a straight line (point to point)."
+       roots: ["Root"]
+      config: {"$MaxString": 1000, "$TypeName": "^[a-zA-Z][-._A-Za-z0-9]{0,63}$", "$FieldName": "^[$a-z][-_$A-Za-z0-9]{0,63}$"}
+jadn_version: "http://oasis-open.org/openc2/jadn/v2.0/schema/"
+
+Root = Record                                    // A Connection data type defines the position of an outgoing relation/path of a visualized CACAO object. It comprises a list of points (in pixels) that altogether represent a line. A CACAO object may have multiple outgoing connections, each one of them represented by a connection data type. A connection should have, at a minimum, two x and y values to represent a straight line (point to point).
+   1 connection_type  connection-type-enum       // The type of connection being used. 
+
+The value of this property MUST come from the 'connection-type-enum' enumeration.
+   2 x                X                          // A list of numbers (𝕎 - whole number) numbers (𝕎 - whole number)  representing the X coordinates of the connection. The list MUST contain at least two values to represent one straight line. x1 and the last x coordinate of a path SHOULD represent the midpoint x coordinates of the two connected visualized objects. 
+
+This property is strongly connected with the y property. Both x and y lists MUST have the same number of values (elements) defined, as they together create a point of the connection on the canvas (e.g., x1 with y1, x2 with y2, etc.).
+   3 y                Y                          // A list of numbers (𝕎 - whole number) numbers (𝕎 - whole number)  representing the Y coordinates of the connection. The list MUST contain at least two values to represent one straight line. y1 and the last y coordinate of a path SHOULD represent the midpoint y coordinates of the two connected visualized objects. 
+
+This property is strongly connected with the x property. Both x and y lists MUST have the same number of values (elements) defined, as they together create a point of the connection on the canvas (e.g., x1 with y1, x2 with y2, etc.).
+
+X = ArrayOf(Integer)                             // A list of numbers (𝕎 - whole number) numbers (𝕎 - whole number)  representing the X coordinates of the connection. The list MUST contain at least two values to represent one straight line. x1 and the last x coordinate of a path SHOULD represent the midpoint x coordinates of the two connected visualized objects. 
+
+This property is strongly connected with the y property. Both x and y lists MUST have the same number of values (elements) defined, as they together create a point of the connection on the canvas (e.g., x1 with y1, x2 with y2, etc.).
+
+Y = ArrayOf(Integer)                             // A list of numbers (𝕎 - whole number) numbers (𝕎 - whole number)  representing the Y coordinates of the connection. The list MUST contain at least two values to represent one straight line. y1 and the last y coordinate of a path SHOULD represent the midpoint y coordinates of the two connected visualized objects. 
+
+This property is strongly connected with the x property. Both x and y lists MUST have the same number of values (elements) defined, as they together create a point of the connection on the canvas (e.g., x1 with y1, x2 with y2, etc.).
+
+connection-type-enum = Enumerated
+   1 on-completion
+   2 on-success
+   3 on-failure
+   4 on-true
+   5 on-false
+   6 cases
+   7 next-steps

@@ -206,7 +206,7 @@ def main(schema_dir: str, output_dir: str) -> None:
             if ext in ('.json', ):
                 path = os.path.join(dirpath, f)
                 print(f'{path}')
-                with open(path, 'r') as jf:
+                with open(path, 'r', encoding='utf8') as jf:
                     js = json.load(jf)
                 schema = js_to_jadn(js)
                 jadn.dump(schema, os.path.join(OUTPUT_DIR, f'{fn}.jadn'))
