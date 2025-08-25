@@ -58,7 +58,7 @@
     ["Type", "Array", [], "", [
       [1, "type_name", "TypeName"],
       [2, "core_type", "Enumerated", ["#JADN-Type"]],
-      [3, "type_options", "Options", ["[0"]],
+      [3, "type_options", "TypeOptions", ["&2"]],
       [4, "type_description", "Description", ["[0"]],
       [5, "fields", "JADN-Type", ["&2", "[0"]]
     ]],
@@ -78,6 +78,21 @@
       [12, "Record", "Fields"]
     ]],
 
+    ["TypeOptions", "Choice", [], "", [
+      [1, "Binary", "BinaryOpts"],
+      [2, "Boolean", "BooleanOpts"],
+      [3, "Integer", "IntegerOpts"],
+      [4, "Number", "NumberOpts"],
+      [5, "String", "StringOpts"],
+      [6, "Enumerated", "EnumeratedOpts"],
+      [7, "Choice", "ChoiceOpts"],
+      [8, "Array", "ArrayOpts"],
+      [9, "ArrayOf", "ArrayOfOpts"],
+      [10, "Map", "MapOpts"],
+      [11, "MapOf", "MapOfOpts"],
+      [12, "Record", "RecordOpts"]
+    ]],
+
     ["Empty", "Array", ["}0"]],
 
     ["Items", "ArrayOf", ["*Item"]],
@@ -94,15 +109,102 @@
       [1, "field_id", "FieldID"],
       [2, "field_name", "FieldName"],
       [3, "field_type", "TypeRef"],
-      [4, "field_options", "Options", ["[0"]],
+      [4, "field_options", "TypeOptions", ["&3", "[0"]],
       [5, "field_description", "Description", ["[0"]]
     ]],
 
     ["FieldID", "Integer", ["y0"]],
 
-    ["Options", "ArrayOf", ["*Option", "q"]],
+    ["BinaryOpts", "Map", [], "", [
+      [1, "format", "ArrayOf", ["*Format", "q", "[0"]],
+      [2, "minLength", "Integer", ["[0"]],
+      [3, "maxLength", "Integer", ["[0"]]
+    ]],
 
-    ["Option", "String", ["{1"]],
+    ["BooleanOpts", "Map", [], "", [
+    ]],
+
+    ["IntegerOpts", "Map", [], "", [
+      [1, "format", "ArrayOf", ["*Format", "q", "[0"]],
+      [2, "minInclusive", "Integer", ["[0"]],
+      [3, "maxInclusive", "Integer", ["[0"]],
+      [4, "minExclusive", "Integer", ["[0"]],
+      [5, "maxExclusive", "Integer", ["[0"]]
+    ]],
+
+    ["NumberOpts", "Map", [], "", [
+      [1, "format", "ArrayOf", ["*Format", "q", "[0"]],
+      [2, "minInclusive", "Number", ["[0"]],
+      [3, "maxInclusive", "Number", ["[0"]],
+      [4, "minExclusive", "Number", ["[0"]],
+      [5, "maxExclusive", "Number", ["[0"]]
+    ]],
+
+    ["StringOpts", "Map", [], "", [
+      [1, "format", "ArrayOf", ["*Format", "q", "[0"]],
+      [2, "minInclusive", "String", ["[0"]],
+      [3, "maxInclusive", "String", ["[0"]],
+      [4, "minExclusive", "String", ["[0"]],
+      [5, "maxExclusive", "String", ["[0"]],
+      [6, "pattern", "String", ["/regex", "[0"]],
+      [7, "minLength", "Integer", ["y0", "[0"]],
+      [8, "maxLength", "Integer", ["y0", "[0"]]
+    ]],
+
+    ["EnumeratedOpts", "Map", [], "", [
+      [1, "id", "Boolean", ["[0"]],
+      [2, "enum", "TypeRef", ["[0"]],
+      [3, "pointer", "TypeRef", ["[0"]]
+    ]],
+
+    ["ChoiceOpts", "Map", [], "", [
+      [1, "id", "Boolean", ["[0"]],
+      [2, "combine", "Combine", ["[0"]]
+    ]],
+
+    ["ArrayOpts", "Map", [], "", [
+      [1, "format", "ArrayOf", ["*Format", "q", "[0"]],
+      [2, "minLength", "Integer", ["y0", "[0"]],
+      [3, "maxLength", "Integer", ["y0", "[0"]]
+    ]],
+
+    ["ArrayOfOpts", "Map", [], "", [
+      [1, "valueType", "TypeRef"],
+      [2, "minLength", "Integer", ["y0", "[0"]],
+      [3, "maxLength", "Integer", ["y0", "[0"]],
+      [4, "unique", "Boolean", ["[0"]],
+      [5, "set", "Boolean", ["[0"]],
+      [6, "unordered", "Boolean", ["[0"]]
+    ]],
+
+    ["MapOpts", "Map", [], "", [
+      [1, "id", "Boolean", ["[0"]],
+      [2, "minLength", "Integer", ["y0", "[0"]],
+      [3, "maxLength", "Integer", ["y0", "[0"]],
+      [4, "sequence", "Boolean", ["[0"]]
+    ]],
+
+    ["MapOfOpts", "Map", [], "", [
+      [1, "keyType", "TypeRef"],
+      [2, "valueType", "TypeRef"],
+      [3, "minLength", "Integer", ["y0", "[0"]],
+      [4, "maxLength", "Integer", ["y0", "[0"]],
+      [5, "sequence", "Boolean", ["[0"]]
+    ]],
+
+    ["RecordOpts", "Map", [], "", [
+      [2, "minLength", "Integer", ["y0", "[0"]],
+      [3, "maxLength", "Integer", ["y0", "[0"]],
+      [4, "sequence", "Boolean", ["[0"]]
+    ]],
+
+    ["Format", "String", ["%^/[a-zA-Z0-9]{1,16}+$"]],
+
+    ["Combine", "Enumerated", [], "", [
+      [1, "CO", "anyOf"],
+      [2, "CA", "allOf"],
+      [3, "CX", "oneOf"]
+    ]],
 
     ["Description", "String"]
   ]
